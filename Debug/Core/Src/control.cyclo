@@ -1,0 +1,10 @@
+../Core/Src/control.c:11:6:read_encoder	1
+../Core/Src/control.c:47:6:read_IMU	1
+../Core/Src/control.c:57:6:calculate_translation	1
+../Core/Src/control.c:66:6:calculate_rotation	1
+../Core/Src/control.c:82:6:velocity_PID	3
+../Core/Src/control.c:107:6:distance_PID	1
+../Core/Src/control.c:128:6:omega_PID	1
+../Core/Src/control.c:154:6:angle_PID	1
+../Core/Src/control.c:174:6:wall_PID	15
+../Core/Src/control.c:231:6:diagonal_CTRL	7

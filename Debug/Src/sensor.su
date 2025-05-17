@@ -1,0 +1,8 @@
+sensor.c:18:6:sensor_init	8	static
+sensor.c:49:5:get_adc_value	40	static
+sensor.c:74:5:get_sensor_value_r	8	static
+sensor.c:85:5:get_sensor_value_fr	8	static
+sensor.c:96:5:get_sensor_value_fl	8	static
+sensor.c:107:5:get_sensor_value_l	8	static
+sensor.c:118:9:get_base	16	static
+sensor.c:136:6:get_wall_info	4	static

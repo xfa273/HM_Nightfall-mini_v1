@@ -1,0 +1,3 @@
+auxiliary.c:20:6:led_write	16	static
+auxiliary.c:36:5:select_mode	16	static
+auxiliary.c:78:5:__io_putchar	24	static

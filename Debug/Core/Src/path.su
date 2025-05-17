@@ -1,0 +1,4 @@
+../Core/Src/path.c:10:6:simplifyPath	1056	static
+../Core/Src/path.c:58:6:convertLTurn	1064	static
+../Core/Src/path.c:163:6:convertDiagonal	1112	static
+../Core/Src/path.c:477:6:makePath	72	static

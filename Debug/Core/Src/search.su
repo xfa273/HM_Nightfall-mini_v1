@@ -1,0 +1,15 @@
+../Core/Src/search.c:16:6:search_init	8	static
+../Core/Src/search.c:43:6:searchA	4	static
+../Core/Src/search.c:54:6:searchB	16	static
+../Core/Src/search.c:65:6:adachi	16	static
+../Core/Src/search.c:247:6:adv_pos	4	static
+../Core/Src/search.c:270:6:conf_route	8	static
+../Core/Src/search.c:301:6:map_Init	16	static
+../Core/Src/search.c:339:6:write_map	16	static
+../Core/Src/search.c:402:6:turn_dir	16	static
+../Core/Src/search.c:413:5:make_smap	24	static
+../Core/Src/search.c:498:6:make_route	16	static
+../Core/Src/search.c:605:6:markVisited	16	static
+../Core/Src/search.c:613:6:findClosestUnvisitedCell	16	static
+../Core/Src/search.c:621:6:store_map_in_eeprom	16	static
+../Core/Src/search.c:640:6:load_map_from_eeprom	16	static

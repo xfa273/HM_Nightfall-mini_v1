@@ -1,0 +1,14 @@
+search.c:18:6:search_init	8	static
+search.c:44:6:searchA	8	static
+search.c:126:6:searchB	8	static
+search.c:222:6:searchC	8	static
+search.c:371:6:searchD	8	static
+search.c:527:6:adv_pos	4	static
+search.c:552:6:conf_route	8	static
+search.c:572:6:map_Init	16	static
+search.c:603:6:write_map	16	static
+search.c:656:6:turn_dir	16	static
+search.c:669:6:make_smap	16	static
+search.c:736:6:make_route	16	static
+search.c:823:6:store_map_in_eeprom	16	static
+search.c:842:6:load_map_from_eeprom	16	static

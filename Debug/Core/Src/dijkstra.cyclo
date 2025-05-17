@@ -1,0 +1,9 @@
+../Core/Src/dijkstra.c:26:6:initializeMaze	3
+../Core/Src/dijkstra.c:34:6:initializePath	2
+../Core/Src/dijkstra.c:40:6:convertPathCellToRun	15
+../Core/Src/dijkstra.c:102:6:setMazeWalls	3
+../Core/Src/dijkstra.c:111:6:correctWallInconsistencies	7
+../Core/Src/dijkstra.c:135:6:printMaze	11
+../Core/Src/dijkstra.c:197:5:getDistance	17
+../Core/Src/dijkstra.c:221:6:dijkstra	42
+../Core/Src/dijkstra.c:373:6:reverseArrayYAxis	3

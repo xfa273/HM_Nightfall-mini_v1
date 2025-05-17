@@ -1,0 +1,8 @@
+../Core/Src/auxiliary.c:17:6:led_write	16	static
+../Core/Src/auxiliary.c:38:6:led_flash	24	static
+../Core/Src/auxiliary.c:58:6:led_wait	8	static
+../Core/Src/auxiliary.c:79:6:buzzer_beep	24	static
+../Core/Src/auxiliary.c:96:6:buzzer_interrupt	24	static
+../Core/Src/auxiliary.c:112:6:buzzer_enter	24	static
+../Core/Src/auxiliary.c:133:5:select_mode	16	static
+../Core/Src/auxiliary.c:180:6:__io_putchar	24	static
