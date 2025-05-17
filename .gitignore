@@ -1,0 +1,73 @@
+# STM32CubeIDE プロジェクト用 .gitignore
+
+# ビルド出力
+/build*/
+/Debug/
+/Release/
+/.settings/
+/.cproject
+/.project
+/.mxproject
+/.metadata/
+/.recommenders/
+
+# コンパイル済みオブジェクト
+*.o
+*.su
+*.d
+*.lst
+*.map
+*.elf
+*.hex
+*.bin
+*.lss
+*.sym
+*.srec
+*.disas
+
+# 依存関係
+*.d
+*.d.*
+
+# ログとデータベース
+*.log
+*.sql
+*.sqlite
+*.bak
+
+# システムファイル
+.DS_Store
+Thumbs.db
+*.swp
+*~
+*.swo
+
+# CubeMX 生成ファイル
+/Drivers/CMSIS/Device/ST/STM32F4xx/Include/stm32f4xx_hal_conf.h
+/Drivers/CMSIS/Device/ST/STM32F4xx/Source/Templates/gcc/startup_stm32f4xx.s
+/Drivers/CMSIS/Device/ST/STM32F4xx/Source/Templates/system_stm32f4xx.c
+/Drivers/CMSIS/Device/ST/STM32F4xx/Source/Templates/system_stm32f4xx.h
+
+# CubeMX ユーザー設定
+/.mxproject
+/.cproject
+/.project
+
+# VSCode
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# ローカル開発環境
+.env
+*.local
+
+# 一時ファイル
+*.tmp
+*.temp
+
+# ドキュメント生成
+/docs/_build/
+/docs/api/
