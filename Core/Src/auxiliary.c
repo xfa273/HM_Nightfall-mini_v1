@@ -18,13 +18,13 @@ void led_write(uint8_t led_fl, uint8_t led_fr) {
     if (led_fl) {
         //HAL_GPIO_WritePin(LED_5_GPIO_Port, LED_5_Pin, GPIO_PIN_SET);
     } else {
-        HAL_GPIO_WritePin(LED_5_GPIO_Port, LED_5_Pin, GPIO_PIN_RESET);
+        // HAL_GPIO_WritePin(LED_5_GPIO_Port, LED_5_Pin, GPIO_PIN_RESET);
     }
 
     if (led_fr) {
         //HAL_GPIO_WritePin(LED_6_GPIO_Port, LED_6_Pin, GPIO_PIN_SET);
     } else {
-        HAL_GPIO_WritePin(LED_6_GPIO_Port, LED_6_Pin, GPIO_PIN_RESET);
+        // HAL_GPIO_WritePin(LED_6_GPIO_Port, LED_6_Pin, GPIO_PIN_RESET);
     }
 }
 
@@ -37,13 +37,13 @@ void led_write(uint8_t led_fl, uint8_t led_fr) {
 
 void led_flash(uint8_t times) {
     for (int i = 0; i < times; i++) {
-        HAL_GPIO_WritePin(LED_5_GPIO_Port, LED_5_Pin, GPIO_PIN_SET);
-        HAL_GPIO_WritePin(LED_6_GPIO_Port, LED_6_Pin, GPIO_PIN_SET);
+        // HAL_GPIO_WritePin(LED_5_GPIO_Port, LED_5_Pin, GPIO_PIN_SET);
+        // HAL_GPIO_WritePin(LED_6_GPIO_Port, LED_6_Pin, GPIO_PIN_SET);
 
         HAL_Delay(70);
 
-        HAL_GPIO_WritePin(LED_5_GPIO_Port, LED_5_Pin, GPIO_PIN_RESET);
-        HAL_GPIO_WritePin(LED_6_GPIO_Port, LED_6_Pin, GPIO_PIN_RESET);
+        // HAL_GPIO_WritePin(LED_5_GPIO_Port, LED_5_Pin, GPIO_PIN_RESET);
+        // HAL_GPIO_WritePin(LED_6_GPIO_Port, LED_6_Pin, GPIO_PIN_RESET);
 
         HAL_Delay(70);
     }
@@ -57,13 +57,13 @@ void led_flash(uint8_t times) {
 //+++++++++++++++++++++++++++++++++++++++++++++++
 void led_wait(void) {
     while (1) {
-        HAL_GPIO_WritePin(LED_5_GPIO_Port, LED_5_Pin, GPIO_PIN_SET);
-        HAL_GPIO_WritePin(LED_6_GPIO_Port, LED_6_Pin, GPIO_PIN_RESET);
+        // HAL_GPIO_WritePin(LED_5_GPIO_Port, LED_5_Pin, GPIO_PIN_SET);
+        // HAL_GPIO_WritePin(LED_6_GPIO_Port, LED_6_Pin, GPIO_PIN_RESET);
 
         HAL_Delay(400);
 
-        HAL_GPIO_WritePin(LED_5_GPIO_Port, LED_5_Pin, GPIO_PIN_RESET);
-        HAL_GPIO_WritePin(LED_6_GPIO_Port, LED_6_Pin, GPIO_PIN_SET);
+        // HAL_GPIO_WritePin(LED_5_GPIO_Port, LED_5_Pin, GPIO_PIN_RESET);
+        // HAL_GPIO_WritePin(LED_6_GPIO_Port, LED_6_Pin, GPIO_PIN_SET);
 
         HAL_Delay(400);
     }
@@ -144,7 +144,7 @@ int select_mode(int mode) {
             buzzer_beep((11 - mode) * 0.5 * 800);
         }
 
-        if (ad_fr > 1000 && ad_fl < 300) {
+        if (ad_fr > 1500 && ad_fl < 600) {
             buzzer_enter(900);
             return mode;
         }

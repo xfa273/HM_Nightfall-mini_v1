@@ -1189,7 +1189,7 @@ void drive_variable_reset(void) {
 // 戻り値：なし
 //+++++++++++++++++++++++++++++++++++++++++++++++
 void drive_enable_motor(void) {
-    HAL_GPIO_WritePin(MOTOR_STBY_GPIO_Port, MOTOR_STBY_Pin, GPIO_PIN_SET);
+    // HAL_GPIO_WritePin(MOTOR_STBY_GPIO_Port, MOTOR_STBY_Pin, GPIO_PIN_SET);
 }
 
 //+++++++++++++++++++++++++++++++++++++++++++++++
@@ -1199,7 +1199,7 @@ void drive_enable_motor(void) {
 // 戻り値：なし
 //+++++++++++++++++++++++++++++++++++++++++++++++
 void drive_disable_motor(void) {
-    HAL_GPIO_WritePin(MOTOR_STBY_GPIO_Port, MOTOR_STBY_Pin, GPIO_PIN_RESET);
+    // HAL_GPIO_WritePin(MOTOR_STBY_GPIO_Port, MOTOR_STBY_Pin, GPIO_PIN_RESET);
 }
 
 //+++++++++++++++++++++++++++++++++++++++++++++++
@@ -1426,10 +1426,10 @@ void test_run(void) {
 
             // get_base();
 
-            acceleration_straight = 1388.889;
+            acceleration_straight = 1000;
             acceleration_straight_dash = 0; // 5000
-            velocity_turn90 = 500;
-            alpha_turn90 = 6800;
+            velocity_turn90 = 300;
+            alpha_turn90 = 14000;
             acceleration_turn = 0;
             dist_offset_in = 20;
             dist_offset_out = 34;
@@ -1450,7 +1450,8 @@ void test_run(void) {
             MF.FLAG.GET_LOG_1 = 1;
             half_sectionA(0);
 
-            turn_R90(0);
+            // turn_R90(0);
+            // rotate_180();
 
             half_sectionD(0);
             MF.FLAG.GET_LOG_1 = 0;
@@ -1475,26 +1476,7 @@ void test_run(void) {
             printf("Mode 4-3 straight 2 Sections.\n");
 
             // 直線
-            acceleration_straight = 2722;
-            acceleration_straight_dash = 3000; // 5000
-            // ターン
-            velocity_turn90 = 700;
-            alpha_turn90 = 11300;
-            acceleration_turn = 0;
-            dist_offset_in = 10;
-            dist_offset_out = 33.5;
-            val_offset_in = 1500; // 1790
-            angle_turn_90 = 90;
-            // 90°大回りターン
-            velocity_l_turn_90 = 700;
-            alpha_l_turn_90 = 2030;
-            angle_l_turn_90 = 90;
-            dist_l_turn_out_90 = 34;
-            // 180°大回りターン
-            velocity_l_turn_180 = 700;
-            alpha_l_turn_180 = 2000;
-            angle_l_turn_180 = 180;
-            dist_l_turn_out_180 = 45;
+            acceleration_straight = 1000;
             // 壁制御とケツ当て
             kp_wall = 0.05;
             duty_setposition = 40;
@@ -1520,26 +1502,16 @@ void test_run(void) {
             printf("Mode 4-4 Turn R90.\n");
 
             // 直線
-            acceleration_straight = 2722;
-            acceleration_straight_dash = 3000; // 5000
+            acceleration_straight = 444.44;
+            acceleration_straight_dash = 444.44; // 5000
             // ターン
-            velocity_turn90 = 700;
+            velocity_turn90 = 300;
             alpha_turn90 = 11500;
             acceleration_turn = 0;
             dist_offset_in = 10;
             dist_offset_out = 39;
             val_offset_in = 500;
             angle_turn_90 = 86.7;
-            // 90°大回りターン
-            velocity_l_turn_90 = 700;
-            alpha_l_turn_90 = 2030;
-            angle_l_turn_90 = 89.6;
-            dist_l_turn_out_90 = 40;
-            // 180°大回りターン
-            velocity_l_turn_180 = 700;
-            alpha_l_turn_180 = 2000;
-            angle_l_turn_180 = 180;
-            dist_l_turn_out_180 = 43;
             // 壁制御とケツ当て
             kp_wall = 0.05;
             duty_setposition = 40;

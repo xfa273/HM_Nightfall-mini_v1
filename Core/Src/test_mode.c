@@ -96,70 +96,27 @@ void test_mode() {
 
             drive_start();
 
-            drive_fan(250);
+            drive_fan(0);
 
             break;
         case 5:
-            printf("Test Mode 5.\n");
+            printf("Test Mode 5: Motor Test.\n");
+            
+            drive_start();
 
-            load_map_from_eeprom();
+            while (1) {
 
-            uint8_t fixedMap[MAZE_SIZE][MAZE_SIZE];
+                __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_4, 300); // 右モーター
+                __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, 300); // 左モーター
+             
+                HAL_Delay(1000);
 
-            // 迷路の初期化
-            initializeMaze(fixedMap);
-
-            // 下位4ビットを新しい配列にコピーし、表示する
-            for (int i = 0; i < MAZE_SIZE; i++) {
-                for (int j = 0; j < MAZE_SIZE; j++) {
-
-                    // 下位4ビットを抽出し、新しい配列に格納
-                    fixedMap[i][j] = (map[i][j] >> 4) & 0xF;
-                    // 下位4ビットを2進数で表示
-                    for (int k = 3; k >= 0; k--) {
-                        printf("%d", (fixedMap[i][j] >> k) & 0x1);
-                    }
-                    printf(" ");
-                }
-                printf("\n");
+                __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_4, 0); // 右モーター
+                __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, 0); // 左モーター
+             
+                HAL_Delay(1000);
             }
-
-            reverseArrayYAxis(fixedMap);
-
-            // 手動で設定した壁情報をセット
-            // setMazeWalls(manualWalls);
-            setMazeWalls(fixedMap);
-
-            // 壁情報の矛盾を修正
-            correctWallInconsistencies();
-
-            // 最短経路を見つける
-            Node start = {START_X, START_Y}; // スタート地点
-            Node goal = {GOAL_X, GOAL_Y};    // ゴール地点
-
-            dijkstra(start, goal);
-            for (int i = 0; i < 256 && path[i] != 0; i++) {
-                printf("%d ", path[i]);
-            }
-            printf("\n");
-
-            simplifyPath();
-            for (int i = 0; i < 256 && path[i] != 0; i++) {
-                printf("%d ", path[i]);
-            }
-            printf("\n");
-
-            convertLTurn();
-            for (int i = 0; i < 256 && path[i] != 0; i++) {
-                printf("%d ", path[i]);
-            }
-            printf("\n");
-
-            // 迷路の表示
-            printMaze();
-
-            run();
-
+            
             break;
         case 6:
 

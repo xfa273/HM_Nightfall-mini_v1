@@ -17,21 +17,18 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
     if (htim->Instance == htim5.Instance) {
         // TIM5の割り込み処理 1kHz
 
-        if (HAL_GPIO_ReadPin(SW_POWER_GPIO_Port, SW_POWER_Pin) == 0) {
-            while (1)
-                ;
-        }
-
         // センサ値の取得
         if (ADC_task_counter == 0) {
             // 左右壁センサ値の取得
             HAL_GPIO_WritePin(IR_R_GPIO_Port, IR_R_Pin, GPIO_PIN_SET);
             HAL_GPIO_WritePin(IR_L_GPIO_Port, IR_L_Pin, GPIO_PIN_SET);
+            // HAL_GPIO_WritePin(LED_1_GPIO_Port, LED_1_Pin, GPIO_PIN_SET);
             tim1_wait_us(IR_WAIT_US);
             ad_r = get_sensor_value_r();
             ad_l = get_sensor_value_l();
             HAL_GPIO_WritePin(IR_R_GPIO_Port, IR_R_Pin, GPIO_PIN_RESET);
             HAL_GPIO_WritePin(IR_L_GPIO_Port, IR_L_Pin, GPIO_PIN_RESET);
+            // HAL_GPIO_WritePin(LED_1_GPIO_Port, LED_1_Pin, GPIO_PIN_RESET);
 
             ADC_task_counter++;
 
@@ -53,11 +50,6 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
             ADC_task_counter = 0;
         }
 
-        indicate_sensor();
-
-        // 壁切れ
-        wall_end();
-
         // エンコーダ値の取得
         read_encoder();
 
@@ -67,13 +59,9 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
         // バッテリー電圧の監視
         if (ad_bat > 3000) { // 3.3*3060/4095*3=7.4[V]で発動
             // バッテリーOK
-            //HAL_GPIO_WritePin(LED_3_GPIO_Port, LED_3_Pin, GPIO_PIN_SET);
-            //HAL_GPIO_WritePin(LED_4_GPIO_Port, LED_4_Pin, GPIO_PIN_SET);
 
         } else {
             // バッテリー消耗
-            HAL_GPIO_WritePin(LED_3_GPIO_Port, LED_3_Pin, GPIO_PIN_RESET);
-            HAL_GPIO_WritePin(LED_4_GPIO_Port, LED_4_Pin, GPIO_PIN_RESET);
         }
 
         if (MF.FLAG.OVERRIDE == 0) {
@@ -113,6 +101,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
     if (MF.FLAG.GET_LOG_1) {
         if (log_cnt < 1000) {
 
+            /*
             log_1[log_cnt] = log_cnt;
             log_2[log_cnt] = omega_interrupt;
             log_3[log_cnt] = real_omega;
@@ -122,8 +111,9 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
             // log_7[log_cnt] = alpha_interrupt * FF_OMEGA;
             log_7[log_cnt] = out_r;
             log_8[log_cnt] = out_l;
+            */
 
-            /*
+            
             log_1[log_cnt] = log_cnt;
             log_2[log_cnt] = target_distance;
             log_3[log_cnt] = real_distance;
@@ -132,7 +122,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
             log_6[log_cnt] = KD_DISTANCE * distance_error_error;
             log_7[log_cnt] = 0;
             log_8[log_cnt] = 0;
-            */
+            
 
             /*
             log_1[log_cnt] = log_cnt;

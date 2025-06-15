@@ -20,14 +20,9 @@ void mode1() {
             printf("Mode 1-0.\n");
 
             while (1) {
-                led_write(1, 1);
-
-                HAL_GPIO_WritePin(LED_3_GPIO_Port, LED_3_Pin, GPIO_PIN_SET);
-                HAL_GPIO_WritePin(LED_4_GPIO_Port, LED_4_Pin, GPIO_PIN_SET);
-
                 HAL_GPIO_WritePin(LED_1_GPIO_Port, LED_1_Pin, GPIO_PIN_SET);
                 HAL_GPIO_WritePin(LED_2_GPIO_Port, LED_2_Pin, GPIO_PIN_SET);
-                HAL_GPIO_WritePin(LED_7_GPIO_Port, LED_7_Pin, GPIO_PIN_SET);
+                HAL_GPIO_WritePin(LED_3_GPIO_Port, LED_3_Pin, GPIO_PIN_SET);
             }
 
             break;
@@ -37,24 +32,23 @@ void mode1() {
             printf("Mode 1-1.\n");
 
             // 直線
-            acceleration_straight = 2000;
-            acceleration_straight_dash = 2000; // 5000
+            acceleration_straight = 1000;
+            acceleration_straight_dash = 700; // 5000
             // ターン
-            velocity_turn90 = 600;
-            alpha_turn90 = 10300;
+            velocity_turn90 = 300;
+            alpha_turn90 = 9000;
             acceleration_turn = 0;
-            dist_offset_in = 20;
-            dist_offset_out = 41;
-            val_offset_in = 1250;
-            angle_turn_90 = 89.5;
+            dist_offset_in = 8;
+            dist_offset_out = 13; // 32
+            val_offset_in = 2200;
+            val_offset_in = 0;
+            angle_turn_90 = 90.0;
             // 壁切れ後の距離
-            dist_wall_end = 0;
+            dist_wall_end = 12;
 
-            
             // 壁制御とケツ当て
-            kp_wall = 0.05;
-            thr_f_wall = 790;
-            duty_setposition = 40;
+            kp_wall = 0.04;
+            duty_setposition = 50;
 
             // 壁判断しきい値の係数
             sensor_kx = 1.0;
