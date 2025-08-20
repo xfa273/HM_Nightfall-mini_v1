@@ -25,6 +25,10 @@
 
 #define MAIN_C_
 #include "global.h"
+#include "mode2.h"
+#include "mode3.h"
+#include "mode4.h"
+#include "mode5.h"
 
 /* USER CODE END Includes */
 
@@ -129,11 +133,11 @@ int main(void)
 
     drive_init();
 
-    printf("Micro Mouse Nightfall-mini 2025\n");
-    for (uint16_t i = 1100; i > 300; i -= 150) {
+    printf("Micro Mouse Nightfall-mini 2025 !?\n");
+    for (uint16_t i = 1100; i > 300; i -= 150)
+    {
         buzzer_beep(i);
     }
-
 
     int mode = 0;
 
@@ -141,94 +145,95 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-    while (1) {
+    while (1)
+    {
+        /*while(1){
+          printf("R: %d, L: %d, FR: %d, FL: %d, BAT: %d\n", ad_r, ad_l,
+            ad_fr, ad_fl, ad_bat);
 
-      /*while(1){
-        printf("R: %d, L: %d, FR: %d, FL: %d, BAT: %d\n", ad_r, ad_l,
-          ad_fr, ad_fl, ad_bat);
-  
-        HAL_Delay(300);
-      }*/
+          HAL_Delay(300);
+        }*/
 
-      mode = select_mode(mode);
+        mode = select_mode(mode);
 
-      switch (mode) {
-        case 0:
+        switch (mode)
+        {
+            case 0:
 
-            break;
+                break;
 
-        case 1:
+            case 1:
 
-            printf("mode 1.\n");
+                printf("mode 1.\n");
 
-            mode1();
+                mode1();
 
-            break;
+                break;
 
-        case 2:
+            case 2:
 
-            printf("mode 2.\n");
+                printf("mode 2.\n");
 
-            mode2();
+                mode2();
 
-            break;
+                break;
 
-        case 3:
+            case 3:
 
-            printf("mode 3.\n");
+                printf("mode 3.\n");
 
-            mode3();
+                mode3();
 
-            break;
+                break;
 
-        case 4:
+            case 4:
 
-            printf("mode 4.\n");
+                printf("mode 4.\n");
 
-            mode4();
+                mode4();
 
-            break;
+                break;
 
-        case 5:
+            case 5:
 
-            printf("mode 5.\n");
+                printf("mode 5.\n");
 
-            mode5();
+                mode5();
 
-            break;
+                break;
 
-        case 6:
+            case 6:
 
-            printf("Mode 6.\n");
+                printf("Mode 6.\n");
 
-            mode6();
+                mode6();
 
-            break;
+                break;
 
-        case 7:
+            case 7:
 
-            printf("Mode 7.\n");
+                printf("Mode 7.\n");
 
-            mode7();
+                mode7();
 
-            break;
+                break;
 
-        case 8:
+            case 8:
 
-            printf("Mode 8 Test Run.\n");
+                printf("Mode 8 Test Run.\n");
 
-            test_run();
+                test_run();
 
-            break;
+                break;
 
-        case 9:
+            case 9:
 
-            printf("Mode 9 Test Mode.\n");
+                printf("Mode 9 Test Mode.\n");
 
-            test_mode();
+                test_mode();
 
-            break;
-        } 
+                break;
+        }
 
     /* USER CODE END WHILE */
 
@@ -313,7 +318,7 @@ static void MX_ADC1_Init(void)
   hadc1.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
   hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
   hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
-  hadc1.Init.NbrOfConversion = 5;
+  hadc1.Init.NbrOfConversion = 9;
   hadc1.Init.DMAContinuousRequests = DISABLE;
   hadc1.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
   if (HAL_ADC_Init(&hadc1) != HAL_OK)
@@ -342,7 +347,7 @@ static void MX_ADC1_Init(void)
 
   /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
   */
-  sConfig.Channel = ADC_CHANNEL_0;
+  sConfig.Channel = ADC_CHANNEL_1;
   sConfig.Rank = 3;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
   {
@@ -351,7 +356,7 @@ static void MX_ADC1_Init(void)
 
   /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
   */
-  sConfig.Channel = ADC_CHANNEL_2;
+  sConfig.Channel = ADC_CHANNEL_3;
   sConfig.Rank = 4;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
   {
@@ -360,8 +365,45 @@ static void MX_ADC1_Init(void)
 
   /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
   */
-  sConfig.Channel = ADC_CHANNEL_10;
+  sConfig.Channel = ADC_CHANNEL_0;
   sConfig.Rank = 5;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
+  */
+  sConfig.Channel = ADC_CHANNEL_2;
+  sConfig.Rank = 6;
+  sConfig.SamplingTime = ADC_SAMPLETIME_3CYCLES;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
+  */
+  sConfig.Channel = ADC_CHANNEL_0;
+  sConfig.Rank = 7;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
+  */
+  sConfig.Channel = ADC_CHANNEL_2;
+  sConfig.Rank = 8;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
+  */
+  sConfig.Channel = ADC_CHANNEL_10;
+  sConfig.Rank = 9;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
   {
     Error_Handler();
@@ -504,7 +546,7 @@ static void MX_TIM2_Init(void)
 
   /* USER CODE END TIM2_Init 1 */
   htim2.Instance = TIM2;
-  htim2.Init.Prescaler = 0;
+  htim2.Init.Prescaler = 12;
   htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim2.Init.Period = 1000;
   htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
@@ -908,7 +950,8 @@ void Error_Handler(void)
      * state
      */
     __disable_irq();
-    while (1) {
+    while (1)
+    {
     }
   /* USER CODE END Error_Handler_Debug */
 }

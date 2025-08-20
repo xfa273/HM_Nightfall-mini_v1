@@ -6,6 +6,8 @@
  */
 
 #include "global.h"
+#include "interrupt.h"
+#include "logging.h"
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
     if (htim->Instance == htim1.Instance) {
@@ -19,26 +21,48 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 
         // センサ値の取得
         if (ADC_task_counter == 0) {
+
             // 左右壁センサ値の取得
-            HAL_GPIO_WritePin(IR_R_GPIO_Port, IR_R_Pin, GPIO_PIN_SET);
-            HAL_GPIO_WritePin(IR_L_GPIO_Port, IR_L_Pin, GPIO_PIN_SET);
-            // HAL_GPIO_WritePin(LED_1_GPIO_Port, LED_1_Pin, GPIO_PIN_SET);
-            tim1_wait_us(IR_WAIT_US);
-            ad_r = get_sensor_value_r();
-            ad_l = get_sensor_value_l();
+
+            // LED OFFのセンサ値
             HAL_GPIO_WritePin(IR_R_GPIO_Port, IR_R_Pin, GPIO_PIN_RESET);
             HAL_GPIO_WritePin(IR_L_GPIO_Port, IR_L_Pin, GPIO_PIN_RESET);
-            // HAL_GPIO_WritePin(LED_1_GPIO_Port, LED_1_Pin, GPIO_PIN_RESET);
+            tim1_wait_us(IR_WAIT_US);
+            ad_r_off = get_sensor_value_r();
+            ad_l_off = get_sensor_value_l();
+
+            // LED ONのセンサ値
+            HAL_GPIO_WritePin(IR_R_GPIO_Port, IR_R_Pin, GPIO_PIN_SET);
+            HAL_GPIO_WritePin(IR_L_GPIO_Port, IR_L_Pin, GPIO_PIN_SET);
+            tim1_wait_us(IR_WAIT_US);
+            ad_r_raw = get_sensor_value_r();
+            ad_l_raw = get_sensor_value_l();
+            ad_r = max(ad_r_raw - ad_r_off - wall_offset_r, 0);
+            ad_l = max(ad_l_raw - ad_l_off - wall_offset_l, 0);
+            HAL_GPIO_WritePin(IR_R_GPIO_Port, IR_R_Pin, GPIO_PIN_RESET);
+            HAL_GPIO_WritePin(IR_L_GPIO_Port, IR_L_Pin, GPIO_PIN_RESET);
 
             ADC_task_counter++;
 
         } else if (ADC_task_counter == 1) {
+            
             // 前壁センサ値の取得
+
+            // LED OFFのセンサ値
+            HAL_GPIO_WritePin(IR_FR_GPIO_Port, IR_FR_Pin, GPIO_PIN_RESET);
+            HAL_GPIO_WritePin(IR_FL_GPIO_Port, IR_FL_Pin, GPIO_PIN_RESET);
+            tim1_wait_us(IR_WAIT_US);
+            ad_fr_off = get_sensor_value_fr();
+            ad_fl_off = get_sensor_value_fl();
+
+            // LED ONのセンサ値
             HAL_GPIO_WritePin(IR_FR_GPIO_Port, IR_FR_Pin, GPIO_PIN_SET);
             HAL_GPIO_WritePin(IR_FL_GPIO_Port, IR_FL_Pin, GPIO_PIN_SET);
             tim1_wait_us(IR_WAIT_US);
-            ad_fr = get_sensor_value_fr();
-            ad_fl = get_sensor_value_fl();
+            ad_fr_raw = get_sensor_value_fr();
+            ad_fl_raw = get_sensor_value_fl();
+            ad_fr = max(ad_fr_raw - ad_fr_off - wall_offset_fr, 0);
+            ad_fl = max(ad_fl_raw - ad_fl_off - wall_offset_fl, 0);
             HAL_GPIO_WritePin(IR_FR_GPIO_Port, IR_FR_Pin, GPIO_PIN_RESET);
             HAL_GPIO_WritePin(IR_FL_GPIO_Port, IR_FL_Pin, GPIO_PIN_RESET);
 
@@ -98,57 +122,30 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
         buzzer_count = 0;
     }
 
+    // 新しいロギング機能の実装
     if (MF.FLAG.GET_LOG_1) {
-        if (log_cnt < 1000) {
-
-            /*
-            log_1[log_cnt] = log_cnt;
-            log_2[log_cnt] = omega_interrupt;
-            log_3[log_cnt] = real_omega;
-            log_4[log_cnt] = KP_OMEGA * omega_error;
-            log_5[log_cnt] = KI_OMEGA * omega_integral;
-            log_6[log_cnt] = KD_OMEGA * omega_error_error;
-            // log_7[log_cnt] = alpha_interrupt * FF_OMEGA;
-            log_7[log_cnt] = out_r;
-            log_8[log_cnt] = out_l;
-            */
-
-            
-            log_1[log_cnt] = log_cnt;
-            log_2[log_cnt] = target_distance;
-            log_3[log_cnt] = real_distance;
-            log_4[log_cnt] = KP_DISTANCE * distance_error;
-            log_5[log_cnt] = KI_DISTANCE * distance_integral;
-            log_6[log_cnt] = KD_DISTANCE * distance_error_error;
-            log_7[log_cnt] = 0;
-            log_8[log_cnt] = 0;
-            
-
-            /*
-            log_1[log_cnt] = log_cnt;
-            log_2[log_cnt] = target_velocity;
-            log_3[log_cnt] = real_velocity;
-            log_4[log_cnt] = KP_VELOCITY * velocity_error;
-            log_5[log_cnt] = KI_VEROCITY * velocity_integral;
-            log_6[log_cnt] = KD_VEROCITY * velocity_error_error;
-            log_7[log_cnt] = 0;
-            log_8[log_cnt] = 0;
-            */
-
-            /*
-            log_1[log_cnt] = log_cnt;
-            log_2[log_cnt] = target_angle;
-            log_3[log_cnt] = -real_angle;
-            log_4[log_cnt] = KP_ANGLE * angle_error;
-            log_5[log_cnt] = KI_ANGLE * angle_integral;
-            log_6[log_cnt] = KD_ANGLE * angle_error_error;
-            log_7[log_cnt] = 0;
-            log_8[log_cnt] = 0;
-            */
-
-            log_cnt++;
-        }
+        // HAL_GetTickから現在の時間を取得
+        uint32_t current_time = HAL_GetTick();
+        
+        // テスト用に固定値と実際の値を混ぜてログに記録
+        static float test_val = 1.23f;
+        test_val += 0.01f;
+        if (test_val > 10.0f) test_val = 1.0f;
+        
+        // 必要なデータをログに記録（バッファ制限のチェックはlog_add_entry内で行う）
+        log_add_entry(
+            (uint16_t)log_buffer.count,     // インデックス
+            omega_interrupt,                        // 目標角速度（テスト値）
+            real_omega,                      // 実際の角速度
+            KP_OMEGA * omega_error,          // P項
+            KI_OMEGA * omega_integral,       // I項
+            KD_OMEGA * omega_error_error,    // D項
+            (float)out_r,                    // 右モーター出力
+            (float)out_l,                    // 左モーター出力
+            current_time                     // タイムスタンプ
+        );
     }
+
 
 } /* HAL_TIM_PeriodElapsedCallback */
 
