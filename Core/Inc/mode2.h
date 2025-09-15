@@ -5,9 +5,9 @@
  *      Author: yuho-
  */
 
-#ifndef INC_MODE5_H_
-#define INC_MODE5_H_
+#ifndef INC_MODE2_H_
+#define INC_MODE2_H_
 
 void mode2(void);
 
-#endif /* INC_MODE5_H_ */
+#endif /* INC_MODE2_H_ */

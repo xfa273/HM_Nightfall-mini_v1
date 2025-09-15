@@ -12,12 +12,18 @@
     各種定数・変数宣言
 ============================================================*/
 
+// IMUモデル種別
+#define IMU_MODEL_NONE      0
+#define IMU_MODEL_ICM20689  1
+#define IMU_MODEL_ISM330    2
+
 #ifdef MAIN_C_ // main.cからこのファイルが呼ばれている場合
 
 /*グローバル変数の定義*/
 //----その他----
 uint8_t tp;                                         // タスクポインタ
-volatile uint16_t ad_r, ad_fr, ad_fl, ad_l, ad_bat; // A-D値格納
+volatile uint16_t ad_r, ad_r_off, ad_fr, ad_fr_off, ad_fl, ad_fl_off, ad_l, ad_l_off, ad_r_raw, ad_l_raw, ad_fr_raw, ad_fl_raw, ad_bat; // A-D値格納
+volatile uint16_t wall_offset_r, wall_offset_l, wall_offset_fr, wall_offset_fl; // LED ON時の壁なし基準値
 volatile uint16_t base_l, base_r, base_f;           // 基準値を格納
 volatile int16_t dif_l, dif_r;                      // AD値と基準との差
 float imu_offset_z;
@@ -33,10 +39,14 @@ uint8_t set_flag;
 uint16_t gyro_calib_cnt;
 uint8_t gyro_calib_flag;
 
+// 現在使用しているIMUモデル
+uint8_t imu_model;
+
 #else // main.c以外からこのファイルが呼ばれている場合
 
 extern uint8_t tp;
-extern volatile uint16_t ad_r, ad_fr, ad_fl, ad_l, ad_bat;
+extern volatile uint16_t ad_r, ad_r_off, ad_fr, ad_fr_off, ad_fl, ad_fl_off, ad_l, ad_l_off, ad_r_raw, ad_l_raw, ad_fr_raw, ad_fl_raw, ad_bat; // A-D値格納
+extern volatile uint16_t wall_offset_r, wall_offset_l, wall_offset_fr, wall_offset_fl; // LED ON時の壁なし基準値
 extern volatile uint16_t base_l, base_r, base_f;
 extern volatile int16_t dif_l, dif_r;
 extern float imu_offset_z;
@@ -51,6 +61,9 @@ extern float accel_x_offset, accel_y_offset, accel_z_offset;
 extern uint8_t set_flag;
 extern uint16_t gyro_calib_cnt;
 extern uint8_t gyro_calib_flag;
+
+// 現在使用しているIMUモデル
+extern uint8_t imu_model;
 
 #endif
 
@@ -72,6 +85,17 @@ void ICM20689_Init(void);
 float ICM20689_GYRO_READ(uint8_t);
 float ICM20689_ACCEL_READ(uint8_t);
 void ICM20689_DataUpdate(void);
+
+// ISM330DHCX
+void ISM330_Init(void);
+void ISM330_DataUpdate(void);
+
+// 自動検出および共通アップデート
+void IMU_Init_Auto(void);
+void IMU_DataUpdate(void);
+// WHO_AM_Iのデバッグプローブ
+void IMU_ProbeWHOAMI_Debug(void);
+void get_sensor_offsets(void);
 void IMU_GetOffset(void);
 uint8_t get_base();   // センサ基準値を取得
 void get_wall_info(); // 壁情報を読む

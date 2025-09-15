@@ -51,7 +51,9 @@ void searchA() {}
 // 引数：なし
 // 戻り値：なし
 //+++++++++++++++++++++++++++++++++++++++++++++++
-void searchB(uint16_t fan_duty) {}
+void searchB(uint16_t fan_duty) {
+    (void)fan_duty;
+}
 
 /*-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 -- -- -- -足立法探索走行（全面探索用）-- -- -- -- -- -- -- -- -- -- -- -- -- --
@@ -411,6 +413,8 @@ void turn_dir(uint8_t t_pat) {
 // 戻り値：なし
 //+++++++++++++++++++++++++++++++++++++++++++++++
 int make_smap(uint8_t target_x, uint8_t target_y) {
+    (void)target_x;
+    (void)target_y;
 
     //====変数宣言====
     uint8_t x, y; // for文用変数
@@ -610,7 +614,10 @@ void markVisited(uint8_t x, uint8_t y) { visited[y][x] = true; }
 // 引数：探索区画のXY座標(x,y)
 // 戻り値：なし
 //+++++++++++++++++++++++++++++++++++++++++++++++
-void findClosestUnvisitedCell(uint8_t currentX, uint8_t currentY) {}
+void findClosestUnvisitedCell(uint8_t currentX, uint8_t currentY) {
+    (void)currentX;
+    (void)currentY;
+}
 
 //+++++++++++++++++++++++++++++++++++++++++++++++
 // store_map_in_eeprom

@@ -10,6 +10,8 @@ RM := rm -rf
 # All of the sources participating in the build are defined here
 -include sources.mk
 -include Drivers/STM32F4xx_HAL_Driver/Src/subdir.mk
+-include Drivers/STM32F4xx_HAL_Driver/subdir.mk
+-include Drivers/CMSIS/subdir.mk
 -include Core/Startup/subdir.mk
 -include Core/Src/subdir.mk
 -include objects.mk
@@ -66,8 +68,8 @@ all: main-build
 main-build: HM_Nightfall-mini_v1.elf secondary-outputs
 
 # Tool invocations
-HM_Nightfall-mini_v1.elf HM_Nightfall-mini_v1.map: $(OBJS) $(USER_OBJS) C:\Users\yuho-\OneDrive\CubeIDE\HM_Nightfall-mini_v1\STM32F405RGTX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "HM_Nightfall-mini_v1.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\yuho-\OneDrive\CubeIDE\HM_Nightfall-mini_v1\STM32F405RGTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="HM_Nightfall-mini_v1.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -u _printf_float -Wl,--start-group -lc -lm -Wl,--end-group
+HM_Nightfall-mini_v1.elf HM_Nightfall-mini_v1.map: $(OBJS) $(USER_OBJS) /home/xfa273/STM32Workspace/HM_Nightfall-mini_v1/STM32F405RGTX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "HM_Nightfall-mini_v1.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"/home/xfa273/STM32Workspace/HM_Nightfall-mini_v1/STM32F405RGTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="HM_Nightfall-mini_v1.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -u _printf_float -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 

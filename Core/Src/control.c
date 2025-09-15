@@ -6,6 +6,7 @@
  */
 
 #include "global.h"
+#include <math.h>
 
 /*エンコーダから速度と位置を取得する*/
 void read_encoder(void) {
@@ -50,7 +51,7 @@ void read_encoder(void) {
 /*IMUから角速度と角度を取得する*/
 void read_IMU(void) {
     // 時計回りが正
-    ICM20689_DataUpdate();
+    IMU_DataUpdate();
     real_omega = -omega_z_true * KP_IMU;
     IMU_angle += omega_z_true * 0.001;
     real_angle = IMU_angle;
@@ -189,12 +190,12 @@ void wall_PID(void) {
         sense_diff_r = ad_r - previous_ad_r;
         sense_diff_l = ad_l - previous_ad_l;
 
-        if (abs(sense_diff_r) > WALL_DIFF_THR) {
+        if (fabsf(sense_diff_r) > WALL_DIFF_THR) {
             wall_thr_r = WALL_BASE_R + 30;
         } else {
             wall_thr_r = WALL_BASE_R;
         }
-        if (abs(sense_diff_l) > WALL_DIFF_THR) {
+        if (fabsf(sense_diff_l) > WALL_DIFF_THR) {
             wall_thr_l = WALL_BASE_L + 30;
         } else {
             wall_thr_l = WALL_BASE_L;

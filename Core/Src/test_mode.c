@@ -96,7 +96,7 @@ void test_mode() {
 
             drive_start();
 
-            drive_fan(0);
+            drive_fan(1000);
 
             break;
         case 5:

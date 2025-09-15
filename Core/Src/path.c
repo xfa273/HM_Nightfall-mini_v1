@@ -472,7 +472,7 @@ void convertDiagonal(void) {
         printf("%d ", path[i]);
     }
     printf("\n");
-};
+}
 
 void makePath(uint8_t path_type) {
     // 0:小回り 1:大回り 2:斜め

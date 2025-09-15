@@ -86,6 +86,8 @@ extern volatile mouse_flags MF;
 #include "mode3.h"
 #include "mode4.h"
 #include "mode5.h"
+#include "mode6.h"
+#include "mode7.h"
 #include "path.h"
 #include "run.h"
 #include "search.h"

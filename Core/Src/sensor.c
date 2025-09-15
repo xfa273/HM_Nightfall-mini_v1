@@ -23,7 +23,10 @@ void sensor_init(void) {
     HAL_TIM_Base_Start_IT(&htim1);
     HAL_TIM_Base_Start_IT(&htim5);
 
-    ICM20689_Init();
+    // センサのオフセット値を取得
+    get_sensor_offsets();
+
+    IMU_Init_Auto();
 }
 
 //+++++++++++++++++++++++++++++++++++++++++++++++
@@ -34,6 +37,7 @@ void sensor_init(void) {
 // 戻り値：電圧値（12bit分解能）
 //+++++++++++++++++++++++++++++++++++++++++++++++
 int get_adc_value(ADC_HandleTypeDef *hadc, uint32_t channel) {
+    (void)channel;
     HAL_ADC_Start(hadc);                  // AD変換を開始する
     HAL_ADC_PollForConversion(hadc, 150); // AD変換終了まで待機する
     return (HAL_ADC_GetValue(hadc) * K_SENSOR); // AD変換結果を取得する
@@ -143,14 +147,184 @@ void get_wall_info() {
     }
 }
 
+//+++++++++++++++++++++++++++++++++++++++++++++++
+// ISM330DHCX support
+//+++++++++++++++++++++++++++++++++++++++++++++++
+
+// 読み出しヘルパ（リトルエンディアン16bit）
+static int16_t read16_le(uint8_t reg_l) {
+    uint8_t lo = read_byte(reg_l);
+    uint8_t hi = read_byte(reg_l + 1);
+    return (int16_t)((int16_t)hi << 8 | lo);
+}
+
+// ISM330DHCX 初期化
+void ISM330_Init(void) {
+    uint8_t who = read_byte(0x0F); // WHO_AM_I
+    printf("ISM330 WHO_AM_I = 0x%02x\r\n", who); // 期待値: 0x6B
+
+    if (who != 0x6B) {
+        // 必要最小限の表示のみ。失敗時はブザーのみ。
+        buzzer_beep(2500);
+        // 検出失敗でも継続は可能だが、以降の読み出しは無効
+    }
+
+    // CTRL3_C (0x12): BDU=1, IF_INC=1
+    // BDU(6)=1, IF_INC(2)=1 -> 0b0100_0100 = 0x44
+    write_byte(0x12, 0x44);
+    HAL_Delay(10);
+
+    // CTRL2_G (0x11): Gyro設定
+    // ODR_G=833Hz(0x7<<4)=0x70
+    // FS_4000=1で±4000 dpsに設定（FS_Gは未使用扱い）
+    // 推奨: 0x71 (= 0x70 | 0x01)
+    write_byte(0x11, 0x71);
+    // 以前の設定（参考・ロールバック用）: ±2000 dps
+    // write_byte(0x11, 0x7C); // ODR=833Hz, FS_G=2000 dps
+    HAL_Delay(10);
+
+    // CTRL1_XL (0x10): ODR_XL=833Hz, FS_XL=±16g -> 0x7C
+    write_byte(0x10, 0x7C);
+    HAL_Delay(10);
+
+    set_flag = 1;
+}
+
+// 感度換算
+static inline float ism330_gyro_dps(int16_t raw) {
+    // FS=4000 dps => 140 mdps/LSB = 0.14 dps/LSB
+    return (float)raw * 0.14f; // [deg/s]
+    // 参考（以前の設定）: FS=2000 dps => 70 mdps/LSB
+    // return (float)raw * 0.07f; // [deg/s]
+}
+static inline float ism330_accel_g(int16_t raw) { // FS=16g => 0.488 mg/LSB
+    return (float)raw * 0.000488f; // [g]
+}
+
+void ISM330_DataUpdate(void) {
+    if (set_flag == 1) {
+        // Gyro OUT*_G: X 0x22/0x23, Y 0x24/0x25, Z 0x26/0x27
+        float gx = ism330_gyro_dps(read16_le(0x22));
+        float gy = ism330_gyro_dps(read16_le(0x24));
+        float gz = ism330_gyro_dps(read16_le(0x26));
+
+        // Accel OUT*_A: X 0x28/0x29, Y 0x2A/0x2B, Z 0x2C/0x2D
+        float ax = ism330_accel_g(read16_le(0x28));
+        float ay = ism330_accel_g(read16_le(0x2A));
+        float az = ism330_accel_g(read16_le(0x2C));
+
+        // 既存座標系との整合（ICM実装と同様の符号を暫定適用）
+        omega_x_raw = -gx;
+        omega_y_raw = gy;
+        omega_z_raw = gz;
+
+        accel_x_raw = -ax;
+        accel_y_raw = ay;
+        accel_z_raw = az;
+
+        // オフセット補正
+        omega_x_true = omega_x_raw - omega_x_offset;
+        omega_y_true = omega_y_raw - omega_y_offset;
+        omega_z_true = omega_z_raw - omega_z_offset;
+        accel_x_true = accel_x_raw - accel_x_offset;
+        accel_y_true = accel_y_raw - accel_y_offset;
+        accel_z_true = accel_z_raw - accel_z_offset;
+    }
+}
+
+// IMU自動検出と初期化
+void IMU_Init_Auto(void) {
+    // まずICM20689を試す
+    uint8_t who_icm = read_byte(0x75);
+    if (who_icm == 0x98) {
+        imu_model = 1; // ICM20689
+        ICM20689_Init();
+        return;
+    }
+
+    // 次にISM330DHCXを試す
+    uint8_t who_ism = read_byte(0x0F);
+    if (who_ism == 0x6B) {
+        imu_model = 2; // ISM330DHCX
+        ISM330_Init();
+        return;
+    }
+
+    // いずれも検出できない場合はエラー
+    imu_model = 0;
+    buzzer_beep(3000);
+}
+
+// アクティブなIMUから最新値を取得（ラッパー）
+void IMU_DataUpdate(void) {
+    if (imu_model == 1) {
+        ICM20689_DataUpdate();
+    } else if (imu_model == 2) {
+        ISM330_DataUpdate();
+    } else {
+        // 未検出時は何もしない
+    }
+}
+
 uint8_t read_byte(uint8_t reg) {
     uint8_t ret, val;
-    HAL_GPIO_WritePin(GPIOD, CS_Pin, GPIO_PIN_RESET); // cs = 0;
+    HAL_GPIO_WritePin(CS_GPIO_Port, CS_Pin, GPIO_PIN_RESET); // cs = 0;
     ret = reg | 0x80;
     HAL_SPI_Transmit(&hspi3, &ret, 1, 100);
     HAL_SPI_Receive(&hspi3, &val, 1, 100);
-    HAL_GPIO_WritePin(GPIOD, CS_Pin, GPIO_PIN_SET); // cs = 1;
+    HAL_GPIO_WritePin(CS_GPIO_Port, CS_Pin, GPIO_PIN_SET); // cs = 1;
     return val;
+}
+
+// SPI3を動的に再初期化（モード/速度切替用）
+static void spi3_reinit(uint32_t pol, uint32_t phase, uint32_t presc) {
+    HAL_SPI_DeInit(&hspi3);
+    hspi3.Init.CLKPolarity = pol;
+    hspi3.Init.CLKPhase = phase;
+    hspi3.Init.BaudRatePrescaler = presc;
+    if (HAL_SPI_Init(&hspi3) != HAL_OK) {
+        printf("HAL_SPI_Init failed in debug reinit.\r\n");
+    }
+}
+
+// WHO_AM_IをSPIモードを切替えつつ読み取って表示（デバッグ用）
+void IMU_ProbeWHOAMI_Debug(void) {
+    uint8_t icm_reg = 0x75; // ICM20689 WHO_AM_I
+    uint8_t ism_reg = 0x0F; // ISM330DHCX WHO_AM_I
+
+    printf("=== IMU WHO_AM_I probe start ===\r\n");
+
+    // 電源投入直後の安定待ち
+    HAL_Delay(20);
+
+    // 低速で検証（ライン品質の影響を減らす）
+    // Mode 3 (CPOL=1, CPHA=2)
+    spi3_reinit(SPI_POLARITY_HIGH, SPI_PHASE_2EDGE, SPI_BAUDRATEPRESCALER_128);
+    uint8_t icm_m3 = read_byte(icm_reg);
+    uint8_t ism_m3 = read_byte(ism_reg);
+    printf("Mode3/Presc128 -> ICM:0x%02X, ISM:0x%02X\r\n", icm_m3, ism_m3);
+
+    // Mode 0 (CPOL=0, CPHA=1)
+    spi3_reinit(SPI_POLARITY_LOW, SPI_PHASE_1EDGE, SPI_BAUDRATEPRESCALER_128);
+    uint8_t icm_m0 = read_byte(icm_reg);
+    uint8_t ism_m0 = read_byte(ism_reg);
+    printf("Mode0/Presc128 -> ICM:0x%02X, ISM:0x%02X\r\n", icm_m0, ism_m0);
+
+    // Mode 1 (CPOL=0, CPHA=2)
+    spi3_reinit(SPI_POLARITY_LOW, SPI_PHASE_2EDGE, SPI_BAUDRATEPRESCALER_128);
+    uint8_t icm_m1 = read_byte(icm_reg);
+    uint8_t ism_m1 = read_byte(ism_reg);
+    printf("Mode1/Presc128 -> ICM:0x%02X, ISM:0x%02X\r\n", icm_m1, ism_m1);
+
+    // Mode 2 (CPOL=1, CPHA=1)
+    spi3_reinit(SPI_POLARITY_HIGH, SPI_PHASE_1EDGE, SPI_BAUDRATEPRESCALER_128);
+    uint8_t icm_m2 = read_byte(icm_reg);
+    uint8_t ism_m2 = read_byte(ism_reg);
+    printf("Mode2/Presc128 -> ICM:0x%02X, ISM:0x%02X\r\n", icm_m2, ism_m2);
+
+    // 既定へ復帰（Mode3/Presc32）
+    spi3_reinit(SPI_POLARITY_HIGH, SPI_PHASE_2EDGE, SPI_BAUDRATEPRESCALER_32);
+    printf("=== IMU WHO_AM_I probe end ===\r\n");
 }
 
 //+++++++++++++++++++++++++++++++++++++++++++++++
@@ -171,10 +345,10 @@ Resister Address.
 void write_byte(uint8_t reg, uint8_t val) {
     uint8_t ret;
     ret = reg & 0x7F;
-    HAL_GPIO_WritePin(GPIOD, CS_Pin, GPIO_PIN_RESET); // cs = 0;
+    HAL_GPIO_WritePin(CS_GPIO_Port, CS_Pin, GPIO_PIN_RESET); // cs = 0;
     HAL_SPI_Transmit(&hspi3, &ret, 1, 100);
     HAL_SPI_Transmit(&hspi3, &val, 1, 100);
-    HAL_GPIO_WritePin(GPIOD, CS_Pin, GPIO_PIN_SET); // cs = 1;
+    HAL_GPIO_WritePin(CS_GPIO_Port, CS_Pin, GPIO_PIN_SET); // cs = 1;
 }
 
 //+++++++++++++++++++++++++++++++++++++++++++++++
@@ -184,18 +358,15 @@ void write_byte(uint8_t reg, uint8_t val) {
 void ICM20689_Init(void) {
     uint8_t who_am_i = 0;
     who_am_i = read_byte(0x75);              // check WHO_AM_I (0x75)
-    printf("who_am_i = 0x%x\r\n", who_am_i); // Who am I = 0x98
+    printf("ICM20689 WHO_AM_I = 0x%02x\r\n", who_am_i); // 期待値: 0x98
 
     if (who_am_i != 0x98) { // recheck 0x98
         HAL_Delay(100);
-        who_am_i = read_byte(0x98);
-
+        who_am_i = read_byte(0x75);
         if (who_am_i != 0x98) {
-            printf("gyro_error\r\n\n");
+            // 必要最小限の表示のみ。失敗時はブザーのみ。
             buzzer_beep(3000);
             buzzer_beep(3000);
-            while (1) {
-            }
         }
     }
 
@@ -252,6 +423,48 @@ void ICM20689_DataUpdate(void) {
         accel_y_true = accel_y_raw - accel_y_offset;
         accel_z_true = accel_z_raw - accel_z_offset;
     }
+}
+
+// センサオフセット値を起動時に複数回測定して平均化する
+void get_sensor_offsets(void) {
+    const int NUM_SAMPLES = 10;  // 測定回数
+    int i;
+    uint32_t sum_r = 0, sum_l = 0, sum_fr = 0, sum_fl = 0;
+
+    wall_offset_l = 0;
+    wall_offset_r = 0;
+    wall_offset_fr = 0;
+    wall_offset_fl = 0;
+    
+    // 起動時ログを抑制
+    
+    // interrupt.cですでに実装されているADCの値取得を使用する
+    // interruption処理が複数回走るのを待つ
+    for (i = 0; i < NUM_SAMPLES; i++) {
+        // ADCタスクカウンタが一周するのを待つ（センサ値が更新されるのを待つ）
+        uint8_t current_counter = ADC_task_counter;
+        while (current_counter == ADC_task_counter) {
+            HAL_Delay(1);
+        }
+        
+        // LEDが発光しているときのオフセット値（壁なしでも受光する光量）を加算
+        sum_r += ad_r_raw;  // LEDが発光しているときの受光量
+        sum_l += ad_l_raw;
+        sum_fr += ad_fr_raw;
+        sum_fl += ad_fl_raw;
+        
+        HAL_Delay(10); // 少し待機して次のサンプルを取得
+    }
+    
+    // 平均値を計算して設定
+    // LEDが発光しているときの基本受光量をオフセット値として設定
+    // 新しい変数にオフセット値を保存（割り込みで上書きされない）
+    wall_offset_r = sum_r / NUM_SAMPLES;
+    wall_offset_l = sum_l / NUM_SAMPLES;
+    wall_offset_fr = sum_fr / NUM_SAMPLES;
+    wall_offset_fl = sum_fl / NUM_SAMPLES;
+    
+    // 起動時ログを抑制
 }
 
 // 静止状態でIMUのオフセット値を取得

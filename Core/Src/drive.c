@@ -6,6 +6,12 @@
  */
 
 #include "global.h"
+#include "main.h"
+#include "params.h"
+#include "drive.h"
+#include "sensor.h"
+#include "interrupt.h"
+#include "logging.h"
 #include <math.h>
 
 /*==========================================================
@@ -245,7 +251,7 @@ void one_section(void) {}
 // 戻り値：なし
 //+++++++++++++++++++++++++++++++++++++++++++++++
 void one_sectionU(uint8_t CTRL) {
-
+    (void)CTRL;
     MF.FLAG.CTRL = 1;
     driveA(DIST_HALF_SEC * 2, speed_now, speed_now, 0);
 
@@ -426,7 +432,7 @@ void l_turn_L90(void) {
 // 戻り値：なし
 //+++++++++++++++++++++++++++++++++++++++++++++++
 void l_turn_R180(uint8_t fwall) {
-
+    (void)fwall;
     MF.FLAG.CTRL = 0;
     MF.FLAG.SLALOM_R = 1;
     driveSR(angle_l_turn_180, alpha_l_turn_180);
@@ -443,7 +449,7 @@ void l_turn_R180(uint8_t fwall) {
 // 戻り値：なし
 //+++++++++++++++++++++++++++++++++++++++++++++++
 void l_turn_L180(uint8_t fwall) {
-
+    (void)fwall;
     MF.FLAG.CTRL = 0;
     MF.FLAG.SLALOM_L = 1;
     driveSL(angle_l_turn_180, alpha_l_turn_180);
@@ -799,10 +805,7 @@ void driveR(float angle) {
         alpha_interrupt = ALPHA_ROTATE_90;
     } else {
         alpha_interrupt = -ALPHA_ROTATE_90;
-        ;
     }
-
-    // printf("%f\n", alpha_interrupt);
 
     // 走行距離カウントをリセット
     real_distance = 0;
@@ -873,7 +876,9 @@ void driveR(float angle) {
 // 引数1：dist …… 走行するパルス
 // 戻り値：なし
 //+++++++++++++++++++++++++++++++++++++++++++++++
-void driveC(int dist) {}
+void driveC(int dist) {
+    (void)dist;
+}
 
 //+++++++++++++++++++++++++++++++++++++++++++++++
 // driveM
@@ -881,7 +886,9 @@ void driveC(int dist) {}
 // 引数1: センサ値の基準値
 // 戻り値：なし
 //+++++++++++++++++++++++++++++++++++++++++++++++
-void driveM(uint16_t sens_tgt) {}
+void driveM(uint16_t sens_tgt) {
+    (void)sens_tgt;
+}
 
 //+++++++++++++++++++++++++++++++++++++++++++++++
 // driveSR
@@ -1189,7 +1196,7 @@ void drive_variable_reset(void) {
 // 戻り値：なし
 //+++++++++++++++++++++++++++++++++++++++++++++++
 void drive_enable_motor(void) {
-    // HAL_GPIO_WritePin(MOTOR_STBY_GPIO_Port, MOTOR_STBY_Pin, GPIO_PIN_SET);
+    HAL_GPIO_WritePin(MOTOR_STBY_GPIO_Port, MOTOR_STBY_Pin, GPIO_PIN_SET);
 }
 
 //+++++++++++++++++++++++++++++++++++++++++++++++
@@ -1199,7 +1206,7 @@ void drive_enable_motor(void) {
 // 戻り値：なし
 //+++++++++++++++++++++++++++++++++++++++++++++++
 void drive_disable_motor(void) {
-    // HAL_GPIO_WritePin(MOTOR_STBY_GPIO_Port, MOTOR_STBY_Pin, GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(MOTOR_STBY_GPIO_Port, MOTOR_STBY_Pin, GPIO_PIN_RESET);
 }
 
 //+++++++++++++++++++++++++++++++++++++++++++++++
@@ -1239,28 +1246,24 @@ void drive_set_dir(uint8_t d_dir) {
     switch (d_dir & 0x0f) { // 0~3ビット目を取り出す
     //----正回転----
     case 0x00: // 0x00の場合
-        HAL_GPIO_WritePin(MOTOR_L_CW_GPIO_Port, MOTOR_L_CW_Pin, DIR_FWD_L);
-        HAL_GPIO_WritePin(MOTOR_L_CCW_GPIO_Port, MOTOR_L_CCW_Pin, DIR_BACK_L);
+        HAL_GPIO_WritePin(MOTOR_L_DIR_GPIO_Port, MOTOR_L_DIR_Pin, DIR_FWD_L);
         // 左を前進方向に設定
         break;
     //----逆回転----
     case 0x01: // 0x01の場合
-        HAL_GPIO_WritePin(MOTOR_L_CW_GPIO_Port, MOTOR_L_CW_Pin, DIR_BACK_L);
-        HAL_GPIO_WritePin(MOTOR_L_CCW_GPIO_Port, MOTOR_L_CCW_Pin, DIR_FWD_L);
+        HAL_GPIO_WritePin(MOTOR_L_DIR_GPIO_Port, MOTOR_L_DIR_Pin, DIR_BACK_L);
         // 左を後進方向に設定
         break;
     }
     //====右モータ====
     switch (d_dir & 0xf0) { // 4~7ビット目を取り出す
     case 0x00:              // 0x00の場合
-        HAL_GPIO_WritePin(MOTOR_R_CW_GPIO_Port, MOTOR_R_CW_Pin, DIR_FWD_R);
-        HAL_GPIO_WritePin(MOTOR_R_CCW_GPIO_Port, MOTOR_R_CCW_Pin, DIR_BACK_R);
+        HAL_GPIO_WritePin(MOTOR_R_DIR_GPIO_Port, MOTOR_R_DIR_Pin, DIR_FWD_R);
         // 右を前進方向に設定
         break;
     //----逆回転----
     case 0x10: // 0x01の場合
-        HAL_GPIO_WritePin(MOTOR_R_CW_GPIO_Port, MOTOR_R_CW_Pin, DIR_BACK_R);
-        HAL_GPIO_WritePin(MOTOR_R_CCW_GPIO_Port, MOTOR_R_CCW_Pin, DIR_FWD_R);
+        HAL_GPIO_WritePin(MOTOR_R_DIR_GPIO_Port, MOTOR_R_DIR_Pin, DIR_BACK_R);
         // 右を後進方向に設定
         break;
     }
@@ -1321,15 +1324,14 @@ void drive_motor(void) {
 
     // PWM出力
     if (MF.FLAG.FAILED) {
-        // フェイルセーフ発動の場合，強制的にDuty=0で停止
-        __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_4, 0);
-        __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, 0);
+        // フェイルセーフ発動の場合，強制的に停止
+        drive_enable_motor();
         drive_fan(0);
 
         buzzer_beep(1200);
 
     } else {
-        __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_4, min(out_r, 1000));
+        //__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_4, min(out_r, 1000));
         __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, min(out_l, 1000));
     }
 }
@@ -1426,7 +1428,7 @@ void test_run(void) {
 
             // get_base();
 
-            acceleration_straight = 1000;
+            acceleration_straight = 600;
             acceleration_straight_dash = 0; // 5000
             velocity_turn90 = 300;
             alpha_turn90 = 14000;
@@ -1443,37 +1445,38 @@ void test_run(void) {
             drive_variable_reset();
             IMU_GetOffset();
 
-            // MF.FLAG.GET_LOG_1 = 1;
             MF.FLAG.CTRL = 1;
 
-            log_cnt = 0;
-            MF.FLAG.GET_LOG_1 = 1;
-            half_sectionA(0);
+            // ロギング開始 - 新しいAPIを使用
+            log_init(); // 必要に応じて初期化
+            log_start(HAL_GetTick());
+            
+            // half_sectionA(0);
 
             // turn_R90(0);
-            // rotate_180();
+            rotate_180();
 
-            half_sectionD(0);
-            MF.FLAG.GET_LOG_1 = 0;
+            // half_sectionD(0);
+            log_stop();
 
             drive_stop();
-            // MF.FLAG.GET_LOG_1 = 0;
 
             break;
         case 2:
-            // ログをプリント
-            printf("Mode 4-2 Write Log Data.\n");
-
-            for (int i; i < log_cnt; i++) {
-                printf("%.0f, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f\n",
-                       log_1[i], log_2[i], log_3[i], log_4[i], log_5[i],
-                       log_6[i], log_7[i], log_8[i]);
-            }
+            // 新しいロギングシステムでログを出力
+            printf("Mode 4-2 - ロギングデータの出力\n");
+            log_print_all();
 
             break;
         case 3:
+            // 純粋なCSVデータのみを出力（可視化ツール貼り付け用）
+            printf("Mode 4-3 - CSV形式ログ出力（可視化ツール用）\n");
+            log_print_csv_only();
+
+            break;
+        case 4:
             //----直進----
-            printf("Mode 4-3 straight 2 Sections.\n");
+            printf("Mode 4-4 straight 2 Sections.\n");
 
             // 直線
             acceleration_straight = 1000;
@@ -1497,9 +1500,9 @@ void test_run(void) {
 
             break;
 
-        case 4:
+        case 5:
             //----右旋回----
-            printf("Mode 4-4 Turn R90.\n");
+            printf("Mode 4-5 Turn R90.\n");
 
             // 直線
             acceleration_straight = 444.44;
@@ -1533,9 +1536,9 @@ void test_run(void) {
             drive_stop();
 
             break;
-        case 5:
+        case 6:
             //--------
-            printf("Mode 4-5 Rotate R90.\n");
+            printf("Mode 4-6 Rotate R90.\n");
 
             // 直線
             acceleration_straight = 2722;
@@ -1583,9 +1586,9 @@ void test_run(void) {
             drive_stop();
 
             break;
-        case 6:
+        case 7:
 
-            printf("Mode 4-6.\n");
+            printf("Mode 4-7.\n");
 
             // 直線
             acceleration_straight = 2722;
@@ -1629,9 +1632,9 @@ void test_run(void) {
 
             break;
 
-        case 7:
+        case 8:
 
-            printf("Mode 4-7.\n");
+            printf("Mode 4-8.\n");
 
             // 直線
             acceleration_straight = 2722;

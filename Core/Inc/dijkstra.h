@@ -13,10 +13,10 @@
 #include <stdint.h>
 
 // 区画の壁の情報を表すビットマスク
-#define NORTH_WALL 0b1000 // 北
-#define EAST_WALL 0b0100  // 東
-#define SOUTH_WALL 0b0010 // 南
-#define WEST_WALL 0b0001  // 西
+#define NORTH_WALL 0x8 // 北
+#define EAST_WALL  0x4 // 東
+#define SOUTH_WALL 0x2 // 南
+#define WEST_WALL  0x1 // 西
 
 // #define MAZE_SIZE 8
 // #define START_X 0

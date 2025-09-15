@@ -35,9 +35,9 @@ Core/Src/mode4.o: ../Core/Src/mode4.c ../Core/Inc/global.h \
  ../Core/Inc/dijkstra.h ../Core/Inc/drive.h ../Core/Inc/eeprom.h \
  ../Core/Inc/interrupt.h ../Core/Inc/mode1.h ../Core/Inc/mode2.h \
  ../Core/Inc/mode3.h ../Core/Inc/mode4.h ../Core/Inc/mode5.h \
- ../Core/Inc/path.h ../Core/Inc/run.h ../Core/Inc/search.h \
- ../Core/Inc/sensor.h ../Core/Inc/test_mode.h \
- ../Core/Src/../Inc/shortest_run_params.h \
+ ../Core/Inc/mode6.h ../Core/Inc/mode7.h ../Core/Inc/path.h \
+ ../Core/Inc/run.h ../Core/Inc/search.h ../Core/Inc/sensor.h \
+ ../Core/Inc/test_mode.h ../Core/Src/../Inc/shortest_run_params.h \
  ../Core/Src/../Inc/turn_time_calculator.h \
  ../Core/Src/../Inc/shortest_run_params.h
 ../Core/Inc/global.h:
@@ -86,6 +86,8 @@ Core/Src/mode4.o: ../Core/Src/mode4.c ../Core/Inc/global.h \
 ../Core/Inc/mode3.h:
 ../Core/Inc/mode4.h:
 ../Core/Inc/mode5.h:
+../Core/Inc/mode6.h:
+../Core/Inc/mode7.h:
 ../Core/Inc/path.h:
 ../Core/Inc/run.h:
 ../Core/Inc/search.h:

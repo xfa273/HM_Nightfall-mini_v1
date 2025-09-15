@@ -30,6 +30,9 @@
 #include "mode4.h"
 #include "mode5.h"
 
+/* Some build configurations missed the prototype; ensure it's visible */
+void mode5(void);
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -126,6 +129,9 @@ int main(void)
   /* USER CODE BEGIN 2 */
 
     // setbuf(stdout, NULL); // printf用
+
+    // (disabled) 起動直後のIMU WHO_AM_Iプローブ出力
+    // IMU_ProbeWHOAMI_Debug();
 
     search_init();
 
@@ -546,7 +552,7 @@ static void MX_TIM2_Init(void)
 
   /* USER CODE END TIM2_Init 1 */
   htim2.Instance = TIM2;
-  htim2.Init.Prescaler = 12;
+  htim2.Init.Prescaler = 0;
   htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim2.Init.Period = 1000;
   htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
@@ -861,22 +867,25 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOD_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOC, IR_FL_Pin|IR_L_Pin|IR_FR_Pin|IR_R_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOC, IR_FL_Pin|IR_L_Pin|MOTOR_STBY_Pin|IR_FR_Pin
+                          |IR_R_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(LED_3_GPIO_Port, LED_3_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, MOTOR_L_CW_Pin|MOTOR_L_CCW_Pin|IR_FRA12_Pin|LED_1_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, MOTOR_L_DIR_Pin|IR_FRA12_Pin|LED_1_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, MOTOR_R_CW_Pin|MOTOR_R_CCW_Pin|LED_2_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, MOTOR_R_DIR_Pin|LED_2_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(CS_GPIO_Port, CS_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pins : IR_FL_Pin IR_L_Pin IR_FR_Pin IR_R_Pin */
-  GPIO_InitStruct.Pin = IR_FL_Pin|IR_L_Pin|IR_FR_Pin|IR_R_Pin;
+  /*Configure GPIO pins : IR_FL_Pin IR_L_Pin MOTOR_STBY_Pin IR_FR_Pin
+                           IR_R_Pin */
+  GPIO_InitStruct.Pin = IR_FL_Pin|IR_L_Pin|MOTOR_STBY_Pin|IR_FR_Pin
+                          |IR_R_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
@@ -895,15 +904,15 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(PUSH_IN_1_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : MOTOR_L_CW_Pin MOTOR_L_CCW_Pin LED_1_Pin */
-  GPIO_InitStruct.Pin = MOTOR_L_CW_Pin|MOTOR_L_CCW_Pin|LED_1_Pin;
+  /*Configure GPIO pins : MOTOR_L_DIR_Pin LED_1_Pin */
+  GPIO_InitStruct.Pin = MOTOR_L_DIR_Pin|LED_1_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : MOTOR_R_CW_Pin MOTOR_R_CCW_Pin LED_2_Pin */
-  GPIO_InitStruct.Pin = MOTOR_R_CW_Pin|MOTOR_R_CCW_Pin|LED_2_Pin;
+  /*Configure GPIO pins : MOTOR_R_DIR_Pin LED_2_Pin */
+  GPIO_InitStruct.Pin = MOTOR_R_DIR_Pin|LED_2_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;

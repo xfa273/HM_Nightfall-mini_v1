@@ -435,8 +435,6 @@ void mode6() {
 
         case 8:
 
-            break;
-
             // 経路の重み
             straight_weight = 3; // 直線の優先度
             diagonal_weight = 0; // 斜めの優先度
@@ -487,6 +485,8 @@ void mode6() {
             drive_fan(0);
 
             led_wait();
+
+            break;
 
         case 9:
 

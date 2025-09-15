@@ -35,9 +35,11 @@ Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
  ../Core/Inc/auxiliary.h ../Core/Inc/control.h ../Core/Inc/dijkstra.h \
  ../Core/Inc/drive.h ../Core/Inc/eeprom.h ../Core/Inc/interrupt.h \
  ../Core/Inc/mode1.h ../Core/Inc/mode2.h ../Core/Inc/mode3.h \
- ../Core/Inc/mode4.h ../Core/Inc/mode5.h ../Core/Inc/path.h \
- ../Core/Inc/run.h ../Core/Inc/search.h ../Core/Inc/sensor.h \
- ../Core/Inc/test_mode.h
+ ../Core/Inc/mode4.h ../Core/Inc/mode5.h ../Core/Inc/mode6.h \
+ ../Core/Inc/mode7.h ../Core/Inc/path.h ../Core/Inc/run.h \
+ ../Core/Inc/search.h ../Core/Inc/sensor.h ../Core/Inc/test_mode.h \
+ ../Core/Inc/mode2.h ../Core/Inc/mode3.h ../Core/Inc/mode4.h \
+ ../Core/Inc/mode5.h
 ../Core/Inc/main.h:
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h:
 ../Core/Inc/stm32f4xx_hal_conf.h:
@@ -85,8 +87,14 @@ Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
 ../Core/Inc/mode3.h:
 ../Core/Inc/mode4.h:
 ../Core/Inc/mode5.h:
+../Core/Inc/mode6.h:
+../Core/Inc/mode7.h:
 ../Core/Inc/path.h:
 ../Core/Inc/run.h:
 ../Core/Inc/search.h:
 ../Core/Inc/sensor.h:
 ../Core/Inc/test_mode.h:
+../Core/Inc/mode2.h:
+../Core/Inc/mode3.h:
+../Core/Inc/mode4.h:
+../Core/Inc/mode5.h:

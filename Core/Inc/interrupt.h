@@ -8,34 +8,49 @@
 #ifndef INC_INTERRUPT_H_
 #define INC_INTERRUPT_H_
 
-void tim1_wait_us(uint32_t);
+#include "main.h"
+#include <stdint.h>
 
-#endif /* INC_INTERRUPT_H_ */
+// New logging system - define max log entries and structure
+#define MAX_LOG_ENTRIES 1000
+
+// Log data structure for collecting control and sensor data
+typedef struct {
+    uint16_t count;          // Sample count/index
+    float target_omega;      // Target angular velocity
+    float actual_omega;      // Actual angular velocity
+    float p_term_omega;      // P-term of angular velocity control
+    float i_term_omega;      // I-term of angular velocity control
+    float d_term_omega;      // D-term of angular velocity control
+    float motor_out_r;       // Right motor output
+    float motor_out_l;       // Left motor output
+    uint32_t timestamp;      // Timestamp (ms)
+} LogEntry;
+
+// Circular buffer for log data
+typedef struct {
+    LogEntry entries[MAX_LOG_ENTRIES];
+    uint16_t head;           // Next position to write
+    uint16_t count;          // Number of valid entries
+    uint8_t logging_active;  // Flag indicating if logging is active
+    uint32_t start_time;     // Timestamp when logging started
+} LogBuffer;
+
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim);
+void wait_ms(int time);
+void wait_ms_non_block(int time);
+int check_ms_passed(int time);
+void wait_us(int time);
+void tim1_wait_us(uint32_t us);
 
 #ifdef MAIN_C_ // main.cからこのファイルが呼ばれている場合
 volatile uint8_t ADC_task_counter; // ADCの振り分け用カウンタ
-
-volatile float log_1[1000]; // ログ(1)
-volatile float log_2[1000]; // ログ(2)
-volatile float log_3[1000]; // ログ(3)
-volatile float log_4[1000]; // ログ(4)
-volatile float log_5[1000]; // ログ(5)
-volatile float log_6[1000]; // ログ(6)
-volatile float log_7[1000]; // ログ(7)
-volatile float log_8[1000]; // ログ(8)
-volatile uint16_t log_cnt;
+volatile LogBuffer log_buffer;
 
 #else // main.c以外からこのファイルが呼ばれている場合
 extern volatile uint8_t ADC_task_counter; // ADCの振り分け用カウンタ
-
-extern volatile float log_1[1000]; // ログ(1)
-extern volatile float log_2[1000]; // ログ(2)
-extern volatile float log_3[1000]; // ログ(3)
-extern volatile float log_4[1000]; // ログ(4)
-extern volatile float log_5[1000]; // ログ(5)
-extern volatile float log_6[1000]; // ログ(6)
-extern volatile float log_7[1000]; // ログ(7)
-extern volatile float log_8[1000]; // ログ(8)
-extern volatile uint16_t log_cnt;
+extern volatile LogBuffer log_buffer;
 
 #endif
+
+#endif /* INC_INTERRUPT_H_ */

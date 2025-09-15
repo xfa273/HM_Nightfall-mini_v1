@@ -6,6 +6,8 @@
 #include "turn_time_calculator.h"
 #include <stdio.h>
 #include <stdlib.h>    // abs
+#include <string.h>
+#include <math.h>
 
 /**
  * @brief ターン走行の所要時間を計算する
@@ -127,7 +129,9 @@ float calculate_straight_time(int section_count, float velocity, float accelerat
         float t_constant = d_constant / velocity; // 等速時間 [s]
         total_time = 2.0f * t_acc + t_constant;
     }
-    
+    // 計算確認のために残しているが、現状では未使用
+    (void)max_reached_speed;
+
     return total_time;
 }
 
