@@ -1244,21 +1244,8 @@ void drive_enable_motor(void) {
 // 戻り値：なし
 //+++++++++++++++++++++++++++++++++++++++++++++++
 void drive_disable_motor(void) {
-    // 停止時は IN1==IN2 となるアイドルにしてからSTBYを落とす
-    s_outputs_locked = 1;
-    const uint32_t arr = __HAL_TIM_GET_AUTORELOAD(&htim2);
-    __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, s_dir_pin_high_l ? arr : 0u);
-    __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_4, s_dir_pin_high_r ? arr : 0u);
+    // Nightfall-Lite(TB6612) と同じ挙動: STBY を無効化するだけ
     HAL_GPIO_WritePin(MOTOR_STBY_GPIO_Port, MOTOR_STBY_Pin, GPIO_PIN_RESET);
-    HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_1);
-    HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_4);
-
-    // ブースト管理をリセット
-    s_prev_cmd_l = 0;
-    s_prev_cmd_r = 0;
-    s_boost_until_ms_l = 0;
-    s_boost_until_ms_r = 0;
-    s_outputs_locked = 0;
 }
 
 //+++++++++++++++++++++++++++++++++++++++++++++++
@@ -1281,16 +1268,9 @@ void drive_start(void) {
 // 戻り値：なし
 //+++++++++++++++++++++++++++++++++++++++++++++++
 void drive_stop(void) {
-    // 停止前に IN1==IN2 となる安全なアイドルを設定
-    s_outputs_locked = 1;
-    const uint32_t arr = __HAL_TIM_GET_AUTORELOAD(&htim2);
-    uint32_t idle_ccr_l = s_dir_pin_high_l ? arr : 0u;
-    uint32_t idle_ccr_r = s_dir_pin_high_r ? arr : 0u;
-    __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, idle_ccr_l);
-    __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_4, idle_ccr_r);
+    // Nightfall-Lite(TB6612) と同じ挙動: PWM停止のみ
     HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_4);
     HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_1);
-    s_outputs_locked = 0;
 }
 
 //+++++++++++++++++++++++++++++++++++++++++++++++
@@ -1664,8 +1644,8 @@ void test_run(void) {
             half_sectionA(0);
             half_sectionD(0);
 
-            led_flash(5);
             drive_stop();
+            led_flash(5);
 
             break;
 
