@@ -7,6 +7,11 @@
 
 #include "global.h"
 
+// drive.c と同じ条件でPWM反転するための定義（DIR==Lowで反転が既定）
+#ifndef PWM_INVERT_DIR_LEVEL
+#define PWM_INVERT_DIR_LEVEL 0
+#endif
+
 void test_mode() {
 
     int mode = 0;
@@ -96,27 +101,76 @@ void test_mode() {
 
             drive_start();
 
-            drive_fan(1000);
+            drive_fan(0);
 
             break;
         case 5:
-            printf("Test Mode 5: Motor Test.\n");
-            
-            drive_start();
+            printf("Test Mode 5: Motor Sequence (DIR x DUTY, BOTH wheels, 2s each).\n");
+
+            // 割り込み内の速度制御・drive_motor()呼び出しを無視
+            MF.FLAG.OVERRIDE = 1;
+
+            // モータドライバを有効化（STBYを上げ、PWMを開始）
+            drive_enable_motor();
+
+            // シーケンス条件（両輪のみ）
+            const uint8_t dirs[2] = {FORWARD, BACK};
+            const uint8_t duty_pct_list[3] = {10, 30, 60};
 
             while (1) {
+                for (uint8_t di = 0; di < 2; di++) {
+                    uint8_t dir_code = dirs[di];
 
-                __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_4, 300); // 右モーター
-                __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, 300); // 左モーター
-             
-                HAL_Delay(1000);
+                    // 安全のため一旦アイドルへ（IN1==IN2）
+                    uint32_t arr_idle = __HAL_TIM_GET_AUTORELOAD(&htim2);
+                    GPIO_PinState cur_dir_l = HAL_GPIO_ReadPin(MOTOR_L_DIR_GPIO_Port, MOTOR_L_DIR_Pin);
+                    GPIO_PinState cur_dir_r = HAL_GPIO_ReadPin(MOTOR_R_DIR_GPIO_Port, MOTOR_R_DIR_Pin);
+                    __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, (cur_dir_l == GPIO_PIN_SET) ? arr_idle : 0u);
+                    __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_4, (cur_dir_r == GPIO_PIN_SET) ? arr_idle : 0u);
+                    HAL_Delay(20);
 
-                __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_4, 0); // 右モーター
-                __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, 0); // 左モーター
-             
-                HAL_Delay(1000);
+                    // 進行方向を設定
+                    drive_set_dir(dir_code);
+                    HAL_Delay(20);
+
+                    for (uint8_t pi = 0; pi < 3; pi++) {
+                        uint8_t duty_pct = duty_pct_list[pi];
+
+                            const uint32_t arr = __HAL_TIM_GET_AUTORELOAD(&htim2);
+                            uint32_t duty_counts = (arr * (uint32_t)duty_pct) / 100u;
+                            if (duty_counts == 0) duty_counts = 1;
+                            if (duty_counts >= arr) duty_counts = arr - 1u;
+
+                            // DIR実レベル読み取り（アイドル設定に使用）
+                            GPIO_PinState dir_l = HAL_GPIO_ReadPin(MOTOR_L_DIR_GPIO_Port, MOTOR_L_DIR_Pin);
+                            GPIO_PinState dir_r = HAL_GPIO_ReadPin(MOTOR_R_DIR_GPIO_Port, MOTOR_R_DIR_Pin);
+                            uint8_t dir_high_l = (dir_l == GPIO_PIN_SET) ? 1 : 0;
+                            uint8_t dir_high_r = (dir_r == GPIO_PIN_SET) ? 1 : 0;
+
+                            // 実機挙動: DIRピンがHighのときは実効Dutyが「逆数」になる
+                            // → DIR==High の側は CCR = ARR - duty_counts（Low期間がduty%）
+                            // → DIR==Low  の側は CCR = duty_counts
+                            uint32_t ccr_l = 0, ccr_r = 0;
+                            ccr_l = dir_high_l ? (arr - duty_counts) : duty_counts;
+                            ccr_r = dir_high_r ? (arr - duty_counts) : duty_counts;
+
+                            __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, ccr_l);
+                            __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_4, ccr_r);
+
+                            // 進行状況を出力
+                            const char *dir_str = (dir_code == FORWARD) ? "FWD" : "BACK";
+                            const char *side_str = "BOTH";
+                            printf("[DIR=%s][SIDE=%s][DUTY=%u%%] CCR_L=%lu, CCR_R=%lu (ARR=%lu)\n",
+                                   dir_str, side_str, (unsigned)duty_pct,
+                                   (unsigned long)ccr_l, (unsigned long)ccr_r, (unsigned long)arr);
+
+                            // 2秒維持
+                            HAL_Delay(2000);
+                    }
+                }
             }
-            
+
+            // breakには到達しない
             break;
         case 6:
 

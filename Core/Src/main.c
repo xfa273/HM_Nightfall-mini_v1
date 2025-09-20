@@ -133,17 +133,19 @@ int main(void)
     // (disabled) 起動直後のIMU WHO_AM_Iプローブ出力
     // IMU_ProbeWHOAMI_Debug();
 
-    search_init();
-
-    sensor_init();
-
-    drive_init();
-
+    // 起動メッセージとブザー（初期化で万一詰まっても起動を可視化）
     printf("Micro Mouse Nightfall-mini 2025 !?\n");
     for (uint16_t i = 1100; i > 300; i -= 150)
     {
         buzzer_beep(i);
     }
+
+    // 以降の初期化
+    search_init();
+
+    sensor_init();
+
+    drive_init();
 
     int mode = 0;
 

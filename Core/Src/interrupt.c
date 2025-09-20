@@ -157,7 +157,19 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 // 戻り値：無し
 //+++++++++++++++++++++++++++++++++++++++++++++++
 void tim1_wait_us(uint32_t us) {
-    uint32_t dest = __HAL_TIM_GET_COUNTER(&htim1) + us;
-    while (__HAL_TIM_GET_COUNTER(&htim1) < dest)
-        ;
+    // TIM1 を 1us タイマとして使用（TIM5 ISR 内での待ち時間測定に同一タイマを使わない）
+    // sensor_init() で HAL_TIM_Base_Start_IT(&htim1) 済みである前提
+    const uint32_t arr = __HAL_TIM_GET_AUTORELOAD(&htim1); // 例: 1000（0..ARRでカウント）
+    uint32_t start = __HAL_TIM_GET_COUNTER(&htim1);
+
+    uint32_t elapsed = 0;
+    while (elapsed < us) {
+        uint32_t now = __HAL_TIM_GET_COUNTER(&htim1);
+        if (now >= start) {
+            elapsed = now - start;
+        } else {
+            // ARR を跨いだ場合の経過時間
+            elapsed = (arr + 1u - start) + now;
+        }
+    }
 }

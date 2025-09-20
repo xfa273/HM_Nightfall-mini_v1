@@ -443,16 +443,22 @@ void get_sensor_offsets(void) {
     for (i = 0; i < NUM_SAMPLES; i++) {
         // ADCタスクカウンタが一周するのを待つ（センサ値が更新されるのを待つ）
         uint8_t current_counter = ADC_task_counter;
+        uint32_t t0 = HAL_GetTick();
         while (current_counter == ADC_task_counter) {
             HAL_Delay(1);
+            if ((HAL_GetTick() - t0) > 200) {
+                // タイムアウト: 割り込みがまだ動いていない/停止している可能性
+                // 既存値で継続（起動ハングを回避）
+                break;
+            }
         }
-        
+
         // LEDが発光しているときのオフセット値（壁なしでも受光する光量）を加算
         sum_r += ad_r_raw;  // LEDが発光しているときの受光量
         sum_l += ad_l_raw;
         sum_fr += ad_fr_raw;
         sum_fl += ad_fl_raw;
-        
+
         HAL_Delay(10); // 少し待機して次のサンプルを取得
     }
     

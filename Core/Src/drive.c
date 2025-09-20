@@ -14,6 +14,35 @@
 #include "logging.h"
 #include <math.h>
 
+// ==== Motor control params (sign-magnitude) ====
+// 周波数は TIM 設定に従う（本実装では変更しない）
+// ARR はランタイムで読み出して使用する（__HAL_TIM_GET_AUTORELOAD）
+#ifndef PWM_INVERT_DIR_LEVEL
+#define PWM_INVERT_DIR_LEVEL 1  // DIR がこのレベルのとき PWM を反転（0:Lowで反転, 1:Highで反転）
+#endif
+#ifndef MOTOR_MIN_DUTY_PCT
+#define MOTOR_MIN_DUTY_PCT 0    // デッドゾーン除去用の最低デューティ[%]
+#endif
+#ifndef MOTOR_BOOST_DUTY_PCT
+#define MOTOR_BOOST_DUTY_PCT 0  // 起動ブーストのデューティ[%]
+#endif
+#ifndef MOTOR_BOOST_TIME_MS
+#define MOTOR_BOOST_TIME_MS 0   // 起動ブースト時間[ms]
+#endif
+
+// 起動検出・ブースト管理用のローカル状態
+static uint16_t s_prev_cmd_l = 0;
+static uint16_t s_prev_cmd_r = 0;
+static uint32_t s_boost_until_ms_l = 0;
+static uint32_t s_boost_until_ms_r = 0;
+
+// 現在のDIRピンレベル（High/Low）を保持
+static uint8_t s_dir_pin_high_l = 0; // 0:Low, 1:High
+static uint8_t s_dir_pin_high_r = 0; // 0:Low, 1:High
+
+// CCR更新抑止フラグ：有効化/無効化シーケンス中の微小回転を防止
+static volatile uint8_t s_outputs_locked = 0;
+
 /*==========================================================
     走行系 上位関数
 ==========================================================*/
@@ -72,6 +101,12 @@ void half_sectionA(uint16_t val) {
 
     if (val == 1) {
         get_wall_info();
+    }
+    // ロック中にDIRが変わった場合でも、IN1==IN2 を維持
+    if (s_outputs_locked) {
+        const uint32_t arr = __HAL_TIM_GET_AUTORELOAD(&htim2);
+        __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, s_dir_pin_high_l ? arr : 0u);
+        __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_4, s_dir_pin_high_r ? arr : 0u);
     }
 }
 
@@ -1196,7 +1231,40 @@ void drive_variable_reset(void) {
 // 戻り値：なし
 //+++++++++++++++++++++++++++++++++++++++++++++++
 void drive_enable_motor(void) {
+    // 現在のDIRピンレベルを取得（起動直後でも正しいアイドルを出すため）
+    GPIO_PinState dir_l = HAL_GPIO_ReadPin(MOTOR_L_DIR_GPIO_Port, MOTOR_L_DIR_Pin);
+    GPIO_PinState dir_r = HAL_GPIO_ReadPin(MOTOR_R_DIR_GPIO_Port, MOTOR_R_DIR_Pin);
+    s_dir_pin_high_l = (dir_l == GPIO_PIN_SET) ? 1 : 0;
+    s_dir_pin_high_r = (dir_r == GPIO_PIN_SET) ? 1 : 0;
+
+    const uint32_t arr = __HAL_TIM_GET_AUTORELOAD(&htim2);
+    // 1) CCR更新をロックし、IN1==IN2となるアイドル(ブレーキ or コースト)に合わせてからPWM開始
+    s_outputs_locked = 1;
+    uint32_t idle_ccr_l = s_dir_pin_high_l ? arr : 0u;
+    uint32_t idle_ccr_r = s_dir_pin_high_r ? arr : 0u;
+    __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, idle_ccr_l);
+    __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_4, idle_ccr_r);
+    __HAL_TIM_SET_COUNTER(&htim2, 0);
+    HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
+    HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_4);
+
+    // PWMピンを安定させるため、ごく短い安定待ち（タイマ更新・AF出力の定常化）
+    tim1_wait_us(100);
+
+    // 2) STBYを有効化
     HAL_GPIO_WritePin(MOTOR_STBY_GPIO_Port, MOTOR_STBY_Pin, GPIO_PIN_SET);
+
+    // ドライバ内部の有効化安定待ち
+    tim1_wait_us(100);
+
+    // 3) ブースト管理をリセット
+    s_prev_cmd_l = 0;
+    s_prev_cmd_r = 0;
+    s_boost_until_ms_l = 0;
+    s_boost_until_ms_r = 0;
+
+    // 4) 解錠（以降はdrive_motorが通常更新。停止中はduty=0なのでCoast維持）
+    s_outputs_locked = 0;
 }
 
 //+++++++++++++++++++++++++++++++++++++++++++++++
@@ -1206,7 +1274,21 @@ void drive_enable_motor(void) {
 // 戻り値：なし
 //+++++++++++++++++++++++++++++++++++++++++++++++
 void drive_disable_motor(void) {
+    // 停止時は IN1==IN2 となるアイドルにしてからSTBYを落とす
+    s_outputs_locked = 1;
+    const uint32_t arr = __HAL_TIM_GET_AUTORELOAD(&htim2);
+    __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, s_dir_pin_high_l ? arr : 0u);
+    __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_4, s_dir_pin_high_r ? arr : 0u);
     HAL_GPIO_WritePin(MOTOR_STBY_GPIO_Port, MOTOR_STBY_Pin, GPIO_PIN_RESET);
+    HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_1);
+    HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_4);
+
+    // ブースト管理をリセット
+    s_prev_cmd_l = 0;
+    s_prev_cmd_r = 0;
+    s_boost_until_ms_l = 0;
+    s_boost_until_ms_r = 0;
+    s_outputs_locked = 0;
 }
 
 //+++++++++++++++++++++++++++++++++++++++++++++++
@@ -1229,8 +1311,16 @@ void drive_start(void) {
 // 戻り値：なし
 //+++++++++++++++++++++++++++++++++++++++++++++++
 void drive_stop(void) {
+    // 停止前に IN1==IN2 となる安全なアイドルを設定
+    s_outputs_locked = 1;
+    const uint32_t arr = __HAL_TIM_GET_AUTORELOAD(&htim2);
+    uint32_t idle_ccr_l = s_dir_pin_high_l ? arr : 0u;
+    uint32_t idle_ccr_r = s_dir_pin_high_r ? arr : 0u;
+    __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, idle_ccr_l);
+    __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_4, idle_ccr_r);
     HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_4);
     HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_1);
+    s_outputs_locked = 0;
 }
 
 //+++++++++++++++++++++++++++++++++++++++++++++++
@@ -1247,11 +1337,13 @@ void drive_set_dir(uint8_t d_dir) {
     //----正回転----
     case 0x00: // 0x00の場合
         HAL_GPIO_WritePin(MOTOR_L_DIR_GPIO_Port, MOTOR_L_DIR_Pin, DIR_FWD_L);
+        s_dir_pin_high_l = (DIR_FWD_L == GPIO_PIN_SET) ? 1 : 0;
         // 左を前進方向に設定
         break;
     //----逆回転----
     case 0x01: // 0x01の場合
         HAL_GPIO_WritePin(MOTOR_L_DIR_GPIO_Port, MOTOR_L_DIR_Pin, DIR_BACK_L);
+        s_dir_pin_high_l = (DIR_BACK_L == GPIO_PIN_SET) ? 1 : 0;
         // 左を後進方向に設定
         break;
     }
@@ -1259,11 +1351,13 @@ void drive_set_dir(uint8_t d_dir) {
     switch (d_dir & 0xf0) { // 4~7ビット目を取り出す
     case 0x00:              // 0x00の場合
         HAL_GPIO_WritePin(MOTOR_R_DIR_GPIO_Port, MOTOR_R_DIR_Pin, DIR_FWD_R);
+        s_dir_pin_high_r = (DIR_FWD_R == GPIO_PIN_SET) ? 1 : 0;
         // 右を前進方向に設定
         break;
     //----逆回転----
     case 0x10: // 0x01の場合
         HAL_GPIO_WritePin(MOTOR_R_DIR_GPIO_Port, MOTOR_R_DIR_Pin, DIR_BACK_R);
+        s_dir_pin_high_r = (DIR_BACK_R == GPIO_PIN_SET) ? 1 : 0;
         // 右を後進方向に設定
         break;
     }
@@ -1276,6 +1370,13 @@ void drive_set_dir(uint8_t d_dir) {
 // 戻り値：なし
 //+++++++++++++++++++++++++++++++++++++++++++++++
 void drive_motor(void) {
+    // 有効化/停止シーケンス中はCCR更新を抑止し、IN1==IN2のアイドルを維持
+    if (s_outputs_locked) {
+        const uint32_t arr = __HAL_TIM_GET_AUTORELOAD(&htim2);
+        __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, s_dir_pin_high_l ? arr : 0u);
+        __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_4, s_dir_pin_high_r ? arr : 0u);
+        return;
+    }
 
     // 並進と回転の出力を合算
     out_r = out_translation - out_rotate;
@@ -1307,12 +1408,13 @@ void drive_motor(void) {
         fail_count_acc = 0;
     }
 
-    // 左右モータの回転方向の指定
+    // 左右モータの回転方向の指定（sign-magnitude）
+    // DIR ピンで方向を出し、PWM は常に High アクティブのまま使用する
     if (out_r >= 0 && out_l >= 0) {
         drive_set_dir(0x00);
     } else if (out_r >= 0 && out_l < 0) {
         drive_set_dir(0x01);
-        out_l = -out_l;
+        out_l = -out_l; // duty 計算用に絶対値へ
     } else if (out_r < 0 && out_l >= 0) {
         drive_set_dir(0x10);
         out_r = -out_r;
@@ -1324,15 +1426,71 @@ void drive_motor(void) {
 
     // PWM出力
     if (MF.FLAG.FAILED) {
-        // フェイルセーフ発動の場合，強制的に停止
-        drive_enable_motor();
+        // フェイルセーフ発動の場合，強制停止（PWM=0 ＋ STBY=Low）
+        __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, 0);
+        __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_4, 0);
+        drive_disable_motor();
         drive_fan(0);
 
         buzzer_beep(1200);
 
     } else {
-        //__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_4, min(out_r, 1000));
-        __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, min(out_l, 1000));
+        // TIM2 の ARR を取得（0..ARR のカウント幅）
+        const uint32_t arr = __HAL_TIM_GET_AUTORELOAD(&htim2);
+        const uint16_t min_counts = (uint16_t)((arr * MOTOR_MIN_DUTY_PCT) / 100u);
+        const uint16_t boost_counts = (uint16_t)((arr * MOTOR_BOOST_DUTY_PCT) / 100u);
+
+        // コマンド（0..ARR）へクリップ
+        uint16_t cmd_l = (uint16_t)fminf(fabsf(out_l), (float)arr);
+        uint16_t cmd_r = (uint16_t)fminf(fabsf(out_r), (float)arr);
+
+        // 最小デューティ補償（非ゼロの場合のみ）
+        if (cmd_l > 0 && cmd_l < min_counts) cmd_l = min_counts;
+        if (cmd_r > 0 && cmd_r < min_counts) cmd_r = min_counts;
+
+        // 起動ブースト（停止 -> 非ゼロの立上りで一定時間ブースト）
+        const uint32_t now = HAL_GetTick();
+        if (s_prev_cmd_l == 0 && cmd_l > 0) {
+            s_boost_until_ms_l = now + MOTOR_BOOST_TIME_MS;
+        }
+        if (s_prev_cmd_r == 0 && cmd_r > 0) {
+            s_boost_until_ms_r = now + MOTOR_BOOST_TIME_MS;
+        }
+        if (cmd_l > 0 && now < s_boost_until_ms_l && boost_counts > cmd_l) {
+            cmd_l = boost_counts;
+        }
+        if (cmd_r > 0 && now < s_boost_until_ms_r && boost_counts > cmd_r) {
+            cmd_r = boost_counts;
+        }
+
+        // デューティ適用（DIRが反転対象レベルのとき PWM反転）
+        uint32_t ccr_l;
+        uint32_t ccr_r;
+        const uint32_t arr_apply = arr;
+        uint8_t invert_active_l = ((s_dir_pin_high_l ? 1 : 0) == PWM_INVERT_DIR_LEVEL);
+        uint8_t invert_active_r = ((s_dir_pin_high_r ? 1 : 0) == PWM_INVERT_DIR_LEVEL);
+        if (cmd_l == 0) {
+            ccr_l = s_dir_pin_high_l ? arr_apply : 0u; // アイドルはIN1==IN2
+        } else if (invert_active_l) {
+            ccr_l = arr_apply - cmd_l;
+        } else {
+            ccr_l = cmd_l;
+        }
+
+        if (cmd_r == 0) {
+            ccr_r = s_dir_pin_high_r ? arr_apply : 0u; // アイドルはIN1==IN2
+        } else if (invert_active_r) {
+            ccr_r = arr_apply - cmd_r;
+        } else {
+            ccr_r = cmd_r;
+        }
+
+        __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, ccr_l);
+        __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_4, ccr_r);
+
+        // 次回用の履歴
+        s_prev_cmd_l = cmd_l;
+        s_prev_cmd_r = cmd_r;
     }
 }
 
@@ -1384,26 +1542,29 @@ void test_run(void) {
             printf("Mode 4-0 Set Position.\n");
 
             // 直線
-            acceleration_straight = 2722;
+            acceleration_straight = 2777.778;
             acceleration_straight_dash = 3000; // 5000
+            velocity_straight = 500;
             // ターン
-            velocity_turn90 = 700;
-            alpha_turn90 = 11300;
+            velocity_turn90 = 300;
+            alpha_turn90 = 12800;
             acceleration_turn = 0;
-            dist_offset_in = 10;
-            dist_offset_out = 33.5;
-            val_offset_in = 1500; // 1790
-            angle_turn_90 = 90;
+            dist_offset_in = 14;
+            dist_offset_out = 18; // 32
+            val_offset_in = 2000;
+            angle_turn_90 = 89.5;
             // 90°大回りターン
-            velocity_l_turn_90 = 700;
-            alpha_l_turn_90 = 2030;
-            angle_l_turn_90 = 90;
-            dist_l_turn_out_90 = 34;
+            velocity_l_turn_90 = 500;
+            alpha_l_turn_90 = 4100;
+            angle_l_turn_90 = 89.0;
+            dist_l_turn_out_90 = 10;
             // 180°大回りターン
-            velocity_l_turn_180 = 700;
-            alpha_l_turn_180 = 2000;
+            velocity_l_turn_180 = 450;
+            alpha_l_turn_180 = 3600;
             angle_l_turn_180 = 180;
-            dist_l_turn_out_180 = 45;
+            dist_l_turn_out_180 = 17;
+            // 壁切れ後の距離
+            dist_wall_end = 0;
             // 壁制御とケツ当て
             kp_wall = 0.05;
             duty_setposition = 40;
@@ -1428,16 +1589,32 @@ void test_run(void) {
 
             // get_base();
 
-            acceleration_straight = 600;
-            acceleration_straight_dash = 0; // 5000
+            // 直線
+            acceleration_straight = 2777.778;
+            acceleration_straight_dash = 3000; // 5000
+            velocity_straight = 500;
+            // ターン
             velocity_turn90 = 300;
-            alpha_turn90 = 14000;
+            alpha_turn90 = 12800;
             acceleration_turn = 0;
-            dist_offset_in = 20;
-            dist_offset_out = 34;
-            val_offset_in = 1700; // 1790
-            angle_turn_90 = 90;
-            kp_wall = 0.0;
+            dist_offset_in = 14;
+            dist_offset_out = 18; // 32
+            val_offset_in = 2000;
+            angle_turn_90 = 89.5;
+            // 90°大回りターン
+            velocity_l_turn_90 = 500;
+            alpha_l_turn_90 = 4100;
+            angle_l_turn_90 = 89.0;
+            dist_l_turn_out_90 = 10;
+            // 180°大回りターン
+            velocity_l_turn_180 = 450;
+            alpha_l_turn_180 = 3600;
+            angle_l_turn_180 = 180;
+            dist_l_turn_out_180 = 17;
+            // 壁切れ後の距離
+            dist_wall_end = 0;
+            // 壁制御とケツ当て
+            kp_wall = 0.05;
             duty_setposition = 40;
 
             velocity_interrupt = 0;
@@ -1451,12 +1628,12 @@ void test_run(void) {
             log_init(); // 必要に応じて初期化
             log_start(HAL_GetTick());
             
-            // half_sectionA(0);
+            half_sectionA(0);
 
             // turn_R90(0);
-            rotate_180();
+            // rotate_180();
 
-            // half_sectionD(0);
+            half_sectionD(0);
             log_stop();
 
             drive_stop();
@@ -1479,7 +1656,29 @@ void test_run(void) {
             printf("Mode 4-4 straight 2 Sections.\n");
 
             // 直線
-            acceleration_straight = 1000;
+            acceleration_straight = 2777.778;
+            acceleration_straight_dash = 3000; // 5000
+            velocity_straight = 500;
+            // ターン
+            velocity_turn90 = 300;
+            alpha_turn90 = 12800;
+            acceleration_turn = 0;
+            dist_offset_in = 14;
+            dist_offset_out = 18; // 32
+            val_offset_in = 2000;
+            angle_turn_90 = 89.5;
+            // 90°大回りターン
+            velocity_l_turn_90 = 500;
+            alpha_l_turn_90 = 4100;
+            angle_l_turn_90 = 89.0;
+            dist_l_turn_out_90 = 10;
+            // 180°大回りターン
+            velocity_l_turn_180 = 450;
+            alpha_l_turn_180 = 3600;
+            angle_l_turn_180 = 180;
+            dist_l_turn_out_180 = 17;
+            // 壁切れ後の距離
+            dist_wall_end = 0;
             // 壁制御とケツ当て
             kp_wall = 0.05;
             duty_setposition = 40;
@@ -1505,16 +1704,29 @@ void test_run(void) {
             printf("Mode 4-5 Turn R90.\n");
 
             // 直線
-            acceleration_straight = 444.44;
-            acceleration_straight_dash = 444.44; // 5000
+            acceleration_straight = 2777.778;
+            acceleration_straight_dash = 3000; // 5000
+            velocity_straight = 500;
             // ターン
             velocity_turn90 = 300;
-            alpha_turn90 = 11500;
+            alpha_turn90 = 12800;
             acceleration_turn = 0;
-            dist_offset_in = 10;
-            dist_offset_out = 39;
-            val_offset_in = 500;
-            angle_turn_90 = 86.7;
+            dist_offset_in = 14;
+            dist_offset_out = 18; // 32
+            val_offset_in = 2000;
+            angle_turn_90 = 89.5;
+            // 90°大回りターン
+            velocity_l_turn_90 = 500;
+            alpha_l_turn_90 = 4100;
+            angle_l_turn_90 = 89.0;
+            dist_l_turn_out_90 = 10;
+            // 180°大回りターン
+            velocity_l_turn_180 = 450;
+            alpha_l_turn_180 = 3600;
+            angle_l_turn_180 = 180;
+            dist_l_turn_out_180 = 17;
+            // 壁切れ後の距離
+            dist_wall_end = 0;
             // 壁制御とケツ当て
             kp_wall = 0.05;
             duty_setposition = 40;
@@ -1541,26 +1753,29 @@ void test_run(void) {
             printf("Mode 4-6 Rotate R90.\n");
 
             // 直線
-            acceleration_straight = 2722;
+            acceleration_straight = 2777.778;
             acceleration_straight_dash = 3000; // 5000
+            velocity_straight = 500;
             // ターン
-            velocity_turn90 = 700;
-            alpha_turn90 = 11500;
+            velocity_turn90 = 300;
+            alpha_turn90 = 12800;
             acceleration_turn = 0;
-            dist_offset_in = 10;
-            dist_offset_out = 39;
-            val_offset_in = 680;
-            angle_turn_90 = 86.7;
+            dist_offset_in = 14;
+            dist_offset_out = 18; // 32
+            val_offset_in = 2000;
+            angle_turn_90 = 89.5;
             // 90°大回りターン
-            velocity_l_turn_90 = 700;
-            alpha_l_turn_90 = 2030;
-            angle_l_turn_90 = 89.6;
-            dist_l_turn_out_90 = 40;
+            velocity_l_turn_90 = 500;
+            alpha_l_turn_90 = 4100;
+            angle_l_turn_90 = 89.0;
+            dist_l_turn_out_90 = 10;
             // 180°大回りターン
-            velocity_l_turn_180 = 700;
-            alpha_l_turn_180 = 2000;
+            velocity_l_turn_180 = 450;
+            alpha_l_turn_180 = 3600;
             angle_l_turn_180 = 180;
-            dist_l_turn_out_180 = 43;
+            dist_l_turn_out_180 = 17;
+            // 壁切れ後の距離
+            dist_wall_end = 0;
             // 壁制御とケツ当て
             kp_wall = 0.05;
             duty_setposition = 40;
@@ -1591,26 +1806,29 @@ void test_run(void) {
             printf("Mode 4-7.\n");
 
             // 直線
-            acceleration_straight = 2722;
+            acceleration_straight = 2777.778;
             acceleration_straight_dash = 3000; // 5000
+            velocity_straight = 500;
             // ターン
-            velocity_turn90 = 700;
-            alpha_turn90 = 11500;
+            velocity_turn90 = 300;
+            alpha_turn90 = 12800;
             acceleration_turn = 0;
-            dist_offset_in = 10;
-            dist_offset_out = 39;
-            val_offset_in = 680;
-            angle_turn_90 = 86.7;
+            dist_offset_in = 14;
+            dist_offset_out = 18; // 32
+            val_offset_in = 2000;
+            angle_turn_90 = 89.5;
             // 90°大回りターン
-            velocity_l_turn_90 = 900;
-            alpha_l_turn_90 = 2970;
-            angle_l_turn_90 = 88;
-            dist_l_turn_out_90 = 27;
+            velocity_l_turn_90 = 500;
+            alpha_l_turn_90 = 4100;
+            angle_l_turn_90 = 89.0;
+            dist_l_turn_out_90 = 10;
             // 180°大回りターン
-            velocity_l_turn_180 = 1000;
-            alpha_l_turn_180 = 2900;
+            velocity_l_turn_180 = 450;
+            alpha_l_turn_180 = 3600;
             angle_l_turn_180 = 180;
-            dist_l_turn_out_180 = 43;
+            dist_l_turn_out_180 = 17;
+            // 壁切れ後の距離
+            dist_wall_end = 0;
             // 壁制御とケツ当て
             kp_wall = 0.05;
             duty_setposition = 40;
@@ -1637,26 +1855,29 @@ void test_run(void) {
             printf("Mode 4-8.\n");
 
             // 直線
-            acceleration_straight = 2722;
+            acceleration_straight = 2777.778;
             acceleration_straight_dash = 3000; // 5000
+            velocity_straight = 500;
             // ターン
-            velocity_turn90 = 700;
-            alpha_turn90 = 11500;
+            velocity_turn90 = 300;
+            alpha_turn90 = 12800;
             acceleration_turn = 0;
-            dist_offset_in = 10;
-            dist_offset_out = 39;
-            val_offset_in = 680;
-            angle_turn_90 = 86.7;
+            dist_offset_in = 14;
+            dist_offset_out = 18; // 32
+            val_offset_in = 2000;
+            angle_turn_90 = 89.5;
             // 90°大回りターン
-            velocity_l_turn_90 = 900;
-            alpha_l_turn_90 = 2670;
-            angle_l_turn_90 = 89.6;
-            dist_l_turn_out_90 = 40;
+            velocity_l_turn_90 = 500;
+            alpha_l_turn_90 = 4100;
+            angle_l_turn_90 = 89.0;
+            dist_l_turn_out_90 = 10;
             // 180°大回りターン
-            velocity_l_turn_180 = 1000;
-            alpha_l_turn_180 = 4330;
-            angle_l_turn_180 = 176;
-            dist_l_turn_out_180 = 42;
+            velocity_l_turn_180 = 450;
+            alpha_l_turn_180 = 3600;
+            angle_l_turn_180 = 180;
+            dist_l_turn_out_180 = 17;
+            // 壁切れ後の距離
+            dist_wall_end = 0;
             // 壁制御とケツ当て
             kp_wall = 0.05;
             duty_setposition = 40;

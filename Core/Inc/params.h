@@ -28,22 +28,22 @@
 #define DIFF_SETPOSITION 1500 // スラロームを位置合わせに変更する制御量
 
 /*PIDパラメータ*/
-#define KP_DISTANCE 28.0F // 並進位置制御のP項  28.0F 30.0
-#define KI_DISTANCE 0.01F // 並進位置制御のI項  0.01F 0.04
-#define KD_DISTANCE 28.0F // 並進位置制御のD項  28.0F 150.0
+#define KP_DISTANCE 5.0F // 並進位置制御のP項  28.0F 30.0
+#define KI_DISTANCE 0.0F // 並進位置制御のI項  0.01F 0.04
+#define KD_DISTANCE 0.0F // 並進位置制御のD項  28.0F 150.0
 
-#define KP_VELOCITY 50.0F // 並進速度制御のP項  50.0F 10.0
-#define KI_VEROCITY 0.05F // 並進速度制御のI項  0.05F 0.04
-#define KD_VEROCITY 50.0F // 並進速度制御のD項  60.0F 100.0
+#define KP_VELOCITY 5.0F // 並進速度制御のP項  50.0F 10.0
+#define KI_VEROCITY 0.0F // 並進速度制御のI項  0.05F 0.04
+#define KD_VEROCITY 0.0F // 並進速度制御のD項  60.0F 100.0
 
 #define KP_ANGLE 0.0F // 角度制御のP項
 #define KI_ANGLE 0.0F // 角度制御のI項
 #define KD_ANGLE 0.0F // 角度制御のD項
 
-#define KP_OMEGA 8.0F  // 角速度制御のP項 1.84F
-#define KI_OMEGA 0.06F // 角速度制御のI項 0.075F
+#define KP_OMEGA 1.1F  // 角速度制御のP項 1.84F
+#define KI_OMEGA 0.0F // 角速度制御のI項 0.075F
 #define KD_OMEGA 0.0F  // 角速度制御のD項 0.16F
-#define FF_OMEGA 0.02F // 角速度制御のFF項 0.043F
+#define FF_OMEGA 0.0F // 角速度制御のFF項 0.043F
 
 #define KP_IMU 1.0F // IMUの角速度の補正係数
 
@@ -54,8 +54,8 @@
 
 /*動作方向関連*/
 
-#define DIR_FWD_L  GPIO_PIN_SET // CW/CCWで前に進む出力（左）
-#define DIR_BACK_L GPIO_PIN_RESET   // CW/CCWで後ろに進む出力（左）
+#define DIR_FWD_L  GPIO_PIN_RESET // CW/CCWで前に進む出力（左）
+#define DIR_BACK_L GPIO_PIN_SET   // CW/CCWで後ろに進む出力（左）
 #define DIR_FWD_R  GPIO_PIN_SET   // CW/CCWで前に進む出力（右）
 #define DIR_BACK_R GPIO_PIN_RESET // CW/CCWで後ろに進む出力（右）
 #define DIR_ENC_R  -1             // エンコーダ方向（右）
