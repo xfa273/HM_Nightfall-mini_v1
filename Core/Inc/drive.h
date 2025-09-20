@@ -357,6 +357,7 @@ void drive_enable_motor(void);
 void drive_disable_motor(void);
 void drive_start(void);
 void drive_stop(void);
+void drive_brake(bool enable);
 
 void drive_set_dir(uint8_t); // 進む方向の設定
 void drive_motor(void);

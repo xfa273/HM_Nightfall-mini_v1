@@ -43,6 +43,9 @@ static uint8_t s_dir_pin_high_r = 0; // 0:Low, 1:High
 // CCR更新抑止フラグ：有効化/無効化シーケンス中の微小回転を防止
 static volatile uint8_t s_outputs_locked = 0;
 
+// モータドライバの有効/無効状態（STBY+PWM）
+static volatile uint8_t s_motor_enabled = 0;
+
 /*==========================================================
     走行系 上位関数
 ==========================================================*/
@@ -1231,9 +1234,37 @@ void drive_variable_reset(void) {
 // 戻り値：なし
 //+++++++++++++++++++++++++++++++++++++++++++++++
 void drive_enable_motor(void) {
-    // Nightfall-Lite(TB6612) と同じ挙動: STBY を有効化するだけ
+    // すでに有効なら何もしない（冪等）
+    if (s_motor_enabled) {
+        s_outputs_locked = 0;
+        return;
+    }
+
+    // 現在のDIRピンレベルを取得
+    GPIO_PinState dir_l = HAL_GPIO_ReadPin(MOTOR_L_DIR_GPIO_Port, MOTOR_L_DIR_Pin);
+    GPIO_PinState dir_r = HAL_GPIO_ReadPin(MOTOR_R_DIR_GPIO_Port, MOTOR_R_DIR_Pin);
+    s_dir_pin_high_l = (dir_l == GPIO_PIN_SET) ? 1 : 0;
+    s_dir_pin_high_r = (dir_r == GPIO_PIN_SET) ? 1 : 0;
+
+    const uint32_t arr = __HAL_TIM_GET_AUTORELOAD(&htim2);
+
+    // 1) CCR更新をロックし、まず IN1==IN2 となるアイドル（短絡ブレーキ相当）を作る
+    s_outputs_locked = 1;
+    __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, s_dir_pin_high_l ? arr : 0u);
+    __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_4, s_dir_pin_high_r ? arr : 0u);
+    __HAL_TIM_SET_COUNTER(&htim2, 0);
+
+    // 2) PWM を開始（安全CCRで IN1==IN2 を提示）
+    HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
+    HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_4);
+    tim1_wait_us(50);
+
+    // 3) STBY を有効化（出力段を有効化）
     HAL_GPIO_WritePin(MOTOR_STBY_GPIO_Port, MOTOR_STBY_Pin, GPIO_PIN_SET);
-    // PWMの開始は drive_start() 側で行う
+    tim1_wait_us(100);
+
+    // 4) 有効化完了
+    s_motor_enabled = 1;
     s_outputs_locked = 0;
 }
 
@@ -1244,8 +1275,50 @@ void drive_enable_motor(void) {
 // 戻り値：なし
 //+++++++++++++++++++++++++++++++++++++++++++++++
 void drive_disable_motor(void) {
-    // Nightfall-Lite(TB6612) と同じ挙動: STBY を無効化するだけ
+    // すでに無効なら何もしない（冪等）
+    if (!s_motor_enabled) {
+        HAL_GPIO_WritePin(MOTOR_STBY_GPIO_Port, MOTOR_STBY_Pin, GPIO_PIN_RESET);
+        return;
+    }
+
+    // 停止時は IN1==IN2 となるアイドルを明示してから停止
+    s_outputs_locked = 1;
+    const uint32_t arr = __HAL_TIM_GET_AUTORELOAD(&htim2);
+    __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, s_dir_pin_high_l ? arr : 0u);
+    __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_4, s_dir_pin_high_r ? arr : 0u);
+
+    // PWM 停止 → STBY 無効化
+    HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_1);
+    HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_4);
     HAL_GPIO_WritePin(MOTOR_STBY_GPIO_Port, MOTOR_STBY_Pin, GPIO_PIN_RESET);
+
+    s_motor_enabled = 0;
+    s_outputs_locked = 0;
+}
+
+//+++++++++++++++++++++++++++++++++++++++++++++++
+// drive_brake
+// 短絡ブレーキのON/OFF（STBY/PWM状態は変更しない）
+// 引数：enable …… trueでブレーキ、falseで解除
+// 戻り値：なし
+//+++++++++++++++++++++++++++++++++++++++++++++++
+void drive_brake(bool enable) {
+    const uint32_t arr = __HAL_TIM_GET_AUTORELOAD(&htim2);
+
+    if (enable) {
+        // DIRピンから現在レベルを取得して IN1==IN2 を生成
+        GPIO_PinState dir_l = HAL_GPIO_ReadPin(MOTOR_L_DIR_GPIO_Port, MOTOR_L_DIR_Pin);
+        GPIO_PinState dir_r = HAL_GPIO_ReadPin(MOTOR_R_DIR_GPIO_Port, MOTOR_R_DIR_Pin);
+        s_dir_pin_high_l = (dir_l == GPIO_PIN_SET) ? 1 : 0;
+        s_dir_pin_high_r = (dir_r == GPIO_PIN_SET) ? 1 : 0;
+
+        s_outputs_locked = 1;
+        __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, s_dir_pin_high_l ? arr : 0u);
+        __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_4, s_dir_pin_high_r ? arr : 0u);
+    } else {
+        // 通常更新に戻す
+        s_outputs_locked = 0;
+    }
 }
 
 //+++++++++++++++++++++++++++++++++++++++++++++++
@@ -1256,8 +1329,8 @@ void drive_disable_motor(void) {
 // 戻り値：なし
 //+++++++++++++++++++++++++++++++++++++++++++++++
 void drive_start(void) {
-    HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_4);
-    HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
+    // 統合：STBY と PWM を安全に同時運用へ
+    drive_enable_motor();
 }
 
 //+++++++++++++++++++++++++++++++++++++++++++++++
@@ -1268,9 +1341,8 @@ void drive_start(void) {
 // 戻り値：なし
 //+++++++++++++++++++++++++++++++++++++++++++++++
 void drive_stop(void) {
-    // Nightfall-Lite(TB6612) と同じ挙動: PWM停止のみ
-    HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_4);
-    HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_1);
+    // 互換：従来の drive_stop は「ブレーキ」に読み替え
+    drive_brake(true);
 }
 
 //+++++++++++++++++++++++++++++++++++++++++++++++
@@ -1695,7 +1767,7 @@ void test_run(void) {
             half_sectionD(0);
 
             led_flash(5);
-            drive_stop();
+            drive_disable_motor();
 
             break;
         case 6:
