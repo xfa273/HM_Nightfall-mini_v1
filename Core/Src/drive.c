@@ -1231,39 +1231,9 @@ void drive_variable_reset(void) {
 // 戻り値：なし
 //+++++++++++++++++++++++++++++++++++++++++++++++
 void drive_enable_motor(void) {
-    // 現在のDIRピンレベルを取得（起動直後でも正しいアイドルを出すため）
-    GPIO_PinState dir_l = HAL_GPIO_ReadPin(MOTOR_L_DIR_GPIO_Port, MOTOR_L_DIR_Pin);
-    GPIO_PinState dir_r = HAL_GPIO_ReadPin(MOTOR_R_DIR_GPIO_Port, MOTOR_R_DIR_Pin);
-    s_dir_pin_high_l = (dir_l == GPIO_PIN_SET) ? 1 : 0;
-    s_dir_pin_high_r = (dir_r == GPIO_PIN_SET) ? 1 : 0;
-
-    const uint32_t arr = __HAL_TIM_GET_AUTORELOAD(&htim2);
-    // 1) CCR更新をロックし、IN1==IN2となるアイドル(ブレーキ or コースト)に合わせてからPWM開始
-    s_outputs_locked = 1;
-    uint32_t idle_ccr_l = s_dir_pin_high_l ? arr : 0u;
-    uint32_t idle_ccr_r = s_dir_pin_high_r ? arr : 0u;
-    __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, idle_ccr_l);
-    __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_4, idle_ccr_r);
-    __HAL_TIM_SET_COUNTER(&htim2, 0);
-    HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
-    HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_4);
-
-    // PWMピンを安定させるため、ごく短い安定待ち（タイマ更新・AF出力の定常化）
-    tim1_wait_us(100);
-
-    // 2) STBYを有効化
+    // Nightfall-Lite(TB6612) と同じ挙動: STBY を有効化するだけ
     HAL_GPIO_WritePin(MOTOR_STBY_GPIO_Port, MOTOR_STBY_Pin, GPIO_PIN_SET);
-
-    // ドライバ内部の有効化安定待ち
-    tim1_wait_us(100);
-
-    // 3) ブースト管理をリセット
-    s_prev_cmd_l = 0;
-    s_prev_cmd_r = 0;
-    s_boost_until_ms_l = 0;
-    s_boost_until_ms_r = 0;
-
-    // 4) 解錠（以降はdrive_motorが通常更新。停止中はduty=0なのでCoast維持）
+    // PWMの開始は drive_start() 側で行う
     s_outputs_locked = 0;
 }
 
@@ -1529,7 +1499,7 @@ void drive_fan(uint16_t fan_power) {
 //+++++++++++++++++++++++++++++++++++++++++++++++
 void test_run(void) {
     int mode = 0;
-    drive_enable_motor();
+    // drive_enable_motor();
 
     led_flash(8);
 
