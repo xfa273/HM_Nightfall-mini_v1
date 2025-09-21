@@ -101,8 +101,8 @@ void velocity_PID(void) {
 
     // モータ制御量を計算
     out_translation = KP_VELOCITY * velocity_error +
-                      KI_VEROCITY * velocity_integral +
-                      KD_VEROCITY * velocity_error_error;
+                      KI_VELOCITY * velocity_integral +
+                      KD_VELOCITY * velocity_error_error;
 
     // 並進速度の偏差を保存
     previous_velocity_error = velocity_error;
