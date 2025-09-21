@@ -1,6 +1,13 @@
 #include "global.h"
 #include "interrupt.h"
+#include "logging.h"
 #include "stdio.h"
+
+// 現在のログプロファイル（取得内容の切替）
+static volatile LogProfile s_log_profile = LOG_PROFILE_OMEGA;
+
+void log_set_profile(LogProfile profile) { s_log_profile = profile; }
+LogProfile log_get_profile(void) { return s_log_profile; }
 
 /**
  * @brief ロギングシステムを初期化する
@@ -10,6 +17,39 @@ void log_init(void) {
     log_buffer.count = 0;
     log_buffer.logging_active = 0;
     log_buffer.start_time = 0;
+}
+
+/**
+ * @brief 現在のプロファイルに基づいて1サンプル分のログを記録する（割り込みから呼ぶ）
+ * @note 取得する変数は後で編集予定のため、現状は既存(角速度系)の内容を各プロファイルで共通に記録
+ */
+void log_capture_tick(void) {
+    if (!log_buffer.logging_active) {
+        return;
+    }
+
+    uint32_t current_time = HAL_GetTick();
+
+    switch (s_log_profile) {
+    case LOG_PROFILE_OMEGA:
+    case LOG_PROFILE_VELOCITY:
+    case LOG_PROFILE_DISTANCE:
+    case LOG_PROFILE_CUSTOM:
+    default:
+        // 既存の角速度系ログをそのまま使用（後で編集可能）
+        log_add_entry(
+            (uint16_t)log_buffer.count,     // インデックス
+            omega_interrupt,                 // 目標角速度
+            real_omega,                      // 実際の角速度
+            KP_OMEGA * omega_error,          // P項
+            KI_OMEGA * omega_integral,       // I項
+            KD_OMEGA * omega_error_error,    // D項
+            (float)out_r,                    // 右モーター出力
+            (float)out_l,                    // 左モーター出力
+            current_time                     // タイムスタンプ
+        );
+        break;
+    }
 }
 
 /**

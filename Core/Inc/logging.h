@@ -3,6 +3,19 @@
 
 #include "stdint.h"
 
+//============================================================
+// ログプロファイル（取得内容の切替）
+//============================================================
+typedef enum {
+    LOG_PROFILE_OMEGA = 0,   // 角速度系（既定）
+    LOG_PROFILE_VELOCITY = 1,// 並進速度系
+    LOG_PROFILE_DISTANCE = 2,// 並進距離系
+    LOG_PROFILE_CUSTOM = 3   // カスタム（後で編集）
+} LogProfile;
+
+void log_set_profile(LogProfile profile);
+LogProfile log_get_profile(void);
+
 /**
  * @brief ロギングシステムを初期化する
  */
@@ -44,5 +57,10 @@ void log_print_all(void);
  * @brief ログデータを純粋なCSV形式で出力する（可視化ツール貼り付け用）
  */
 void log_print_csv_only(void);
+
+/**
+ * @brief 現在のプロファイルに基づいて1サンプル分のログを記録（割り込みから呼ぶ）
+ */
+void log_capture_tick(void);
 
 #endif /* INC_LOGGING_H_ */

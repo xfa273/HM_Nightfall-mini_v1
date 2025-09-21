@@ -122,28 +122,9 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
         buzzer_count = 0;
     }
 
-    // 新しいロギング機能の実装
+    // 新しいロギング機能の実装（プロファイル切替対応）
     if (MF.FLAG.GET_LOG_1) {
-        // HAL_GetTickから現在の時間を取得
-        uint32_t current_time = HAL_GetTick();
-        
-        // テスト用に固定値と実際の値を混ぜてログに記録
-        static float test_val = 1.23f;
-        test_val += 0.01f;
-        if (test_val > 10.0f) test_val = 1.0f;
-        
-        // 必要なデータをログに記録（バッファ制限のチェックはlog_add_entry内で行う）
-        log_add_entry(
-            (uint16_t)log_buffer.count,     // インデックス
-            omega_interrupt,                        // 目標角速度（テスト値）
-            real_omega,                      // 実際の角速度
-            KP_OMEGA * omega_error,          // P項
-            KI_OMEGA * omega_integral,       // I項
-            KD_OMEGA * omega_error_error,    // D項
-            (float)out_r,                    // 右モーター出力
-            (float)out_l,                    // 左モーター出力
-            current_time                     // タイムスタンプ
-        );
+        log_capture_tick();
     }
 
 
