@@ -31,23 +31,53 @@ void log_capture_tick(void) {
     uint32_t current_time = HAL_GetTick();
 
     switch (s_log_profile) {
+
     case LOG_PROFILE_OMEGA:
+    // 角速度
+    log_add_entry(
+        (uint16_t)log_buffer.count,     // インデックス
+        omega_interrupt,                 // 目標角速度
+        real_omega,                      // 実際の角速度
+        KP_OMEGA * omega_error,          // P項
+        KI_OMEGA * omega_integral,       // I項
+        KD_OMEGA * omega_error_error,    // D項
+        (float)out_r,                    // 右モーター出力
+        (float)out_l,                    // 左モーター出力
+        current_time                     // タイムスタンプ
+    );
+    break;
+
     case LOG_PROFILE_VELOCITY:
+    // 並進速度
+    log_add_entry(
+        (uint16_t)log_buffer.count,     // インデックス
+        velocity_interrupt,                 // 目標速度
+        real_velocity,                      // 実際の速度
+        KP_VELOCITY * velocity_error,          // P項
+        KI_VELOCITY * velocity_integral,       // I項
+        KD_VELOCITY * velocity_error_error,    // D項
+        (float)out_r,                    // 右モーター出力
+        (float)out_l,                    // 左モーター出力
+        current_time                     // タイムスタンプ
+    );
+    break;
+    
     case LOG_PROFILE_DISTANCE:
+    // 並進距離
+    log_add_entry(
+        (uint16_t)log_buffer.count,     // インデックス
+        target_distance,               // 目標距離
+        real_distance,                      // 実際の距離
+        KP_DISTANCE * distance_error,          // P項
+        KI_DISTANCE * distance_integral,       // I項
+        KD_DISTANCE * distance_error_error,    // D項
+        (float)out_r,                    // 右モーター出力
+        (float)out_l,                    // 左モーター出力
+        current_time                     // タイムスタンプ
+    );
+    break;
     case LOG_PROFILE_CUSTOM:
     default:
-        // 既存の角速度系ログをそのまま使用（後で編集可能）
-        log_add_entry(
-            (uint16_t)log_buffer.count,     // インデックス
-            omega_interrupt,                 // 目標角速度
-            real_omega,                      // 実際の角速度
-            KP_OMEGA * omega_error,          // P項
-            KI_OMEGA * omega_integral,       // I項
-            KD_OMEGA * omega_error_error,    // D項
-            (float)out_r,                    // 右モーター出力
-            (float)out_l,                    // 左モーター出力
-            current_time                     // タイムスタンプ
-        );
         break;
     }
 }

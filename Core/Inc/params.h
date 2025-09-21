@@ -36,6 +36,14 @@
 #define KI_VEROCITY 0.0F // 並進速度制御のI項  0.05F 0.04
 #define KD_VEROCITY 0.0F // 並進速度制御のD項  60.0F 100.0
 
+// 互換エイリアス（スペル修正に伴う新名称に対応）
+#ifndef KI_VELOCITY
+#define KI_VELOCITY KI_VEROCITY
+#endif
+#ifndef KD_VELOCITY
+#define KD_VELOCITY KD_VEROCITY
+#endif
+
 #define KP_ANGLE 0.0F // 角度制御のP項
 #define KI_ANGLE 0.0F // 角度制御のI項
 #define KD_ANGLE 0.0F // 角度制御のD項

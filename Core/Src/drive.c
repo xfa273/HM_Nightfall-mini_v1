@@ -1648,6 +1648,7 @@ void test_run(void) {
 
             // ロギング開始 - 新しいAPIを使用
             log_init(); // 必要に応じて初期化
+            log_set_profile(LOG_PROFILE_VELOCITY);
             log_start(HAL_GetTick());
             
             half_sectionA(0);
@@ -1662,9 +1663,60 @@ void test_run(void) {
 
             break;
         case 2:
-            // 新しいロギングシステムでログを出力
-            printf("Mode 4-2 - ロギングデータの出力\n");
-            log_print_all();
+            // ログ確認用
+            printf("Mode 6-2 Get Log.\n");
+
+            // get_base();
+
+            // 直線
+            acceleration_straight = 2777.778;
+            acceleration_straight_dash = 3000; // 5000
+            velocity_straight = 500;
+            // ターン
+            velocity_turn90 = 300;
+            alpha_turn90 = 12800;
+            acceleration_turn = 0;
+            dist_offset_in = 14;
+            dist_offset_out = 18; // 32
+            val_offset_in = 2000;
+            angle_turn_90 = 89.5;
+            // 90°大回りターン
+            velocity_l_turn_90 = 500;
+            alpha_l_turn_90 = 4100;
+            angle_l_turn_90 = 89.0;
+            dist_l_turn_out_90 = 10;
+            // 180°大回りターン
+            velocity_l_turn_180 = 450;
+            alpha_l_turn_180 = 3600;
+            angle_l_turn_180 = 180;
+            dist_l_turn_out_180 = 17;
+            // 壁切れ後の距離
+            dist_wall_end = 0;
+            // 壁制御とケツ当て
+            kp_wall = 0.05;
+            duty_setposition = 40;
+
+            velocity_interrupt = 0;
+
+            drive_variable_reset();
+            IMU_GetOffset();
+
+            MF.FLAG.CTRL = 1;
+
+            // ロギング開始 - 新しいAPIを使用
+            log_init(); // 必要に応じて初期化
+            log_set_profile(LOG_PROFILE_OMEGA);
+            log_start(HAL_GetTick());
+            
+            half_sectionA(0);
+
+            turn_R90(0);
+            // rotate_180();
+
+            half_sectionD(0);
+            log_stop();
+
+            drive_stop();
 
             break;
         case 3:
@@ -1920,6 +1972,12 @@ void test_run(void) {
             drive_stop();
 
             break;
+        
+            case 9:
+
+            // 新しいロギングシステムでログを出力
+            printf("Mode 4-2 - ロギングデータの出力\n");
+            log_print_all();
         }
     }
     drive_disable_motor();
