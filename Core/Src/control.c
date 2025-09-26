@@ -28,8 +28,8 @@ void read_encoder(void) {
     // encoder_speed_r = (encoder_speed_r / 4096*4) * (13 / 42) * DIST_ONE_ROT *
     // 1000; encoder_speed_l = (encoder_speed_l / 4096*4) * (13 / 42) *
     // DIST_ONE_ROT * 1000;
-    encoder_speed_r = encoder_speed_r * 0.64286 * D_TIRE * 3.1415;
-    encoder_speed_l = encoder_speed_l * 0.64286 * D_TIRE * 3.1415;
+    encoder_speed_r = encoder_speed_r * 0.59211 * D_TIRE * 3.1415;
+    encoder_speed_l = encoder_speed_l * 0.59211 * D_TIRE * 3.1415;
 
     // 回転方向を補正
     encoder_speed_r = DIR_ENC_R * encoder_speed_r;
