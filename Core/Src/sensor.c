@@ -122,12 +122,6 @@ void get_wall_info() {
     if (ad_fr > WALL_BASE_FR * sensor_kx || ad_fl > WALL_BASE_FL * sensor_kx) {
         // AD値が閾値より大きい（=壁があって光が跳ね返ってきている）場合
         wall_info |= 0x88; // 壁情報を更新
-
-        if (ad_fr > WALL_BASE_FR * 1.1 && ad_fl > WALL_BASE_FL * 1.1) {
-            MF.FLAG.F_WALL = 1;
-        } else {
-            MF.FLAG.F_WALL = 0;
-        }
     }
     //----右壁を見る----
     if (ad_r > WALL_BASE_R * sensor_kx) {

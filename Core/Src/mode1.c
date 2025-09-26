@@ -33,22 +33,21 @@ void mode1() {
 
             // 直線
             acceleration_straight = 1000;
-            acceleration_straight_dash = 700; // 5000
+            acceleration_straight_dash = 1500; // 5000
             // ターン
             velocity_turn90 = 300;
             alpha_turn90 = 9000;
             acceleration_turn = 0;
             dist_offset_in = 8;
-            dist_offset_out = 13; // 32
-            val_offset_in = 2200;
-            val_offset_in = 0;
-            angle_turn_90 = 90.0;
+            dist_offset_out = 15; // 32
+            val_offset_in = 1750;
+            angle_turn_90 = 89.5;
             // 壁切れ後の距離
             dist_wall_end = 12;
 
             // 壁制御とケツ当て
-            kp_wall = 0.04;
-            duty_setposition = 50;
+            kp_wall = 0.02;
+            duty_setposition = 40;
 
             // 壁判断しきい値の係数
             sensor_kx = 1.0;

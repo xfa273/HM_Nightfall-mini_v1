@@ -74,6 +74,13 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
             ADC_task_counter = 0;
         }
 
+        // 前壁補正の判定
+        if (ad_fr > WALL_BASE_FR * 1.1 && ad_fl > WALL_BASE_FL * 1.1) {
+            MF.FLAG.F_WALL = 1;
+        } else {
+            MF.FLAG.F_WALL = 0;
+        }
+
         // エンコーダ値の取得
         read_encoder();
 

@@ -191,7 +191,7 @@ void wall_PID(void) {
         sense_diff_l = ad_l - previous_ad_l;
 
         if (fabsf(sense_diff_r) > WALL_DIFF_THR) {
-            wall_thr_r = WALL_BASE_R + 30;
+            wall_thr_r = WALL_BASE_R + 30; //30
         } else {
             wall_thr_r = WALL_BASE_R;
         }

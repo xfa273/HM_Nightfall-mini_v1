@@ -1071,10 +1071,10 @@ void driveFWall(float dist, float spd_in, float spd_out) {
 
     // 実際の距離が目標距離になるか前壁距離に達するまで走行
     if (MF.FLAG.SLALOM_R) {
-        while ((ad_fr + ad_fl) < val_offset_in)
+        while (((ad_fr + ad_fl) < val_offset_in && MF.FLAG.F_WALL) || real_distance < dist)
             ;
     } else if (MF.FLAG.SLALOM_L) {
-        while ((ad_fr + ad_fl) < val_offset_in)
+        while (((ad_fr + ad_fl) < val_offset_in && MF.FLAG.F_WALL) || real_distance < dist)
             ;
     }
 
@@ -1535,7 +1535,7 @@ void drive_fan(uint16_t fan_power) {
 
         for (uint16_t i = 0; i < fan_power; i++) {
             __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, i);
-            HAL_Delay(4);
+            HAL_Delay(1);
         }
     } else {
         __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, 0);
@@ -1705,10 +1705,12 @@ void test_run(void) {
             
             half_sectionA(0);
             one_sectionU(0);
+            one_sectionU(0);
+            one_sectionU(0);
             half_sectionD(0);
             log_stop();
 
-            drive_stop();
+            // drive_stop();
 
             break;
         case 3:
@@ -1771,21 +1773,21 @@ void test_run(void) {
             printf("Mode 4-4 straight 2 Sections.\n");
 
             // 直線
-            acceleration_straight = 2777.778;
-            acceleration_straight_dash = 3000; // 5000
-            velocity_straight = 500;
+            acceleration_straight = 5444.44;
+            acceleration_straight_dash = 8000; // 5000
+            velocity_straight = 700;
             // ターン
-            velocity_turn90 = 300;
-            alpha_turn90 = 12800;
+            velocity_turn90 = 700;
+            alpha_turn90 = 43900;
             acceleration_turn = 0;
-            dist_offset_in = 14;
-            dist_offset_out = 18; // 32
+            dist_offset_in = 5;
+            dist_offset_out = 8.47; // 32
             val_offset_in = 2000;
             angle_turn_90 = 89.5;
             // 90°大回りターン
             velocity_l_turn_90 = 500;
             alpha_l_turn_90 = 4100;
-            angle_l_turn_90 = 89.0;
+            angle_l_turn_90 = 89.5;
             dist_l_turn_out_90 = 10;
             // 180°大回りターン
             velocity_l_turn_180 = 450;
@@ -1805,6 +1807,7 @@ void test_run(void) {
 
             MF.FLAG.CTRL = 1;
 
+            led_flash(3);
             drive_fan(1000);
             led_flash(3);
 
@@ -1813,15 +1816,16 @@ void test_run(void) {
             log_set_profile(LOG_PROFILE_OMEGA);
             log_start(HAL_GetTick());
             
-            half_sectionA(0);
+            half_sectionA(700);
 
-            l_turn_R180(0);
+            turn_R90(0);
 
             half_sectionD(0);
             log_stop();
 
             drive_stop();
 
+            led_flash(3);
             drive_fan(0);
             led_flash(3);
 
@@ -1832,22 +1836,22 @@ void test_run(void) {
             printf("Mode 4-5 Turn R90.\n");
 
             // 直線
-            acceleration_straight = 2777.778;
-            acceleration_straight_dash = 3000; // 5000
-            velocity_straight = 500;
+            acceleration_straight = 11111.11;
+            acceleration_straight_dash = 10000; // 5000
+            velocity_straight = 1000;
             // ターン
-            velocity_turn90 = 300;
-            alpha_turn90 = 12800;
+            velocity_turn90 = 700;
+            alpha_turn90 = 43900;
             acceleration_turn = 0;
-            dist_offset_in = 14;
-            dist_offset_out = 18; // 32
+            dist_offset_in = 5;
+            dist_offset_out = 8.47; // 32
             val_offset_in = 2000;
             angle_turn_90 = 89.5;
             // 90°大回りターン
-            velocity_l_turn_90 = 500;
-            alpha_l_turn_90 = 4100;
-            angle_l_turn_90 = 89.0;
-            dist_l_turn_out_90 = 10;
+            velocity_l_turn_90 = 1000;
+            alpha_l_turn_90 = 20400;
+            angle_l_turn_90 = 89.5;
+            dist_l_turn_out_90 = 8.25;
             // 180°大回りターン
             velocity_l_turn_180 = 450;
             alpha_l_turn_180 = 3600;
@@ -1861,19 +1865,32 @@ void test_run(void) {
 
             velocity_interrupt = 0;
 
-            led_flash(10);
-
             drive_variable_reset();
             IMU_GetOffset();
-            drive_enable_motor();
 
+            MF.FLAG.CTRL = 1;
+
+            led_flash(3);
+            drive_fan(1000);
+            led_flash(3);
+
+            // ロギング開始 - 新しいAPIを使用
+            log_init(); // 必要に応じて初期化
+            log_set_profile(LOG_PROFILE_OMEGA);
+            log_start(HAL_GetTick());
+            
             half_sectionA(0);
-            half_sectionU();
-            turn_R90(0);
-            half_sectionD(0);
 
-            led_flash(5);
-            drive_disable_motor();
+            l_turn_R90();
+
+            half_sectionD(0);
+            log_stop();
+
+            drive_stop();
+
+            led_flash(3);
+            drive_fan(0);
+            led_flash(3);
 
             break;
         case 6:

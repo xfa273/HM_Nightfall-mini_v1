@@ -120,7 +120,7 @@ void adachi(void) {
                 } else {
                     known_straight = false;
                 }
-            } else if (mouse.dir == 0x00 && route[r_cnt] == 0x88) {
+            } else if (mouse.dir == 0x03 && route[r_cnt] == 0x88) {
                 // 西向き
                 if (visited[mouse.y][mouse.x - 1]) {
                     known_straight = true;
@@ -230,7 +230,7 @@ void adachi(void) {
 
     drive_fan(0);
 
-    led_flash(8);
+    led_flash(2);
 
     for (uint8_t i = 0; i < 3; i++) {
 
