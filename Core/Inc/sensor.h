@@ -8,6 +8,8 @@
 #ifndef INC_SENSOR_H_
 #define INC_SENSOR_H_
 
+#include <stdbool.h>
+
 /*============================================================
     各種定数・変数宣言
 ============================================================*/
@@ -101,5 +103,11 @@ uint8_t get_base();   // センサ基準値を取得
 void get_wall_info(); // 壁情報を読む
 void indicate_sensor();
 void wall_end();
+
+// フラッシュ保存/読込API（迷路用領域とは別セクタに保存）
+// センサ基準値・オフセットなどを保存/読込する
+// 戻り値: 読込はtrueで有効データ、falseで未初期化または破損
+bool sensor_params_load_from_flash(void);
+HAL_StatusTypeDef sensor_params_save_to_flash(void);
 
 #endif /* INC_SENSOR_H_ */

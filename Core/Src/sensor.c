@@ -6,6 +6,7 @@
  */
 
 #include "global.h"
+#include "flash_params.h"
 
 //+++++++++++++++++++++++++++++++++++++++++++++++
 // sensor_init
@@ -27,6 +28,52 @@ void sensor_init(void) {
     get_sensor_offsets();
 
     IMU_Init_Auto();
+}
+
+//+++++++++++++++++++++++++++++++++++++++++++++++
+// Flash parameter I/O (separate from maze EEPROM emulation)
+// Save/Load sensor baselines and offsets to FLASH_SECTOR_10
+//+++++++++++++++++++++++++++++++++++++++++++++++
+
+bool sensor_params_load_from_flash(void)
+{
+    flash_params_t p;
+    if (!flash_params_load(&p)) {
+        return false;
+    }
+
+    // Apply loaded values to globals
+    base_l = (uint16_t)p.base_l;
+    base_r = (uint16_t)p.base_r;
+    base_f = (uint16_t)p.base_f;
+
+    wall_offset_r  = (uint16_t)p.wall_offset_r;
+    wall_offset_l  = (uint16_t)p.wall_offset_l;
+    wall_offset_fr = (uint16_t)p.wall_offset_fr;
+    wall_offset_fl = (uint16_t)p.wall_offset_fl;
+
+    imu_offset_z = p.imu_offset_z;
+    return true;
+}
+
+HAL_StatusTypeDef sensor_params_save_to_flash(void)
+{
+    flash_params_t p;
+    flash_params_defaults(&p);
+
+    // Capture current values
+    p.base_l = base_l;
+    p.base_r = base_r;
+    p.base_f = base_f;
+
+    p.wall_offset_r  = wall_offset_r;
+    p.wall_offset_l  = wall_offset_l;
+    p.wall_offset_fr = wall_offset_fr;
+    p.wall_offset_fl = wall_offset_fl;
+
+    p.imu_offset_z = imu_offset_z;
+
+    return flash_params_save(&p);
 }
 
 //+++++++++++++++++++++++++++++++++++++++++++++++

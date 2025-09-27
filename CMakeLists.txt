@@ -52,6 +52,7 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     Core/Src/control.c
     Core/Src/dijkstra.c
     Core/Src/drive.c
+    Core/Src/flash_params.c
     Core/Src/eeprom.c
     Core/Src/interrupt.c
     Core/Src/logging.c
