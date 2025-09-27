@@ -25,11 +25,11 @@ void read_encoder(void) {
     encoder_speed_r = -encoder_speed_r; // 右の速度の符号を補正
 
     // 速度の換算 →[mm/s]
-    // encoder_speed_r = (encoder_speed_r / 4096*4) * (13 / 42) * DIST_ONE_ROT *
-    // 1000; encoder_speed_l = (encoder_speed_l / 4096*4) * (13 / 42) *
-    // DIST_ONE_ROT * 1000;
-    encoder_speed_r = encoder_speed_r * 0.59211 * D_TIRE * 3.1415;
-    encoder_speed_l = encoder_speed_l * 0.59211 * D_TIRE * 3.1415;
+    // 注意: 新機体はエンコーダがホイール側搭載のため減速比は不要
+    // Cpr_wheel = 400[PPR] × 4[逓倍] = 1600[count/rev]
+    // 係数K = 1000[ms→s] × (1/Cpr_wheel) = 1000*(1/(400*4)) = 0.625
+    encoder_speed_r = encoder_speed_r * 0.625 * D_TIRE * 3.1415;
+    encoder_speed_l = encoder_speed_l * 0.625 * D_TIRE * 3.1415;
 
     // 回転方向を補正
     encoder_speed_r = DIR_ENC_R * encoder_speed_r;
