@@ -85,6 +85,25 @@
 //----赤外線（赤色）LED発光待機時間（単位はマイクロ秒）
 #define IR_WAIT_US 30
 
+/* 前壁センサを用いた中央合わせ（非接触）用パラメータ */
+// 区画中央における前壁センサの目標値（実機で調整）
+#define F_ALIGN_TARGET_FR    1200
+#define F_ALIGN_TARGET_FL    1200
+
+// アライン実行条件（前壁が十分に見えているか判定する閾値）
+#define F_ALIGN_DETECT_THR   400
+
+// 閉ループ制御ゲイン（実機調整用）
+#define MATCH_POS_KP_TRANS   0.04F   // [mm/s] / [ADcount]
+#define MATCH_POS_KP_ROT     0.20F   // [deg/s] / [ADcount]
+
+// 飽和・許容値・タイムアウト
+#define MATCH_POS_VEL_MAX     200.0F   // [mm/s]
+#define MATCH_POS_OMEGA_MAX   300.0F   // [deg/s]
+#define MATCH_POS_TOL         15       // [ADcount]
+#define MATCH_POS_TOL_ANGLE   15       // [ADcount]
+#define MATCH_POS_TIMEOUT_MS  1500     // [ms]
+
 /*------------------------------------------------------------
     探索系
 ------------------------------------------------------------*/

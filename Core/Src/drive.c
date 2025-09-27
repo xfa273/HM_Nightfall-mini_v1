@@ -736,11 +736,83 @@ void set_position(void) {
 // 戻り値：なし
 //+++++++++++++++++++++++++++++++++++++++++++++++
 void match_position(uint16_t target_value) {
+    (void)target_value; // 未使用（パラメータは params.h の定数を使用）
 
-    while (abs(target_value - (ad_fr + ad_fl)) > 10) {
-
-        // 未使用変数を削除
+    // 前壁が見えていなければ何もしない
+    if (ad_fr < F_ALIGN_DETECT_THR || ad_fl < F_ALIGN_DETECT_THR) {
+        printf("match_position: front wall not detected (FR=%u, FL=%u)\r\n",
+               (unsigned)ad_fr, (unsigned)ad_fl);
+        buzzer_beep(2500);
+        return;
     }
+
+    // 壁制御は使わない（前壁のみで制御）
+    uint8_t ctrl_prev = MF.FLAG.CTRL;
+    float kp_wall_prev = kp_wall;
+    MF.FLAG.CTRL = 0;
+    kp_wall = 0.0f;
+
+    // 走行制御の状態を初期化して開始
+    drive_variable_reset();
+    acceleration_interrupt = 0;
+    alpha_interrupt = 0;
+    target_distance = 0;
+    target_angle = 0;
+    velocity_interrupt = 0;
+    omega_interrupt = 0;
+    drive_start();
+
+    uint32_t t0 = HAL_GetTick();
+    while (1) {
+        // 誤差算出（+は目標より近い/右が強い）
+        float e_fr = (float)((int32_t)ad_fr - (int32_t)F_ALIGN_TARGET_FR);
+        float e_fl = (float)((int32_t)ad_fl - (int32_t)F_ALIGN_TARGET_FL);
+        float e_pos = 0.5f * (e_fr + e_fl);   // 並進：平均を使う
+        float e_ang = (e_fr - e_fl);          // 角度：差分を使う
+
+        // 収束判定
+        if (fabsf(e_pos) <= MATCH_POS_TOL && fabsf(e_ang) <= MATCH_POS_TOL_ANGLE) {
+            break;
+        }
+
+        // 安全: センサ見失い
+        if (ad_fr < F_ALIGN_DETECT_THR || ad_fl < F_ALIGN_DETECT_THR) {
+            printf("match_position: lost front wall (FR=%u, FL=%u)\r\n",
+                   (unsigned)ad_fr, (unsigned)ad_fl);
+            break;
+        }
+
+        // 並進・回転コマンド（符号は近い→後退、右強→左回転になるように）
+        float v_cmd = -MATCH_POS_KP_TRANS * e_pos;
+        float w_cmd = -MATCH_POS_KP_ROT   * e_ang;
+
+        // 飽和
+        if (v_cmd >  MATCH_POS_VEL_MAX) v_cmd =  MATCH_POS_VEL_MAX;
+        if (v_cmd < -MATCH_POS_VEL_MAX) v_cmd = -MATCH_POS_VEL_MAX;
+        if (w_cmd >  MATCH_POS_OMEGA_MAX) w_cmd =  MATCH_POS_OMEGA_MAX;
+        if (w_cmd < -MATCH_POS_OMEGA_MAX) w_cmd = -MATCH_POS_OMEGA_MAX;
+
+        // 直接指令（加速度は0維持、積分器はISR側）
+        velocity_interrupt = v_cmd;
+        omega_interrupt    = w_cmd;
+
+        // タイムアウト
+        if ((HAL_GetTick() - t0) > MATCH_POS_TIMEOUT_MS) {
+            printf("match_position: timeout\r\n");
+            break;
+        }
+
+        HAL_Delay(2); // 2ms周期で更新（ISRは1kHz）
+    }
+
+    // 停止
+    velocity_interrupt = 0;
+    omega_interrupt = 0;
+    drive_stop();
+
+    // 復帰
+    MF.FLAG.CTRL = ctrl_prev;
+    kp_wall = kp_wall_prev;
 }
 
 /*==========================================================
@@ -1999,47 +2071,13 @@ void test_run(void) {
 
             printf("Mode 4-8.\n");
 
-            // 直線
-            acceleration_straight = 2777.778;
-            acceleration_straight_dash = 3000; // 5000
-            velocity_straight = 500;
-            // ターン
-            velocity_turn90 = 300;
-            alpha_turn90 = 12800;
-            acceleration_turn = 0;
-            dist_offset_in = 14;
-            dist_offset_out = 18; // 32
-            val_offset_in = 2000;
-            angle_turn_90 = 89.5;
-            // 90°大回りターン
-            velocity_l_turn_90 = 500;
-            alpha_l_turn_90 = 4100;
-            angle_l_turn_90 = 89.0;
-            dist_l_turn_out_90 = 10;
-            // 180°大回りターン
-            velocity_l_turn_180 = 450;
-            alpha_l_turn_180 = 3600;
-            angle_l_turn_180 = 180;
-            dist_l_turn_out_180 = 17;
-            // 壁切れ後の距離
-            dist_wall_end = 0;
-            // 壁制御とケツ当て
-            kp_wall = 0.05;
-            duty_setposition = 40;
-
-            velocity_interrupt = 0;
-
-            led_flash(10);
-
+            // 前壁センサを使った非接触中央合わせ
+            led_flash(5);
             drive_variable_reset();
             IMU_GetOffset();
             drive_enable_motor();
-
-            half_sectionA(velocity_l_turn_180);
-            l_turn_R180(0);
-            half_sectionD(0);
-
-            led_flash(5);
+            match_position(0);
+            led_flash(3);
             drive_stop();
 
             break;
