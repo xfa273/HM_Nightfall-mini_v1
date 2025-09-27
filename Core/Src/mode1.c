@@ -33,14 +33,14 @@ void mode1() {
 
             // 直線
             acceleration_straight = 1000;
-            acceleration_straight_dash = 1500; // 5000
+            acceleration_straight_dash = 2000; // 5000
             // ターン
             velocity_turn90 = 300;
             alpha_turn90 = 9000;
             acceleration_turn = 0;
             dist_offset_in = 8;
-            dist_offset_out = 15; // 32
-            val_offset_in = 1750;
+            dist_offset_out = 15.5; // 32
+            val_offset_in = 1650;
             angle_turn_90 = 89.5;
             // 壁切れ後の距離
             dist_wall_end = 12;
