@@ -160,6 +160,7 @@ volatile float wall_control;
 volatile float previous_ad_r;
 volatile float previous_ad_l;
 volatile float kp_wall; // 壁制御ゲイン
+volatile float latest_wall_error; // 壁偏差（探索側トリガ用）
 
 /*斜め制御用*/
 volatile float diagonal_control_thr;
@@ -328,6 +329,7 @@ extern volatile float wall_control;
 extern volatile float previous_ad_r;
 extern volatile float previous_ad_l;
 extern volatile float kp_wall; // 壁制御ゲイン
+extern volatile float latest_wall_error; // 壁偏差（探索側トリガ用）
 
 /*斜め制御用*/
 extern volatile float diagonal_control_thr;

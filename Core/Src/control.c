@@ -214,6 +214,8 @@ void wall_PID(void) {
             // 左壁のみある場合
             wall_error = 2 * (ad_l - base_l);
         }
+        // 探索側で参照できるように最新の壁誤差を公開
+        latest_wall_error = wall_error;
 
         wall_control = wall_error * kp_wall;
 

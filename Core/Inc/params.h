@@ -85,6 +85,9 @@
 //----赤外線（赤色）LED発光待機時間（単位はマイクロ秒）
 #define IR_WAIT_US 30
 
+// 探索中の横壁ズレ検出しきい値（wall_PIDで算出するlatest_wall_error[ADcount]の絶対値）
+#define WALL_ALIGN_ERR_THR  200
+
 /* 前壁センサを用いた中央合わせ（非接触）用パラメータ */
 // 区画中央における前壁センサの目標値（実機で調整）
 #define F_ALIGN_TARGET_FR    3600

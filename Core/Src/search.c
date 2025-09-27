@@ -6,6 +6,7 @@
  */
 
 #include "global.h"
+#include <math.h>
 
 //+++++++++++++++++++++++++++++++++++++++++++++++
 // search_init
@@ -140,7 +141,21 @@ void adachi(void) {
                 one_sectionD();
                 acceled = false;
             } else {
-                one_sectionU(1);
+                if (fabsf(latest_wall_error) > WALL_ALIGN_ERR_THR) {
+                    half_sectionD(0);
+                    if (r_wall) {
+                        rotate_R90();
+                        match_position(0);
+                        rotate_L90();
+                    } else if (l_wall) {
+                        rotate_L90();
+                        match_position(0);
+                        rotate_R90();
+                    }
+                    half_sectionA(1);
+                } else {
+                    one_sectionU(1);
+                }
             }
 
             led_write(0, 0);
