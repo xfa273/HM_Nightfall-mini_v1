@@ -79,15 +79,13 @@ HAL_StatusTypeDef sensor_params_save_to_flash(void)
     return flash_params_save(&p);
 }
 
-// 任意タイミングで再測定してフラッシュへ保存するヘルパ
+// 任意タイミングで再測定してフラッシュへ保存するヘルパ（壁センサのみ）
 HAL_StatusTypeDef sensor_recalibrate_and_save(void)
 {
-    // 再測定（壁無し条件で実施すること）
+    // 壁センサオフセットの再測定（壁無し・静止条件で実施すること）
     get_sensor_offsets();
     // 制御基準値の更新（機体姿勢が適正な状態で）
     (void)get_base();
-    // IMUオフセットも更新（静止状態を推奨）
-    IMU_GetOffset();
 
     return sensor_params_save_to_flash();
 }
