@@ -177,10 +177,19 @@ void adachi(void) {
             }
 
             if (ad_fr > WALL_BASE_FR * 1.3 && ad_fl > WALL_BASE_FL * 1.3) {
-                rotate_180();
+                match_position(0);
+                if (r_wall) {
+                    rotate_R90();
+                    match_position(0);
+                    rotate_R90();
+                } else if (l_wall) {
+                    rotate_L90();
+                    match_position(0);
+                    rotate_L90();
+                } else {
+                    rotate_180();
+                }
                 drive_wait();
-                set_position();
-                // drive_wait();
             } else {
                 rotate_180();
                 drive_wait();

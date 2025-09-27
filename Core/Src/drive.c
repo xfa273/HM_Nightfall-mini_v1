@@ -810,7 +810,7 @@ void match_position(uint16_t target_value) {
     // 停止（収束 or 安全離脱）
     omega_interrupt = 0;
     velocity_interrupt = 0;
-    drive_stop();
+    drive_variable_reset();
 
     // 復帰
     MF.FLAG.CTRL = ctrl_prev;
@@ -2079,7 +2079,7 @@ void test_run(void) {
             IMU_GetOffset();
             drive_enable_motor();
             match_position(0);
-            led_flash(3);
+            buzzer_beep(1200);
             drive_stop();
 
             break;

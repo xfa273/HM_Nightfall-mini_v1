@@ -498,101 +498,14 @@ void test_mode() {
 
             printf("Test Mode 9 Circuit.\n");
 
-            // 直線
-            acceleration_straight = 10888.9;
-            acceleration_straight_dash = 32000;
-            velocity_straight = 5400;
-            // 90°大回りターン
-            velocity_l_turn_90 = 2200;
-            alpha_l_turn_90 = 28500;
-            angle_l_turn_90 = 85.0;
-            dist_l_turn_out_90 = 101;
-            // 壁制御とケツ当て
-            kp_wall = 0.05;
-            duty_setposition = 40;
-
-            velocity_interrupt = 0;
-
-            led_flash(10);
-
-            drive_variable_reset();
-            IMU_GetOffset();
-            drive_enable_motor();
-            led_flash(5);
-            get_base();
-            drive_fan(800);
-            led_flash(5);
-
-            first_sectionA();
-
-            // 1回目の直線
-            run_straight(12, velocity_straight, 0);
-            run_straight(4, velocity_straight, 0);
-            run_straight(12, velocity_l_turn_90, 0);
-
-            // 1回目のターン
-            l_turn_R90();
-
-            // 2回目の直線
-            run_straight(12, velocity_straight, 0);
-            run_straight(2, velocity_straight, 0);
-            run_straight(12, velocity_l_turn_90, 0);
-
-            // 2回目のターン
-            l_turn_R90();
-
-            // 3回目の直線
-            run_straight(12, velocity_straight, 0);
-            run_straight(2, velocity_straight, 0);
-            run_straight(12, velocity_l_turn_90, 0);
-
-            // 3回目のターン
-            l_turn_R90();
-
-            // 4回目の直線
-            run_straight(12, velocity_straight, 0);
-            run_straight(2, velocity_straight, 0);
-            run_straight(12, velocity_l_turn_90, 0);
-
-            // 4回目のターン
-            l_turn_R90();
-
-            // 5回目の直線
-            run_straight(12, velocity_straight, 0);
-            run_straight(2, velocity_straight, 0);
-            run_straight(12, velocity_l_turn_90, 0);
-
-            // 5回目のターン
-            l_turn_R90();
-
-            // 6回目の直線
-            run_straight(12, velocity_straight, 0);
-            run_straight(2, velocity_straight, 0);
-            run_straight(12, velocity_l_turn_90, 0);
-
-            // 6回目のターン
-            l_turn_R90();
-
-            // 7回目の直線
-            run_straight(12, velocity_straight, 0);
-            run_straight(2, velocity_straight, 0);
-            run_straight(12, velocity_l_turn_90, 0);
-
-            // 7回目のターン
-            l_turn_R90();
-
-            // 8回目の直線
-            run_straight(12, velocity_straight, 0);
-            run_straight(2, velocity_straight, 0);
-            run_straight(12, velocity_l_turn_90, 0);
-
-            half_sectionD(0);
-
-            drive_fan(0);
-
-            led_flash(5);
-            drive_stop();
-
+            HAL_StatusTypeDef st = sensor_recalibrate_and_save();
+                if (st == HAL_OK) {
+                        printf("Sensor parameters saved to Flash successfully.\n");
+                        buzzer_beep(1200);
+                    } else {
+                        printf("Failed to save sensor parameters. HAL status=%d\n", st);
+                        buzzer_beep(3000);
+                    }
             break;
         }
     }

@@ -21,7 +21,7 @@
 #define DIST_FIRST_SEC    14     // 最初の区画の距離[mm]
 #define DIST_SET_POSITION 15     // 壁当て後の前進距離[mm]
 
-#define ALPHA_ROTATE_90   1500  // 超信地旋回の角加速度[deg/sec^2]
+#define ALPHA_ROTATE_90   3000  // 超信地旋回の角加速度[deg/sec^2]
 #define ANGLE_ROTATE_90_R 90.0F // 超信地旋回の角度[deg]
 #define ANGLE_ROTATE_90_L 90.0F // 超信地旋回の角度[deg]
 
@@ -87,8 +87,8 @@
 
 /* 前壁センサを用いた中央合わせ（非接触）用パラメータ */
 // 区画中央における前壁センサの目標値（実機で調整）
-#define F_ALIGN_TARGET_FR    3300
-#define F_ALIGN_TARGET_FL    3300
+#define F_ALIGN_TARGET_FR    3600
+#define F_ALIGN_TARGET_FL    3600
 
 // アライン実行条件（前壁が十分に見えているか判定する閾値）
 #define F_ALIGN_DETECT_THR   400
@@ -100,11 +100,11 @@
 // 飽和・許容値・タイムアウト
 #define MATCH_POS_VEL_MAX     200.0F   // [mm/s]
 #define MATCH_POS_OMEGA_MAX   300.0F   // [deg/s]
-#define MATCH_POS_TOL         15       // [ADcount]
-#define MATCH_POS_TOL_ANGLE   15       // [ADcount]
-#define MATCH_POS_TIMEOUT_MS  1500     // [ms]
+#define MATCH_POS_TOL         80       // [ADcount]
+#define MATCH_POS_TOL_ANGLE   40       // [ADcount]
+#define MATCH_POS_TIMEOUT_MS  20     // [ms]
 // 収束判定：FR/FL が目標±MATCH_POS_TOL 内に連続して入る必要回数（2ms/loop前提）
-#define MATCH_POS_STABLE_COUNT 200      // [loop] ≒ 400ms
+#define MATCH_POS_STABLE_COUNT 100      // [loop] ≒ 400ms
 
 /*------------------------------------------------------------
     探索系

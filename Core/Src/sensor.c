@@ -8,6 +8,17 @@
 #include "global.h"
 #include "flash_params.h"
 
+// デバッグ出力ヘルパ：壁センサオフセットを表示
+static void print_wall_offsets(const char* label)
+{
+    printf("%s: L=%u, R=%u, FR=%u, FL=%u\r\n",
+           label,
+           (unsigned)wall_offset_l,
+           (unsigned)wall_offset_r,
+           (unsigned)wall_offset_fr,
+           (unsigned)wall_offset_fl);
+}
+
 //+++++++++++++++++++++++++++++++++++++++++++++++
 // sensor_init
 // センサ系の変数の初期化，ADコンバータの設定とセンサ値取得に使用するタイマの設定をする
@@ -26,8 +37,12 @@ void sensor_init(void) {
 
     // センサのオフセット値をフラッシュから読み込み（有効なら使用）
     // 失敗した場合のみ測定を実施
-    if (!sensor_params_load_from_flash()) {
+    bool loaded = sensor_params_load_from_flash();
+    if (!loaded) {
         get_sensor_offsets();
+        print_wall_offsets("Wall offsets (measured at init)");
+    } else {
+        print_wall_offsets("Wall offsets (loaded at init)");
     }
 
     IMU_Init_Auto();
@@ -86,6 +101,8 @@ HAL_StatusTypeDef sensor_recalibrate_and_save(void)
     get_sensor_offsets();
     // 制御基準値の更新（機体姿勢が適正な状態で）
     (void)get_base();
+    // 測定したオフセットを表示
+    print_wall_offsets("Wall offsets (measured)");
 
     return sensor_params_save_to_flash();
 }
