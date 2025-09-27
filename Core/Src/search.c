@@ -69,6 +69,7 @@ void adachi(void) {
 
     drive_start();
 
+
     //====スタート位置壁情報取得====
     get_wall_info();    // 壁情報の初期化, 後壁はなくなる
     wall_info &= ~0x88; // 前壁は存在するはずがないので削除する
@@ -142,17 +143,21 @@ void adachi(void) {
                 acceled = false;
             } else {
                 if (fabsf(latest_wall_error) > WALL_ALIGN_ERR_THR) {
-                    half_sectionD(0);
                     if (r_wall) {
+                        half_sectionD(0);
                         rotate_R90();
                         match_position(0);
                         rotate_L90();
+                        half_sectionA(1);
                     } else if (l_wall) {
+                        half_sectionD(0);
                         rotate_L90();
                         match_position(0);
                         rotate_R90();
+                        half_sectionA(1);
+                    }else{
+                        one_sectionU(1);
                     }
-                    half_sectionA(1);
                 } else {
                     one_sectionU(1);
                 }
