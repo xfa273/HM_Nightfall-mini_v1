@@ -196,7 +196,7 @@ void adachi(void) {
                 }
             }
 
-            if (ad_fr > WALL_BASE_FR * 1.3 && ad_fl > WALL_BASE_FL * 1.3) {
+            if (ad_fr > WALL_BASE_FR * 1.5 && ad_fl > WALL_BASE_FL * 1.5) {
                 match_position(0);
                 if (r_wall) {
                     rotate_R90();

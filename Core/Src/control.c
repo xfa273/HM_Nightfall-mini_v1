@@ -219,6 +219,10 @@ void wall_PID(void) {
 
         wall_control = wall_error * kp_wall;
 
+        if(fabsf(out_l)<50 && fabsf(out_r)<50){
+            wall_control = 0;
+        }
+
         if (wall_control > 0) {
             wall_control = max(wall_control, WALL_CTRL_MAX);
         } else {

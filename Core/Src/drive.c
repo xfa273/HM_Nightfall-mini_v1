@@ -159,9 +159,6 @@ void half_sectionD(uint16_t val) {
         if (MF.FLAG.SCND && acceleration_straight_dash > 0 && val) {
             speed_out = sqrt(speed_now * speed_now -
                              2 * acceleration_straight_dash * DIST_HALF_SEC);
-        } else if (!val) {
-            speed_out = sqrt(speed_now * speed_now -
-                             2 * acceleration_straight * DIST_HALF_SEC);
         } else {
             speed_out = 0;
         }
@@ -196,8 +193,6 @@ void half_sectionDD(uint16_t val) {
         if (MF.FLAG.SCND && acceleration_straight_dash > 0 && val) {
             speed_out = sqrt(speed_now * speed_now -
                              2 * acceleration_straight_dash * DIST_D_HALF_SEC);
-        } else if (!val) {
-            speed_out = 0;
         } else {
             speed_out = 0;
         }
@@ -739,12 +734,14 @@ void match_position(uint16_t target_value) {
     (void)target_value; // 未使用（パラメータは params.h の定数を使用）
 
     // 前壁が見えていなければ何もしない
+    /*
     if (ad_fr < F_ALIGN_DETECT_THR || ad_fl < F_ALIGN_DETECT_THR) {
         printf("match_position: front wall not detected (FR=%u, FL=%u)\r\n",
                (unsigned)ad_fr, (unsigned)ad_fl);
         buzzer_beep(2500);
         return;
     }
+    */
 
     // 側壁の自動壁制御は無効化（前壁のみで位置・角度を合わせる）
     uint8_t ctrl_prev = MF.FLAG.CTRL;
@@ -764,16 +761,9 @@ void match_position(uint16_t target_value) {
 
     const float dt = 0.002f; // 2ms刻み
     int stable_count = 0;
+    uint32_t count = 0;
 
-    while (1) {
-        // 安全: センサ見失い
-        /*
-        if (ad_fr < F_ALIGN_DETECT_THR || ad_fl < F_ALIGN_DETECT_THR) {
-            printf("match_position: lost front wall (FR=%u, FL=%u)\r\n",
-                   (unsigned)ad_fr, (unsigned)ad_fl);
-            break;
-        }
-        */
+    while (count < 2000 && ad_fr > WALL_BASE_FR * 1.5 && ad_fl > WALL_BASE_FL * 1.5) {
 
         // 誤差算出（+は目標より近い/右が強い）
         float e_fr = (float)((int32_t)ad_fr - (int32_t)F_ALIGN_TARGET_FR);
@@ -805,6 +795,7 @@ void match_position(uint16_t target_value) {
         omega_interrupt = w_cmd;
 
         HAL_Delay(2); // 2ms周期で更新（ISRは1kHz）
+        count++;
     }
 
     // 停止（収束 or 安全離脱）

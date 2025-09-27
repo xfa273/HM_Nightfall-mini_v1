@@ -22,8 +22,8 @@
 #define DIST_SET_POSITION 15     // 壁当て後の前進距離[mm]
 
 #define ALPHA_ROTATE_90   3000  // 超信地旋回の角加速度[deg/sec^2]
-#define ANGLE_ROTATE_90_R 90.0F // 超信地旋回の角度[deg]
-#define ANGLE_ROTATE_90_L 90.0F // 超信地旋回の角度[deg]
+#define ANGLE_ROTATE_90_R 89.5F // 超信地旋回の角度[deg]
+#define ANGLE_ROTATE_90_L 89.5F // 超信地旋回の角度[deg]
 
 #define DIFF_SETPOSITION 1500 // スラロームを位置合わせに変更する制御量
 
@@ -86,7 +86,7 @@
 #define IR_WAIT_US 30
 
 // 探索中の横壁ズレ検出しきい値（wall_PIDで算出するlatest_wall_error[ADcount]の絶対値）
-#define WALL_ALIGN_ERR_THR  200
+#define WALL_ALIGN_ERR_THR  450
 
 /* 前壁センサを用いた中央合わせ（非接触）用パラメータ */
 // 区画中央における前壁センサの目標値（実機で調整）
@@ -103,7 +103,7 @@
 // 飽和・許容値・タイムアウト
 #define MATCH_POS_VEL_MAX     200.0F   // [mm/s]
 #define MATCH_POS_OMEGA_MAX   300.0F   // [deg/s]
-#define MATCH_POS_TOL         80       // [ADcount]
+#define MATCH_POS_TOL         100       // [ADcount]
 #define MATCH_POS_TOL_ANGLE   40       // [ADcount]
 #define MATCH_POS_TIMEOUT_MS  20     // [ms]
 // 収束判定：FR/FL が目標±MATCH_POS_TOL 内に連続して入る必要回数（2ms/loop前提）

@@ -152,19 +152,30 @@ void mode2() {
             makePath(0);
 
             // 直線
-            acceleration_straight = 2722;
-            acceleration_straight_dash = 5000; // 5000
-            velocity_straight = 1000;
+            acceleration_straight = 1000;
+            acceleration_straight_dash = 2000; // 5000
+            velocity_straight = 1500;
             // ターン
-            velocity_turn90 = 700;
-            alpha_turn90 = 10900;
+            velocity_turn90 = 300;
+            alpha_turn90 = 9000;
             acceleration_turn = 0;
-            dist_offset_in = 10;
-            dist_offset_out = 32;
-            val_offset_in = 1170;
-            angle_turn_90 = 88.5;
+            dist_offset_in = 8;
+            dist_offset_out = 13; // 32
+            val_offset_in = 1600;
+            val_offset_in = 0;
+            angle_turn_90 = 90.0;
+            // 90°大回りターン
+            velocity_l_turn_90 = 500;
+            alpha_l_turn_90 = 4100;
+            angle_l_turn_90 = 89.0;
+            dist_l_turn_out_90 = 10;
+            // 180°大回りターン
+            velocity_l_turn_180 = 450;
+            alpha_l_turn_180 = 3600;
+            angle_l_turn_180 = 180;
+            dist_l_turn_out_180 = 17;
             // 壁切れ後の距離
-            dist_wall_end = 12;
+            dist_wall_end = 0;
             // 壁制御とケツ当て
             kp_wall = 0.05;
             duty_setposition = 40;
@@ -203,27 +214,27 @@ void mode2() {
             acceleration_straight_dash = 8000; // 5000
             velocity_straight = 1000;
             // ターン
-            velocity_turn90 = 700;
-            alpha_turn90 = 10900;
+            velocity_turn90 = 300;
+            alpha_turn90 = 12800;
             acceleration_turn = 0;
-            dist_offset_in = 10;
-            dist_offset_out = 32;
-            val_offset_in = 700;
-            angle_turn_90 = 88.5;
+            dist_offset_in = 14;
+            dist_offset_out = 18; // 32
+            val_offset_in = 2000;
+            angle_turn_90 = 89.5;
             // 90°大回りターン
-            velocity_l_turn_90 = 850;
-            alpha_l_turn_90 = 3000;
-            angle_l_turn_90 = 89;
-            dist_l_turn_out_90 = 26;
+            velocity_l_turn_90 = 500;
+            alpha_l_turn_90 = 4100;
+            angle_l_turn_90 = 89.0;
+            dist_l_turn_out_90 = 10;
             // 180°大回りターン
-            velocity_l_turn_180 = 850;
-            alpha_l_turn_180 = 3485;
-            angle_l_turn_180 = 179;
-            dist_l_turn_out_180 = 50;
+            velocity_l_turn_180 = 450;
+            alpha_l_turn_180 = 3600;
+            angle_l_turn_180 = 180;
+            dist_l_turn_out_180 = 17;
             // 壁切れ後の距離
-            dist_wall_end = 12;
+            dist_wall_end = 0;
             // 壁制御とケツ当て
-            kp_wall = 0.2;
+            kp_wall = 0.05;
             duty_setposition = 40;
 
             velocity_interrupt = 0;
