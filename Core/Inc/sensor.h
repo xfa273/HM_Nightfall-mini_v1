@@ -109,5 +109,6 @@ void wall_end();
 // 戻り値: 読込はtrueで有効データ、falseで未初期化または破損
 bool sensor_params_load_from_flash(void);
 HAL_StatusTypeDef sensor_params_save_to_flash(void);
+HAL_StatusTypeDef sensor_recalibrate_and_save(void);
 
 #endif /* INC_SENSOR_H_ */

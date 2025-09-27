@@ -24,8 +24,11 @@ void sensor_init(void) {
     HAL_TIM_Base_Start_IT(&htim1);
     HAL_TIM_Base_Start_IT(&htim5);
 
-    // センサのオフセット値を取得
-    get_sensor_offsets();
+    // センサのオフセット値をフラッシュから読み込み（有効なら使用）
+    // 失敗した場合のみ測定を実施
+    if (!sensor_params_load_from_flash()) {
+        get_sensor_offsets();
+    }
 
     IMU_Init_Auto();
 }
@@ -74,6 +77,19 @@ HAL_StatusTypeDef sensor_params_save_to_flash(void)
     p.imu_offset_z = imu_offset_z;
 
     return flash_params_save(&p);
+}
+
+// 任意タイミングで再測定してフラッシュへ保存するヘルパ
+HAL_StatusTypeDef sensor_recalibrate_and_save(void)
+{
+    // 再測定（壁無し条件で実施すること）
+    get_sensor_offsets();
+    // 制御基準値の更新（機体姿勢が適正な状態で）
+    (void)get_base();
+    // IMUオフセットも更新（静止状態を推奨）
+    IMU_GetOffset();
+
+    return sensor_params_save_to_flash();
 }
 
 //+++++++++++++++++++++++++++++++++++++++++++++++

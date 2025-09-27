@@ -167,7 +167,17 @@ int main(void)
         switch (mode)
         {
             case 0:
-
+                printf("Mode 0: Recalibrate sensors and save to Flash.\n");
+                {
+                    HAL_StatusTypeDef st = sensor_recalibrate_and_save();
+                    if (st == HAL_OK) {
+                        printf("Sensor parameters saved to Flash successfully.\n");
+                        buzzer_beep(1200);
+                    } else {
+                        printf("Failed to save sensor parameters. HAL status=%d\n", st);
+                        buzzer_beep(3000);
+                    }
+                }
                 break;
 
             case 1:
