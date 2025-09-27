@@ -87,15 +87,15 @@
 
 /* 前壁センサを用いた中央合わせ（非接触）用パラメータ */
 // 区画中央における前壁センサの目標値（実機で調整）
-#define F_ALIGN_TARGET_FR    1200
-#define F_ALIGN_TARGET_FL    1200
+#define F_ALIGN_TARGET_FR    3300
+#define F_ALIGN_TARGET_FL    3300
 
 // アライン実行条件（前壁が十分に見えているか判定する閾値）
 #define F_ALIGN_DETECT_THR   400
 
 // 閉ループ制御ゲイン（実機調整用）
-#define MATCH_POS_KP_TRANS   0.04F   // [mm/s] / [ADcount]
-#define MATCH_POS_KP_ROT     0.20F   // [deg/s] / [ADcount]
+#define MATCH_POS_KP_TRANS   0.3F   // [mm/s] / [ADcount]
+#define MATCH_POS_KP_ROT     0.2F   // [deg/s] / [ADcount]
 
 // 飽和・許容値・タイムアウト
 #define MATCH_POS_VEL_MAX     200.0F   // [mm/s]
@@ -103,6 +103,8 @@
 #define MATCH_POS_TOL         15       // [ADcount]
 #define MATCH_POS_TOL_ANGLE   15       // [ADcount]
 #define MATCH_POS_TIMEOUT_MS  1500     // [ms]
+// 収束判定：FR/FL が目標±MATCH_POS_TOL 内に連続して入る必要回数（2ms/loop前提）
+#define MATCH_POS_STABLE_COUNT 200      // [loop] ≒ 400ms
 
 /*------------------------------------------------------------
     探索系

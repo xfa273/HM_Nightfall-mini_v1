@@ -746,7 +746,7 @@ void match_position(uint16_t target_value) {
         return;
     }
 
-    // 壁制御は使わない（前壁のみで制御）
+    // 側壁の自動壁制御は無効化（前壁のみで位置・角度を合わせる）
     uint8_t ctrl_prev = MF.FLAG.CTRL;
     float kp_wall_prev = kp_wall;
     MF.FLAG.CTRL = 0;
@@ -756,58 +756,60 @@ void match_position(uint16_t target_value) {
     drive_variable_reset();
     acceleration_interrupt = 0;
     alpha_interrupt = 0;
-    target_distance = 0;
-    target_angle = 0;
+    // 以降、target_distance は手動更新、omega_interrupt は直接指示
+    // （calculate_translation/calculate_rotation は 0 加速度なので増分は本関数で与える）
     velocity_interrupt = 0;
     omega_interrupt = 0;
     drive_start();
 
-    uint32_t t0 = HAL_GetTick();
+    const float dt = 0.002f; // 2ms刻み
+    int stable_count = 0;
+
     while (1) {
+        // 安全: センサ見失い
+        /*
+        if (ad_fr < F_ALIGN_DETECT_THR || ad_fl < F_ALIGN_DETECT_THR) {
+            printf("match_position: lost front wall (FR=%u, FL=%u)\r\n",
+                   (unsigned)ad_fr, (unsigned)ad_fl);
+            break;
+        }
+        */
+
         // 誤差算出（+は目標より近い/右が強い）
         float e_fr = (float)((int32_t)ad_fr - (int32_t)F_ALIGN_TARGET_FR);
         float e_fl = (float)((int32_t)ad_fl - (int32_t)F_ALIGN_TARGET_FL);
         float e_pos = 0.5f * (e_fr + e_fl);   // 並進：平均を使う
         float e_ang = (e_fr - e_fl);          // 角度：差分を使う
 
-        // 収束判定
-        if (fabsf(e_pos) <= MATCH_POS_TOL && fabsf(e_ang) <= MATCH_POS_TOL_ANGLE) {
+        // 収束判定（両センサが目標±MATCH_POS_TOL 内に連続して入ったら終了）
+        if (fabsf(e_fr) <= MATCH_POS_TOL && fabsf(e_fl) <= MATCH_POS_TOL) {
+            stable_count++;
+        } else {
+            stable_count = 0;
+        }
+        if (stable_count >= MATCH_POS_STABLE_COUNT) {
+            printf("match_position: converged (stable_count=%d)\r\n", stable_count);
             break;
         }
 
-        // 安全: センサ見失い
-        if (ad_fr < F_ALIGN_DETECT_THR || ad_fl < F_ALIGN_DETECT_THR) {
-            printf("match_position: lost front wall (FR=%u, FL=%u)\r\n",
-                   (unsigned)ad_fr, (unsigned)ad_fl);
-            break;
-        }
-
-        // 並進・回転コマンド（符号は近い→後退、右強→左回転になるように）
-        float v_cmd = -MATCH_POS_KP_TRANS * e_pos;
-        float w_cmd = -MATCH_POS_KP_ROT   * e_ang;
-
-        // 飽和
+        // 並進は target_distance を微小更新して distance_PID を活用
+        float v_cmd = -MATCH_POS_KP_TRANS * e_pos; // [mm/s]
         if (v_cmd >  MATCH_POS_VEL_MAX) v_cmd =  MATCH_POS_VEL_MAX;
         if (v_cmd < -MATCH_POS_VEL_MAX) v_cmd = -MATCH_POS_VEL_MAX;
+        target_distance += v_cmd * dt; // 目標位置を増減
+
+        // 角度は omega_interrupt を直接与えて omega_PID を活用
+        float w_cmd = MATCH_POS_KP_ROT * e_ang; // [deg/s]
         if (w_cmd >  MATCH_POS_OMEGA_MAX) w_cmd =  MATCH_POS_OMEGA_MAX;
         if (w_cmd < -MATCH_POS_OMEGA_MAX) w_cmd = -MATCH_POS_OMEGA_MAX;
-
-        // 直接指令（加速度は0維持、積分器はISR側）
-        velocity_interrupt = v_cmd;
-        omega_interrupt    = w_cmd;
-
-        // タイムアウト
-        if ((HAL_GetTick() - t0) > MATCH_POS_TIMEOUT_MS) {
-            printf("match_position: timeout\r\n");
-            break;
-        }
+        omega_interrupt = w_cmd;
 
         HAL_Delay(2); // 2ms周期で更新（ISRは1kHz）
     }
 
-    // 停止
-    velocity_interrupt = 0;
+    // 停止（収束 or 安全離脱）
     omega_interrupt = 0;
+    velocity_interrupt = 0;
     drive_stop();
 
     // 復帰
