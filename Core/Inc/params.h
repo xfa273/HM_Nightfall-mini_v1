@@ -15,7 +15,7 @@
     走行系
 ------------------------------------------------------------*/
 /*走行パラメータ*/
-#define D_TIRE            13.317F  // タイヤ直径[mm]
+#define D_TIRE            13.315F  // タイヤ直径[mm]
 #define DIST_HALF_SEC     45     // 迷路の半区間距離[mm]
 #define DIST_D_HALF_SEC   67.279 // 斜めの半区間距離[mm]
 #define DIST_FIRST_SEC    14     // 最初の区画の距離[mm]
@@ -86,7 +86,7 @@
 #define IR_WAIT_US 30
 
 // 探索中の横壁ズレ検出しきい値（wall_PIDで算出するlatest_wall_error[ADcount]の絶対値）
-#define WALL_ALIGN_ERR_THR  450
+#define WALL_ALIGN_ERR_THR  500
 
 /* 前壁センサを用いた中央合わせ（非接触）用パラメータ */
 // 区画中央における前壁センサの目標値（実機で調整）

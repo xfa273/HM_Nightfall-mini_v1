@@ -7,6 +7,8 @@
 
 #include "global.h"
 #include <math.h>
+#include "../Inc/shortest_run_params.h"
+#include "../Inc/path.h"
 
 void run(void) {
 
@@ -275,4 +277,95 @@ void run(void) {
     buzzer_beep(300);
 
     drive_stop();
+}
+
+void run_shortest(uint8_t mode, uint8_t case_index) {
+    // case_index: 4..7 -> idx 0..3
+    uint8_t idx = 0;
+    if (case_index >= 4 && case_index <= 7) {
+        idx = (uint8_t)(case_index - 4);
+    } else {
+        // フォールバック: 0 を使用
+        idx = 0;
+    }
+
+    const ShortestRunModeParams_t *pm = NULL;
+    const ShortestRunCaseParams_t *pcases = NULL;
+    switch (mode) {
+        case 2: pm = &shortestRunModeParams2; pcases = &shortestRunCaseParamsMode2[0]; break;
+        case 3: pm = &shortestRunModeParams3; pcases = &shortestRunCaseParamsMode3[0]; break;
+        case 4: pm = &shortestRunModeParams4; pcases = &shortestRunCaseParamsMode4[0]; break;
+        case 5: pm = &shortestRunModeParams5; pcases = &shortestRunCaseParamsMode5[0]; break;
+        case 6: pm = &shortestRunModeParams6; pcases = &shortestRunCaseParamsMode6[0]; break;
+        case 7: pm = &shortestRunModeParams7; pcases = &shortestRunCaseParamsMode7[0]; break;
+        default: pm = &shortestRunModeParams2; pcases = &shortestRunCaseParamsMode2[0]; break;
+    }
+
+    const ShortestRunCaseParams_t *p = &pcases[idx];
+
+    printf("Mode %d-%d Shortest Run.\n", mode, case_index);
+
+    // 経路の重み（テーブルから設定）
+    straight_weight = p->straight_weight;
+    diagonal_weight = p->diagonal_weight;
+
+    // 経路作成
+    makePath(1);
+
+    // 走行フラグ
+    MF.FLAG.RUNNING = 1;
+
+    // パラメータ適用
+    // 直線（caseごと）
+    acceleration_straight      = p->acceleration_straight;
+    acceleration_straight_dash = p->acceleration_straight_dash;
+    velocity_straight          = p->velocity_straight;
+    // ターン（mode共通）
+    velocity_turn90            = pm->velocity_turn90;
+    alpha_turn90               = pm->alpha_turn90;
+    acceleration_turn          = pm->acceleration_turn;
+    dist_offset_in             = pm->dist_offset_in;
+    dist_offset_out            = pm->dist_offset_out;
+    val_offset_in              = pm->val_offset_in;
+    angle_turn_90              = pm->angle_turn_90;
+    velocity_l_turn_90         = pm->velocity_l_turn_90;
+    alpha_l_turn_90            = pm->alpha_l_turn_90;
+    angle_l_turn_90            = pm->angle_l_turn_90;
+    dist_l_turn_in_90          = pm->dist_l_turn_in_90;
+    dist_l_turn_out_90         = pm->dist_l_turn_out_90;
+    velocity_l_turn_180        = pm->velocity_l_turn_180;
+    alpha_l_turn_180           = pm->alpha_l_turn_180;
+    angle_l_turn_180           = pm->angle_l_turn_180;
+    dist_l_turn_in_180         = pm->dist_l_turn_in_180;
+    dist_l_turn_out_180        = pm->dist_l_turn_out_180;
+    // 壁制御（caseごと）
+    kp_wall                    = p->kp_wall;
+
+    // 壁切れ後の距離・ケツ当て
+    dist_wall_end = 0;
+    duty_setposition = 40;
+
+    velocity_interrupt = 0;
+
+    // センサ・モータ初期化
+    led_flash(10);
+    drive_variable_reset();
+    IMU_GetOffset();
+    drive_enable_motor();
+
+    MF.FLAG.SCND = 1;
+    MF.FLAG.RETURN = 0;
+
+    led_flash(5);
+    get_base();
+
+    // ファン出力（mode共通）
+    drive_fan(pm->fan_power);
+
+    // 実行
+    run();
+
+    // 後処理
+    drive_fan(0);
+    MF.FLAG.RUNNING = 0;
 }

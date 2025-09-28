@@ -141,26 +141,24 @@ void adachi(void) {
             } else if (!known_straight && acceled) {
                 one_sectionD();
                 acceled = false;
-            } else {
-                if (fabsf(latest_wall_error) > WALL_ALIGN_ERR_THR) {
-                    if (r_wall) {
-                        half_sectionD(0);
-                        rotate_R90();
-                        match_position(0);
-                        rotate_L90();
-                        half_sectionA(1);
-                    } else if (l_wall) {
-                        half_sectionD(0);
-                        rotate_L90();
-                        match_position(0);
-                        rotate_R90();
-                        half_sectionA(1);
-                    }else{
-                        one_sectionU(1);
-                    }
-                } else {
+            } else if (!acceled && fabsf(latest_wall_error) > WALL_ALIGN_ERR_THR) {
+                if (r_wall) {
+                    half_sectionD(0);
+                    rotate_R90();
+                    match_position(0);
+                    rotate_L90();
+                    half_sectionA(1);
+                } else if (l_wall) {
+                    half_sectionD(0);
+                    rotate_L90();
+                    match_position(0);
+                    rotate_R90();
+                    half_sectionA(1);
+                }else{
                     one_sectionU(1);
                 }
+            } else {
+                one_sectionU(1);
             }
 
             led_write(0, 0);
