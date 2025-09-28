@@ -432,6 +432,9 @@ void turn_L90(uint8_t fwall) {
 //+++++++++++++++++++++++++++++++++++++++++++++++
 void l_turn_R90(void) {
 
+    // スラローム前は壁制御OFF（元の挙動を維持）
+    MF.FLAG.CTRL = 0;
+
     // 前距離（必要なら）
     if (dist_l_turn_in_90 > 0.0f) {
         MF.FLAG.CTRL = 1;
@@ -454,6 +457,9 @@ void l_turn_R90(void) {
 // 戻り値：なし
 //+++++++++++++++++++++++++++++++++++++++++++++++
 void l_turn_L90(void) {
+
+    // スラローム前は壁制御OFF（元の挙動を維持）
+    MF.FLAG.CTRL = 0;
 
     // 前距離（必要なら）
     if (dist_l_turn_in_90 > 0.0f) {
@@ -478,6 +484,9 @@ void l_turn_L90(void) {
 //+++++++++++++++++++++++++++++++++++++++++++++++
 void l_turn_R180(uint8_t fwall) {
     (void)fwall;
+    // スラローム前は壁制御OFF（元の挙動を維持）
+    MF.FLAG.CTRL = 0;
+
     // 前距離（必要なら）
     if (dist_l_turn_in_180 > 0.0f) {
         MF.FLAG.CTRL = 1;
@@ -501,6 +510,9 @@ void l_turn_R180(uint8_t fwall) {
 //+++++++++++++++++++++++++++++++++++++++++++++++
 void l_turn_L180(uint8_t fwall) {
     (void)fwall;
+    // スラローム前は壁制御OFF（元の挙動を維持）
+    MF.FLAG.CTRL = 0;
+
     // 前距離（必要なら）
     if (dist_l_turn_in_180 > 0.0f) {
         MF.FLAG.CTRL = 1;
