@@ -39,6 +39,8 @@ typedef struct {
     float angle_l_turn_180;           ///< 大回り180°ターン角度 (度)
     float dist_l_turn_in_180;         ///< 大回り180°入り距離 (mm)
     float dist_l_turn_out_180;        ///< 大回り180°オフセット (mm)
+    // 壁制御
+    float kp_wall;                    ///< 壁制御比例ゲイン
 } ShortestRunParam_t;
 
 // モード2～7それぞれ4つのケース(case4～7)用パラメータ配列

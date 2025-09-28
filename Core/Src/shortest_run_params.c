@@ -27,7 +27,8 @@ const ShortestRunParam_t shortestRunParamsMode2[4] = {
         .alpha_l_turn_180           = 4640.0f,
         .angle_l_turn_180           = 179.0f,
         .dist_l_turn_in_180         = 12.0f,
-        .dist_l_turn_out_180        = 19.0f
+        .dist_l_turn_out_180        = 19.0f,
+        .kp_wall                    = 0.05f
     },
     /* case5 */ {
         .acceleration_straight      = 1000.0f,
@@ -49,7 +50,8 @@ const ShortestRunParam_t shortestRunParamsMode2[4] = {
         .alpha_l_turn_180           = 4640.0f,
         .angle_l_turn_180           = 179.0f,
         .dist_l_turn_in_180         = 12.0f,
-        .dist_l_turn_out_180        = 19.0f
+        .dist_l_turn_out_180        = 19.0f,
+        .kp_wall                    = 0.05f
     },
     /* case6 */ {
         .acceleration_straight      = 1000.0f,
@@ -71,7 +73,8 @@ const ShortestRunParam_t shortestRunParamsMode2[4] = {
         .alpha_l_turn_180           = 4640.0f,
         .angle_l_turn_180           = 179.0f,
         .dist_l_turn_in_180         = 12.0f,
-        .dist_l_turn_out_180        = 19.0f
+        .dist_l_turn_out_180        = 19.0f,
+        .kp_wall                    = 0.05f
     },
     /* case7 */ {
         .acceleration_straight      = 1000.0f,
@@ -93,7 +96,8 @@ const ShortestRunParam_t shortestRunParamsMode2[4] = {
         .alpha_l_turn_180           = 4640.0f,
         .angle_l_turn_180           = 179.0f,
         .dist_l_turn_in_180         = 12.0f,
-        .dist_l_turn_out_180        = 19.0f
+        .dist_l_turn_out_180        = 19.0f,
+        .kp_wall                    = 0.05f
     },
 };
 const ShortestRunParam_t shortestRunParamsMode3[4] = {
@@ -115,7 +119,8 @@ const ShortestRunParam_t shortestRunParamsMode3[4] = {
         .velocity_l_turn_180       = 1000.0f,
         .alpha_l_turn_180          = 4680.0f,
         .angle_l_turn_180          = 179.0f,
-        .dist_l_turn_out_180       = 45.0f
+        .dist_l_turn_out_180       = 45.0f,
+        .kp_wall                   = 0.05f
     },
     /* case5 */ {
         .acceleration_straight     = 3555.6f,
@@ -135,7 +140,8 @@ const ShortestRunParam_t shortestRunParamsMode3[4] = {
         .velocity_l_turn_180       = 1000.0f,
         .alpha_l_turn_180          = 4680.0f,
         .angle_l_turn_180          = 179.0f,
-        .dist_l_turn_out_180       = 45.0f
+        .dist_l_turn_out_180       = 45.0f,
+        .kp_wall                   = 0.05f
     },
     /* case6 */ {
         .acceleration_straight     = 3555.6f,
@@ -155,7 +161,8 @@ const ShortestRunParam_t shortestRunParamsMode3[4] = {
         .velocity_l_turn_180       = 1000.0f,
         .alpha_l_turn_180          = 4680.0f,
         .angle_l_turn_180          = 179.0f,
-        .dist_l_turn_out_180       = 45.0f
+        .dist_l_turn_out_180       = 45.0f,
+        .kp_wall                   = 0.05f
     },
     /* case7 */ {
         .acceleration_straight     = 3555.6f,
@@ -175,7 +182,8 @@ const ShortestRunParam_t shortestRunParamsMode3[4] = {
         .velocity_l_turn_180       = 1000.0f,
         .alpha_l_turn_180          = 4680.0f,
         .angle_l_turn_180          = 179.0f,
-        .dist_l_turn_out_180       = 45.0f
+        .dist_l_turn_out_180       = 45.0f,
+        .kp_wall                   = 0.05f
     },
 };
 
@@ -198,7 +206,8 @@ const ShortestRunParam_t shortestRunParamsMode4[4] = {
         .velocity_l_turn_180       = 1300.0f,
         .alpha_l_turn_180          = 7500.0f,
         .angle_l_turn_180          = 178.0f,
-        .dist_l_turn_out_180       = 85.0f
+        .dist_l_turn_out_180       = 85.0f,
+        .kp_wall                   = 0.05f
     },
     /* case5 */ {
         .acceleration_straight     = 5555.6f,
@@ -218,7 +227,8 @@ const ShortestRunParam_t shortestRunParamsMode4[4] = {
         .velocity_l_turn_180       = 1300.0f,
         .alpha_l_turn_180          = 7500.0f,
         .angle_l_turn_180          = 178.0f,
-        .dist_l_turn_out_180       = 85.0f
+        .dist_l_turn_out_180       = 85.0f,
+        .kp_wall                   = 0.05f
     },
     /* case6 */ {
         .acceleration_straight     = 5555.6f,
@@ -238,7 +248,8 @@ const ShortestRunParam_t shortestRunParamsMode4[4] = {
         .velocity_l_turn_180       = 1300.0f,
         .alpha_l_turn_180          = 7500.0f,
         .angle_l_turn_180          = 178.0f,
-        .dist_l_turn_out_180       = 85.0f
+        .dist_l_turn_out_180       = 85.0f,
+        .kp_wall                   = 0.05f
     },
     /* case7 */ {
         .acceleration_straight     = 5555.6f,
@@ -258,7 +269,8 @@ const ShortestRunParam_t shortestRunParamsMode4[4] = {
         .velocity_l_turn_180       = 1300.0f,
         .alpha_l_turn_180          = 7500.0f,
         .angle_l_turn_180          = 178.0f,
-        .dist_l_turn_out_180       = 85.0f
+        .dist_l_turn_out_180       = 85.0f,
+        .kp_wall                   = 0.05f
     },
 };
 
@@ -281,7 +293,8 @@ const ShortestRunParam_t shortestRunParamsMode5[4] = {
         .velocity_l_turn_180       = 1500.0f,
         .alpha_l_turn_180          = 11000.0f,
         .angle_l_turn_180          = 175.0f,
-        .dist_l_turn_out_180       = 105.0f
+        .dist_l_turn_out_180       = 105.0f,
+        .kp_wall                   = 0.05f
     },
     /* case5 */ {
         .acceleration_straight     = 8000.0f,
@@ -301,7 +314,8 @@ const ShortestRunParam_t shortestRunParamsMode5[4] = {
         .velocity_l_turn_180       = 1500.0f,
         .alpha_l_turn_180          = 11000.0f,
         .angle_l_turn_180          = 175.0f,
-        .dist_l_turn_out_180       = 105.0f
+        .dist_l_turn_out_180       = 105.0f,
+        .kp_wall                   = 0.05f
     },
     /* case6 */ {
         .acceleration_straight     = 8000.0f,
@@ -321,7 +335,8 @@ const ShortestRunParam_t shortestRunParamsMode5[4] = {
         .velocity_l_turn_180       = 1500.0f,
         .alpha_l_turn_180          = 11000.0f,
         .angle_l_turn_180          = 175.0f,
-        .dist_l_turn_out_180       = 105.0f
+        .dist_l_turn_out_180       = 105.0f,
+        .kp_wall                   = 0.05f
     },
     /* case7 */ {
         .acceleration_straight     = 8000.0f,
@@ -341,7 +356,8 @@ const ShortestRunParam_t shortestRunParamsMode5[4] = {
         .velocity_l_turn_180       = 1500.0f,
         .alpha_l_turn_180          = 11000.0f,
         .angle_l_turn_180          = 175.0f,
-        .dist_l_turn_out_180       = 105.0f
+        .dist_l_turn_out_180       = 105.0f,
+        .kp_wall                   = 0.05f
     },
 };
 
@@ -364,7 +380,8 @@ const ShortestRunParam_t shortestRunParamsMode6[4] = {
         .velocity_l_turn_180       = 2000.0f,
         .alpha_l_turn_180          = 20500.0f,
         .angle_l_turn_180          = 179.0f,
-        .dist_l_turn_out_180       = 138.0f
+        .dist_l_turn_out_180       = 138.0f,
+        .kp_wall                   = 0.05f
     },
     /* case5 */ {
         .acceleration_straight     = 10888.9f,
@@ -384,7 +401,8 @@ const ShortestRunParam_t shortestRunParamsMode6[4] = {
         .velocity_l_turn_180       = 2000.0f,
         .alpha_l_turn_180          = 20500.0f,
         .angle_l_turn_180          = 179.0f,
-        .dist_l_turn_out_180       = 138.0f
+        .dist_l_turn_out_180       = 138.0f,
+        .kp_wall                   = 0.05f
     },
     /* case6 */ {
         .acceleration_straight     = 10888.9f,
@@ -404,7 +422,8 @@ const ShortestRunParam_t shortestRunParamsMode6[4] = {
         .velocity_l_turn_180       = 2000.0f,
         .alpha_l_turn_180          = 20500.0f,
         .angle_l_turn_180          = 179.0f,
-        .dist_l_turn_out_180       = 138.0f
+        .dist_l_turn_out_180       = 138.0f,
+        .kp_wall                   = 0.05f
     },
     /* case7 */ {
         .acceleration_straight     = 10888.9f,
@@ -424,7 +443,8 @@ const ShortestRunParam_t shortestRunParamsMode6[4] = {
         .velocity_l_turn_180       = 2000.0f,
         .alpha_l_turn_180          = 20500.0f,
         .angle_l_turn_180          = 179.0f,
-        .dist_l_turn_out_180       = 138.0f
+        .dist_l_turn_out_180       = 138.0f,
+        .kp_wall                   = 0.05f
     },
 };
 
@@ -447,7 +467,8 @@ const ShortestRunParam_t shortestRunParamsMode7[4] = {
         .velocity_l_turn_180       = 2200.0f,
         .alpha_l_turn_180          = 24000.0f,
         .angle_l_turn_180          = 176.8f,
-        .dist_l_turn_out_180       = 169.0f
+        .dist_l_turn_out_180       = 169.0f,
+        .kp_wall                   = 0.05f
     },
     /* case5 */ {
         .acceleration_straight     = 14222.2f,
@@ -467,7 +488,8 @@ const ShortestRunParam_t shortestRunParamsMode7[4] = {
         .velocity_l_turn_180       = 2200.0f,
         .alpha_l_turn_180          = 24000.0f,
         .angle_l_turn_180          = 176.8f,
-        .dist_l_turn_out_180       = 169.0f
+        .dist_l_turn_out_180       = 169.0f,
+        .kp_wall                   = 0.05f
     },
     /* case6 */ {
         .acceleration_straight     = 10888.9f,
@@ -487,7 +509,8 @@ const ShortestRunParam_t shortestRunParamsMode7[4] = {
         .velocity_l_turn_180       = 2200.0f,
         .alpha_l_turn_180          = 24000.0f,
         .angle_l_turn_180          = 176.8f,
-        .dist_l_turn_out_180       = 169.0f
+        .dist_l_turn_out_180       = 169.0f,
+        .kp_wall                   = 0.05f
     },
     /* case7 */ {
         .acceleration_straight     = 10888.9f,
@@ -507,7 +530,7 @@ const ShortestRunParam_t shortestRunParamsMode7[4] = {
         .velocity_l_turn_180       = 2200.0f,
         .alpha_l_turn_180          = 24000.0f,
         .angle_l_turn_180          = 176.8f,
-        .dist_l_turn_out_180       = 169.0f
+        .dist_l_turn_out_180       = 169.0f,
+        .kp_wall                   = 0.05f
     },
 };
-

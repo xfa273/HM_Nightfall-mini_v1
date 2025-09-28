@@ -255,10 +255,10 @@ void mode3() {
                 angle_l_turn_180           = p->angle_l_turn_180;
                 dist_l_turn_in_180         = p->dist_l_turn_in_180;
                 dist_l_turn_out_180        = p->dist_l_turn_out_180;
+                kp_wall                    = p->kp_wall;
             }
 
             // 壁制御とケツ当て
-            kp_wall = 0.2;
             duty_setposition = 40;
 
             velocity_interrupt = 0;
@@ -321,9 +321,9 @@ void mode3() {
                 angle_l_turn_180           = p->angle_l_turn_180;
                 dist_l_turn_in_180         = p->dist_l_turn_in_180;
                 dist_l_turn_out_180        = p->dist_l_turn_out_180;
+                kp_wall                    = p->kp_wall;
             }
             // 壁制御とケツ当て
-            kp_wall = 0.2;
             duty_setposition = 40;
 
             velocity_interrupt = 0;
@@ -387,9 +387,9 @@ void mode3() {
                 angle_l_turn_180           = p->angle_l_turn_180;
                 dist_l_turn_in_180         = p->dist_l_turn_in_180;
                 dist_l_turn_out_180        = p->dist_l_turn_out_180;
+                kp_wall                    = p->kp_wall;
             }
             // 壁制御とケツ当て
-            kp_wall = 0.2;
             duty_setposition = 40;
 
             velocity_interrupt = 0;
@@ -453,9 +453,9 @@ void mode3() {
                 angle_l_turn_180           = p->angle_l_turn_180;
                 dist_l_turn_in_180         = p->dist_l_turn_in_180;
                 dist_l_turn_out_180        = p->dist_l_turn_out_180;
+                kp_wall                    = p->kp_wall;
             }
             // 壁制御とケツ当て
-            kp_wall = 0.2;
             duty_setposition = 40;
 
             velocity_interrupt = 0;

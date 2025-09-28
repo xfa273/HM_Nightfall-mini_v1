@@ -230,11 +230,11 @@ void mode2() {
                 angle_l_turn_180           = p->angle_l_turn_180;
                 dist_l_turn_in_180         = p->dist_l_turn_in_180;
                 dist_l_turn_out_180        = p->dist_l_turn_out_180;
+                kp_wall                    = p->kp_wall;
             }
             // 壁切れ後の距離
             dist_wall_end = 0;
             // 壁制御とケツ当て
-            kp_wall = 0.05;
             duty_setposition = 40;
 
             velocity_interrupt = 0;
@@ -296,11 +296,11 @@ void mode2() {
                 angle_l_turn_180           = p->angle_l_turn_180;
                 dist_l_turn_in_180         = p->dist_l_turn_in_180;
                 dist_l_turn_out_180        = p->dist_l_turn_out_180;
+                kp_wall                    = p->kp_wall;
             }
             // 壁切れ後の距離
             dist_wall_end = 12;
             // 壁制御とケツ当て
-            kp_wall = 0.2;
             duty_setposition = 40;
 
             velocity_interrupt = 0;
@@ -357,11 +357,11 @@ void mode2() {
                 angle_l_turn_180           = p->angle_l_turn_180;
                 dist_l_turn_in_180         = p->dist_l_turn_in_180;
                 dist_l_turn_out_180        = p->dist_l_turn_out_180;
+                kp_wall                    = p->kp_wall;
             }
             // 壁切れ後の距離
             dist_wall_end = 12;
             // 壁制御とケツ当て
-            kp_wall = 0.2;
             duty_setposition = 40;
 
             velocity_interrupt = 0;
@@ -418,11 +418,11 @@ void mode2() {
                 angle_l_turn_180           = p->angle_l_turn_180;
                 dist_l_turn_in_180         = p->dist_l_turn_in_180;
                 dist_l_turn_out_180        = p->dist_l_turn_out_180;
+                kp_wall                    = p->kp_wall;
             }
             // 壁切れ後の距離
             dist_wall_end = 12;
             // 壁制御とケツ当て
-            kp_wall = 0.2;
             duty_setposition = 40;
 
             velocity_interrupt = 0;
