@@ -231,10 +231,12 @@ void mode5() {
                 velocity_l_turn_90         = p->velocity_l_turn_90;
                 alpha_l_turn_90            = p->alpha_l_turn_90;
                 angle_l_turn_90            = p->angle_l_turn_90;
+                dist_l_turn_in_90          = p->dist_l_turn_in_90;
                 dist_l_turn_out_90         = p->dist_l_turn_out_90;
                 velocity_l_turn_180        = p->velocity_l_turn_180;
                 alpha_l_turn_180           = p->alpha_l_turn_180;
                 angle_l_turn_180           = p->angle_l_turn_180;
+                dist_l_turn_in_180         = p->dist_l_turn_in_180;
                 dist_l_turn_out_180        = p->dist_l_turn_out_180;
             }
             // 壁制御とケツ当て
@@ -287,10 +289,12 @@ void mode5() {
                 velocity_l_turn_90         = p->velocity_l_turn_90;
                 alpha_l_turn_90            = p->alpha_l_turn_90;
                 angle_l_turn_90            = p->angle_l_turn_90;
+                dist_l_turn_in_90          = p->dist_l_turn_in_90;
                 dist_l_turn_out_90         = p->dist_l_turn_out_90;
                 velocity_l_turn_180        = p->velocity_l_turn_180;
                 alpha_l_turn_180           = p->alpha_l_turn_180;
                 angle_l_turn_180           = p->angle_l_turn_180;
+                dist_l_turn_in_180         = p->dist_l_turn_in_180;
                 dist_l_turn_out_180        = p->dist_l_turn_out_180;
             }
             // 壁制御とケツ当て
@@ -344,10 +348,12 @@ void mode5() {
                 velocity_l_turn_90         = p->velocity_l_turn_90;
                 alpha_l_turn_90            = p->alpha_l_turn_90;
                 angle_l_turn_90            = p->angle_l_turn_90;
+                dist_l_turn_in_90          = p->dist_l_turn_in_90;
                 dist_l_turn_out_90         = p->dist_l_turn_out_90;
                 velocity_l_turn_180        = p->velocity_l_turn_180;
                 alpha_l_turn_180           = p->alpha_l_turn_180;
                 angle_l_turn_180           = p->angle_l_turn_180;
+                dist_l_turn_in_180         = p->dist_l_turn_in_180;
                 dist_l_turn_out_180        = p->dist_l_turn_out_180;
             }
             // 壁制御とケツ当て
@@ -389,7 +395,7 @@ void mode5() {
             makePath(1);
 
             {
-                const ShortestRunParam_t *p = &shortestRunParamsMode5[3];
+                const ShortestRunParam_t *p = &shortestRunParamsMode5[1];
                 acceleration_straight      = p->acceleration_straight;
                 acceleration_straight_dash = p->acceleration_straight_dash;
                 velocity_straight          = p->velocity_straight;
@@ -403,10 +409,12 @@ void mode5() {
                 velocity_l_turn_90         = p->velocity_l_turn_90;
                 alpha_l_turn_90            = p->alpha_l_turn_90;
                 angle_l_turn_90            = p->angle_l_turn_90;
+                dist_l_turn_in_90          = p->dist_l_turn_in_90;
                 dist_l_turn_out_90         = p->dist_l_turn_out_90;
                 velocity_l_turn_180        = p->velocity_l_turn_180;
                 alpha_l_turn_180           = p->alpha_l_turn_180;
                 angle_l_turn_180           = p->angle_l_turn_180;
+                dist_l_turn_in_180         = p->dist_l_turn_in_180;
                 dist_l_turn_out_180        = p->dist_l_turn_out_180;
             }
             // 壁制御とケツ当て
@@ -522,11 +530,13 @@ void mode5() {
             velocity_l_turn_90 = 1700;
             alpha_l_turn_90 = 17000;
             angle_l_turn_90 = 79.5;
+            dist_l_turn_in_90 = 0;
             dist_l_turn_out_90 = 89;
             // 180°大回りターン
             velocity_l_turn_180 = 1500;
             alpha_l_turn_180 = 11000;
             angle_l_turn_180 = 175;
+            dist_l_turn_in_180 = 0;
             dist_l_turn_out_180 = 105;
             // 壁制御とケツ当て
             kp_wall = 0.3;
