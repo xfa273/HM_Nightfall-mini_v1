@@ -31,15 +31,18 @@ typedef struct {
     float velocity_l_turn_90;         ///< 大回り90°速度 (mm/s)
     float alpha_l_turn_90;            ///< 大回り90°ハンドリングパラメータ
     float angle_l_turn_90;            ///< 大回り90°ターン角度 (度)
+    float dist_l_turn_in_90;          ///< 大回り90°入り距離 (mm)
     float dist_l_turn_out_90;         ///< 大回り90°オフセット (mm)
     // 180°大回りターン
     float velocity_l_turn_180;        ///< 大回り180°速度 (mm/s)
     float alpha_l_turn_180;           ///< 大回り180°ハンドリングパラメータ
     float angle_l_turn_180;           ///< 大回り180°ターン角度 (度)
+    float dist_l_turn_in_180;         ///< 大回り180°入り距離 (mm)
     float dist_l_turn_out_180;        ///< 大回り180°オフセット (mm)
 } ShortestRunParam_t;
 
-// モード3～7それぞれ4つのケース(case4～7)用パラメータ配列
+// モード2～7それぞれ4つのケース(case4～7)用パラメータ配列
+extern const ShortestRunParam_t shortestRunParamsMode2[4];
 extern const ShortestRunParam_t shortestRunParamsMode3[4];
 extern const ShortestRunParam_t shortestRunParamsMode4[4];
 extern const ShortestRunParam_t shortestRunParamsMode5[4];
