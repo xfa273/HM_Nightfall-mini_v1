@@ -51,10 +51,12 @@ volatile bool l_wall;         // 左壁の有無
 volatile float velocity_l_turn_90; // 90°大回りターンの速度[mm/s]
 volatile float alpha_l_turn_90; // 90°大回りターンの角加速度[deg/sec^2]
 volatile float angle_l_turn_90; // 90°大回りターンの旋回角度[deg]
+volatile float dist_l_turn_in_90;  // 90°大回りターンの入オフセット距離[mm]
 volatile float dist_l_turn_out_90; // 90°大回りターンの出オフセット距離[mm]
 volatile float velocity_l_turn_180; // 180°大回りターンの速度[mm/s]
 volatile float alpha_l_turn_180; // 180°大回りターンの角加速度[deg/sec^2]
 volatile float angle_l_turn_180; // 180°大回りターンの旋回角度[deg]
+volatile float dist_l_turn_in_180;  // 180°大回りターンの入オフセット距離[mm]
 volatile float dist_l_turn_out_180; // 180°大回りターンの出オフセット距離[mm]
 
 // 斜め45度用
@@ -211,11 +213,14 @@ extern volatile bool l_wall;         // 左壁の有無
 extern volatile float velocity_l_turn_90; // 90°大回りターンの速度[mm/s]
 extern volatile float alpha_l_turn_90; // 90°大回りターンの角加速度[deg/sec^2]
 extern volatile float angle_l_turn_90; // 90°大回りターンの旋回角度[deg]
+extern volatile float dist_l_turn_in_90;  // 90°大回りターンの入オフセット距離[mm]
 extern volatile float
     dist_l_turn_out_90; // 90°大回りターンの出オフセット距離[mm]
 extern volatile float velocity_l_turn_180; // 180°大回りターンの速度[mm/s]
 extern volatile float alpha_l_turn_180; // 180°大回りターンの角加速度[deg/sec^2]
 extern volatile float angle_l_turn_180; // 180°大回りターンの旋回角度[deg]
+extern volatile float
+    dist_l_turn_in_180; // 180°大回りターンの入オフセット距離[mm]
 extern volatile float
     dist_l_turn_out_180; // 180°大回りターンの出オフセット距離[mm]
 

@@ -432,7 +432,13 @@ void turn_L90(uint8_t fwall) {
 //+++++++++++++++++++++++++++++++++++++++++++++++
 void l_turn_R90(void) {
 
-    MF.FLAG.CTRL = 0;
+    // 前距離（必要なら）
+    if (dist_l_turn_in_90 > 0.0f) {
+        MF.FLAG.CTRL = 1;
+        driveA(dist_l_turn_in_90, speed_now, velocity_l_turn_90, 0);
+        MF.FLAG.CTRL = 0;
+    }
+
     MF.FLAG.SLALOM_R = 1;
     driveSR(angle_l_turn_90, alpha_l_turn_90);
     MF.FLAG.CTRL = 1;
@@ -449,7 +455,13 @@ void l_turn_R90(void) {
 //+++++++++++++++++++++++++++++++++++++++++++++++
 void l_turn_L90(void) {
 
-    MF.FLAG.CTRL = 0;
+    // 前距離（必要なら）
+    if (dist_l_turn_in_90 > 0.0f) {
+        MF.FLAG.CTRL = 1;
+        driveA(dist_l_turn_in_90, speed_now, velocity_l_turn_90, 0);
+        MF.FLAG.CTRL = 0;
+    }
+
     MF.FLAG.SLALOM_L = 1;
     driveSL(angle_l_turn_90, alpha_l_turn_90);
     MF.FLAG.CTRL = 1;
@@ -466,7 +478,13 @@ void l_turn_L90(void) {
 //+++++++++++++++++++++++++++++++++++++++++++++++
 void l_turn_R180(uint8_t fwall) {
     (void)fwall;
-    MF.FLAG.CTRL = 0;
+    // 前距離（必要なら）
+    if (dist_l_turn_in_180 > 0.0f) {
+        MF.FLAG.CTRL = 1;
+        driveA(dist_l_turn_in_180, speed_now, velocity_l_turn_180, 0);
+        MF.FLAG.CTRL = 0;
+    }
+
     MF.FLAG.SLALOM_R = 1;
     driveSR(angle_l_turn_180, alpha_l_turn_180);
     MF.FLAG.CTRL = 1;
@@ -483,7 +501,13 @@ void l_turn_R180(uint8_t fwall) {
 //+++++++++++++++++++++++++++++++++++++++++++++++
 void l_turn_L180(uint8_t fwall) {
     (void)fwall;
-    MF.FLAG.CTRL = 0;
+    // 前距離（必要なら）
+    if (dist_l_turn_in_180 > 0.0f) {
+        MF.FLAG.CTRL = 1;
+        driveA(dist_l_turn_in_180, speed_now, velocity_l_turn_180, 0);
+        MF.FLAG.CTRL = 0;
+    }
+
     MF.FLAG.SLALOM_L = 1;
     driveSL(angle_l_turn_180, alpha_l_turn_180);
     MF.FLAG.CTRL = 1;
