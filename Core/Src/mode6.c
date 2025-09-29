@@ -189,7 +189,7 @@ void mode6() {
             makePath(1);
 
             {
-                const ShortestRunCaseParams_t *pc = &shortestRunCaseParamsMode6[3];
+                const ShortestRunCaseParams_t *pc = &shortestRunCaseParamsMode6[4];
                 const ShortestRunModeParams_t *pm = &shortestRunModeParams6;
                 // 直線（caseごと）
                 acceleration_straight      = pc->acceleration_straight;
