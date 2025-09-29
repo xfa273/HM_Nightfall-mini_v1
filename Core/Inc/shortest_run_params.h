@@ -33,6 +33,9 @@ typedef struct {
     float dist_l_turn_out_180;        ///< 大回り180°オフセット (mm)
     // ファン
     uint16_t fan_power;               ///< ファン出力 (0-1000)
+    // 経路生成（makePath）引数設定
+    int makepath_type_case3;          ///< case3 用 makePath 引数（将来拡張に備えて int）
+    int makepath_type_case47;         ///< case4〜7 用 makePath 引数（将来拡張に備えて int）
 } ShortestRunModeParams_t;
 
 /**
@@ -58,12 +61,12 @@ extern const ShortestRunModeParams_t shortestRunModeParams5;
 extern const ShortestRunModeParams_t shortestRunModeParams6;
 extern const ShortestRunModeParams_t shortestRunModeParams7;
 
-// ケース個別パラメータ（case4..7の順に4要素）
-extern const ShortestRunCaseParams_t shortestRunCaseParamsMode2[4];
-extern const ShortestRunCaseParams_t shortestRunCaseParamsMode3[4];
-extern const ShortestRunCaseParams_t shortestRunCaseParamsMode4[4];
-extern const ShortestRunCaseParams_t shortestRunCaseParamsMode5[4];
-extern const ShortestRunCaseParams_t shortestRunCaseParamsMode6[4];
-extern const ShortestRunCaseParams_t shortestRunCaseParamsMode7[4];
+// ケース個別パラメータ（case3..7の順に5要素）
+extern const ShortestRunCaseParams_t shortestRunCaseParamsMode2[5];
+extern const ShortestRunCaseParams_t shortestRunCaseParamsMode3[5];
+extern const ShortestRunCaseParams_t shortestRunCaseParamsMode4[5];
+extern const ShortestRunCaseParams_t shortestRunCaseParamsMode5[5];
+extern const ShortestRunCaseParams_t shortestRunCaseParamsMode6[5];
+extern const ShortestRunCaseParams_t shortestRunCaseParamsMode7[5];
 
 #endif // SHORTEST_RUN_PARAMS_H

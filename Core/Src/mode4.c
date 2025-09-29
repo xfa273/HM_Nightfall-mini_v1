@@ -161,51 +161,7 @@ void mode4() {
 
         case 3:
             printf("Mode 4-3.\n");
-
-            // 経路の重み
-            straight_weight = 0; // 直線の優先度
-            diagonal_weight = 0; // 斜めの優先度
-
-            makePath(0);
-
-            // 直線
-            acceleration_straight = 5555.6;
-            acceleration_straight_dash = 12000;
-            velocity_straight = 3500;
-            // ターン
-            velocity_turn90 = 1000;
-            alpha_turn90 = 22400;
-            acceleration_turn = 0;
-            dist_offset_in = 10;
-            dist_offset_out = 52;
-            val_offset_in = 1100;
-            angle_turn_90 = 88;
-            // 壁制御とケツ当て
-            kp_wall = 0.1;
-            duty_setposition = 40;
-
-            velocity_interrupt = 0;
-
-            led_flash(10);
-
-            drive_variable_reset();
-            IMU_GetOffset();
-            drive_enable_motor();
-
-            led_flash(5);
-
-            get_base();
-
-            drive_fan(shortestRunModeParams4.fan_power);
-
-            led_flash(3);
-
-            run();
-
-            drive_fan(0);
-
-            led_wait();
-
+            run_shortest(4, 3);
             break;
 
         case 4:

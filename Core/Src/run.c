@@ -280,10 +280,10 @@ void run(void) {
 }
 
 void run_shortest(uint8_t mode, uint8_t case_index) {
-    // case_index: 4..7 -> idx 0..3
+    // case_index: 3..7 -> idx 0..4
     uint8_t idx = 0;
-    if (case_index >= 4 && case_index <= 7) {
-        idx = (uint8_t)(case_index - 4);
+    if (case_index >= 3 && case_index <= 7) {
+        idx = (uint8_t)(case_index - 3);
     } else {
         // フォールバック: 0 を使用
         idx = 0;
@@ -309,8 +309,9 @@ void run_shortest(uint8_t mode, uint8_t case_index) {
     straight_weight = p->straight_weight;
     diagonal_weight = p->diagonal_weight;
 
-    // 経路作成
-    makePath(1);
+    // 経路作成（パラメータテーブルから makePath 引数を選択）
+    int path_type = (case_index == 3) ? pm->makepath_type_case3 : pm->makepath_type_case47;
+    makePath((uint8_t)path_type);
 
     // 走行フラグ
     MF.FLAG.RUNNING = 1;

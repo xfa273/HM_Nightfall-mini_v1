@@ -170,56 +170,7 @@ void mode3() {
 
         case 3:
             printf("Mode 3-3.\n");
-
-            // 経路の重み
-            straight_weight = 0; // 直線の優先度
-            diagonal_weight = 0; // 斜めの優先度
-
-            makePath(0);
-
-            MF.FLAG.RUNNING = 1;
-
-            // 直線
-            acceleration_straight = 3555.6;
-            acceleration_straight_dash = 10000; // 5000
-            velocity_straight = 3500;
-            // ターン
-            velocity_turn90 = 800;
-            alpha_turn90 = 15550;
-            acceleration_turn = 0;
-            dist_offset_in = 10;
-            dist_offset_out = 43;
-            val_offset_in = 710;
-            angle_turn_90 = 88.5;
-            // 壁制御とケツ当て
-            kp_wall = 0.06;
-            duty_setposition = 40;
-
-            velocity_interrupt = 0;
-
-            led_flash(10);
-
-            drive_variable_reset();
-            IMU_GetOffset();
-            drive_enable_motor();
-
-            MF.FLAG.SCND = 1;
-            MF.FLAG.RETURN = 0;
-
-            led_flash(5);
-
-            get_base();
-
-            drive_fan(shortestRunModeParams3.fan_power);
-
-            led_flash(3);
-
-            run();
-
-            drive_fan(0);
-
-            MF.FLAG.RUNNING = 0;
-
+            run_shortest(3, 3);
             break;
 
         case 4:

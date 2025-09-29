@@ -146,57 +146,7 @@ void mode2() {
 
         case 3:
             printf("Mode 2-3.\n");
-
-            // 経路の重み
-            straight_weight = 0; // 直線の優先度
-            diagonal_weight = 0; // 斜めの優先度
-
-            makePath(0);
-
-            // 直線
-            acceleration_straight = 1000;
-            acceleration_straight_dash = 2000; // 5000
-            velocity_straight = 1500;
-            // ターン
-            velocity_turn90 = 300;
-            alpha_turn90 = 9000;
-            acceleration_turn = 0;
-            dist_offset_in = 8;
-            dist_offset_out = 15.5; // 32
-            val_offset_in = 1650;
-            angle_turn_90 = 89.5;
-            // 90°大回りターン
-            velocity_l_turn_90 = 500;
-            alpha_l_turn_90 = 4100;
-            angle_l_turn_90 = 89.0;
-            dist_l_turn_out_90 = 10;
-            // 180°大回りターン
-            velocity_l_turn_180 = 450;
-            alpha_l_turn_180 = 3600;
-            angle_l_turn_180 = 180;
-            dist_l_turn_out_180 = 17;
-            // 壁切れ後の距離
-            dist_wall_end = 0;
-            // 壁制御とケツ当て
-            kp_wall = 0.05;
-            duty_setposition = 40;
-
-            velocity_interrupt = 0;
-
-            led_flash(10);
-
-            drive_variable_reset();
-            IMU_GetOffset();
-            drive_enable_motor();
-
-            led_flash(5);
-
-            get_base();
-
-            led_flash(3);
-
-            run();
-
+            run_shortest(2, 3);
             break;
 
         case 4:
