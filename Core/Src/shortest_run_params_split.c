@@ -55,21 +55,21 @@ const ShortestRunCaseParams_t shortestRunCaseParamsMode2[5] = {
 // ========================= Mode 3 =========================
 const ShortestRunModeParams_t shortestRunModeParams3 = {
     .velocity_turn90    = 600.0f,
-    .alpha_turn90       = 34000.0f,
+    .alpha_turn90       = 33900.0f,
     .acceleration_turn  = 0.0f,
     .dist_offset_in     = 5.0f,
-    .dist_offset_out    = 25.0f,
-    .val_offset_in      = 1150.0f,
-    .angle_turn_90      = 88.0f,
+    .dist_offset_out    = 26.0f,
+    .val_offset_in      = 1000.0f,
+    .angle_turn_90      = 85.0f,
     .velocity_l_turn_90 = 1000.0f,
-    .alpha_l_turn_90    = 21500.0f,
+    .alpha_l_turn_90    = 22000.0f,
     .angle_l_turn_90    = 88.0f,
-    .dist_l_turn_in_90  = 5.0f,
-    .dist_l_turn_out_90 = 41.0f,
+    .dist_l_turn_in_90  = 2.0f,
+    .dist_l_turn_out_90 = 42.0f,
     .velocity_l_turn_180= 1000.0f,
-    .alpha_l_turn_180   = 19600.0f,
-    .angle_l_turn_180   = 177.0f,
-    .dist_l_turn_in_180 = 5.0f,
+    .alpha_l_turn_180   = 16850.0f,
+    .angle_l_turn_180   = 176.0f,
+    .dist_l_turn_in_180 = 3.0f,
     .dist_l_turn_out_180= 45.0f,
     .fan_power          = 600,
     .makepath_type_case3 = 0,
@@ -78,8 +78,8 @@ const ShortestRunModeParams_t shortestRunModeParams3 = {
 
 const ShortestRunCaseParams_t shortestRunCaseParamsMode3[5] = {
     {
-        .acceleration_straight = 3555.6f, .acceleration_straight_dash = 10000.0f,
-        .velocity_straight = 3500.0f, .kp_wall = 0.06f,
+        .acceleration_straight = 4000.0f, .acceleration_straight_dash = 4000.0f,
+        .velocity_straight = 1000.0f, .kp_wall = 0.05f,
         .straight_weight = 0, .diagonal_weight = 0
     },
     {

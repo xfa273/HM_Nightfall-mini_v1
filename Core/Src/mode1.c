@@ -33,7 +33,7 @@ void mode1() {
 
             // 直線
             acceleration_straight = 1000;
-            acceleration_straight_dash = 2000; // 5000
+            acceleration_straight_dash = 3000; // 5000
             // ターン
             velocity_turn90 = 300;
             alpha_turn90 = 9000;
@@ -77,23 +77,21 @@ void mode1() {
             printf("Mode 1-2.\n");
 
             // 直線
-            acceleration_straight = 5555.6;
-            acceleration_straight_dash = 3000;
-            velocity_straight = 4000;
+            acceleration_straight = 4000;
+            acceleration_straight_dash = 4000; // 5000
             // ターン
-            velocity_turn90 = 1000;
-            alpha_turn90 = 22400;
+            velocity_turn90 = 600;
+            alpha_turn90 = 34000;
             acceleration_turn = 0;
-            dist_offset_in = 10;
-            dist_offset_out = 45;
-            val_offset_in = 1100;
-            angle_turn_90 = 88.5;
+            dist_offset_in = 5;
+            dist_offset_out = 20;
+            val_offset_in = 1000;
+            angle_turn_90 = 88;
             // 壁切れ後の距離
-            dist_wall_end = 0;
+            dist_wall_end = 12;
 
             // 壁制御とケツ当て
             kp_wall = 0.05;
-            thr_f_wall = 770;
             duty_setposition = 40;
 
             // 壁判断しきい値の係数
@@ -113,11 +111,11 @@ void mode1() {
 
             drive_start();
 
-            drive_fan(120);
-
-            led_flash(10);
+            drive_fan(600);
 
             adachi();
+
+            drive_fan(0);
 
             led_wait();
 

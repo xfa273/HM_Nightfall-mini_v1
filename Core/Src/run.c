@@ -18,11 +18,8 @@ void run(void) {
     speed_now = 0;
     velocity_interrupt = 0;
     drive_variable_reset();
-    IMU_GetOffset();
     drive_enable_motor();
-    led_flash(5);
     get_base();
-    led_flash(5);
 
     first_sectionA();
 
@@ -115,36 +112,21 @@ void run(void) {
         } else if (path[path_count] < 400) {
             // 右旋回
 
-            // uint8_t turn_sections = path[path_count] - 300;
-            // printf("Turn R %d Sections.\n", path[path_count] - 300);
-
-            led_write(0, 1);
-
             turn_R90(1);
 
             turn_dir(DIR_TURN_R90); // マイクロマウス内部位置情報でも右回転処理
 
-            led_write(0, 0);
-
         } else if (path[path_count] < 500) {
             // 左旋回
-
-            // uint8_t turn_sections = path[path_count] - 400;
-            // printf("Turn L %d Sections.\n", path[path_count] - 400);
-
-            led_write(1, 0);
 
             turn_L90(1);
 
             turn_dir(DIR_TURN_L90); // マイクロマウス内部位置情報でも右回転処理
 
-            led_write(0, 0);
-
         } else if (path[path_count] < 600) {
             // 右大回り旋回
 
             uint8_t l_turn_sections = path[path_count] - 500;
-            // printf("Large Turn R %d Sections.\n", l_turn_sections);
 
             if (l_turn_sections == 2) {
                 l_turn_R180(0);
@@ -360,6 +342,8 @@ void run_shortest(uint8_t mode, uint8_t case_index) {
     led_flash(5);
     get_base();
 
+    led_write(1,1);
+
     // ファン出力（mode共通）
     drive_fan(pm->fan_power);
 
@@ -369,4 +353,6 @@ void run_shortest(uint8_t mode, uint8_t case_index) {
     // 後処理
     drive_fan(0);
     MF.FLAG.RUNNING = 0;
+
+    led_write(0,0);
 }
