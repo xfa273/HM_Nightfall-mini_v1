@@ -22,8 +22,8 @@
 #define DIST_SET_POSITION 15     // 壁当て後の前進距離[mm]
 
 #define ALPHA_ROTATE_90   3000  // 超信地旋回の角加速度[deg/sec^2]
-#define ANGLE_ROTATE_90_R 89.5F // 超信地旋回の角度[deg]
-#define ANGLE_ROTATE_90_L 89.5F // 超信地旋回の角度[deg]
+#define ANGLE_ROTATE_90_R 89.0F // 超信地旋回の角度[deg]
+#define ANGLE_ROTATE_90_L 89.0F // 超信地旋回の角度[deg]
 
 #define DIFF_SETPOSITION 1500 // スラロームを位置合わせに変更する制御量
 
@@ -72,8 +72,8 @@
 #define WALL_DIFF_THR 22   // 壁センサ値の変化量のしきい値
 #define K_SENSOR      1.00F // センサの補正値 0.94F
 
-#define WALL_CTRL_BASE_L 1750 // 壁制御の基準値（左） 668
-#define WALL_CTRL_BASE_R 2110 // 壁制御の基準値（右） 1101
+#define WALL_CTRL_BASE_L 2135 // 壁制御の基準値（左） 668
+#define WALL_CTRL_BASE_R 2100 // 壁制御の基準値（右） 1101
 
 /*制御閾値*/
 #define CTRL_BASE_L   1     // 左制御閾値
@@ -90,8 +90,8 @@
 
 /* 前壁センサを用いた中央合わせ（非接触）用パラメータ */
 // 区画中央における前壁センサの目標値（実機で調整）
-#define F_ALIGN_TARGET_FR    3600
-#define F_ALIGN_TARGET_FL    3600
+#define F_ALIGN_TARGET_FR    3750
+#define F_ALIGN_TARGET_FL    3750
 
 // アライン実行条件（前壁が十分に見えているか判定する閾値）
 #define F_ALIGN_DETECT_THR   400

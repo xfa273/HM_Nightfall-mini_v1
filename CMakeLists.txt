@@ -63,6 +63,9 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     Core/Src/mode5.c
     Core/Src/mode6.c
     Core/Src/mode7.c
+    Core/Src/maze_grid.c
+    Core/Src/solver_params.c
+    Core/Src/solver.c
     Core/Src/path.c
     Core/Src/run.c
     Core/Src/search.c

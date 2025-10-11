@@ -6,6 +6,7 @@
  */
 
 #include "global.h"
+#include "maze_grid.h"
 
 #include <limits.h>
 #include <stdbool.h>
@@ -14,22 +15,12 @@
 #include <stdlib.h>
 
 /*迷路の用意↓*/
-
-// 迷路のデータを格納する2次元配列
-uint8_t maze[MAZE_SIZE][MAZE_SIZE];
-
-bool path_cell[MAZE_SIZE][MAZE_SIZE] = {{false}};
+// 迷路データと表示系は maze_grid.c に移設
 
 int diagonal_counter = 0;
 int straight_counter = 0;
 
-void initializeMaze(uint8_t maze[MAZE_SIZE][MAZE_SIZE]) {
-    for (int y = 0; y < MAZE_SIZE; y++) {
-        for (int x = 0; x < MAZE_SIZE; x++) {
-            maze[y][x] = 0; // 最初はすべての壁がないと仮定
-        }
-    }
-}
+// initializeMaze は maze_grid.c に実装
 
 void initializePath() {
     for (int i = 0; i < 256; i++) {
@@ -99,92 +90,11 @@ void convertPathCellToRun() {
     }
 }
 
-void setMazeWalls(uint8_t walls[MAZE_SIZE][MAZE_SIZE]) {
-    // 与えられた壁情報で迷路を更新
-    for (int y = 0; y < MAZE_SIZE; y++) {
-        for (int x = 0; x < MAZE_SIZE; x++) {
-            maze[y][x] = walls[y][x];
-        }
-    }
-}
+// setMazeWalls は maze_grid.c に実装
 
-void correctWallInconsistencies() {
-    // 壁情報の矛盾を修正
-    for (int y = 0; y < MAZE_SIZE; y++) {
-        for (int x = 0; x < MAZE_SIZE; x++) {
-            // 東の壁と隣接区画の西の壁をチェック
-            if (x < MAZE_SIZE - 1) {
-                if ((maze[y][x] & EAST_WALL) != (maze[y][x + 1] & WEST_WALL)) {
-                    maze[y][x] |= EAST_WALL;
-                    maze[y][x + 1] |= WEST_WALL;
-                }
-            }
+// correctWallInconsistencies は maze_grid.c に実装
 
-            // 南の壁と隣接区画の北の壁をチェック
-            if (y < MAZE_SIZE - 1) {
-                if ((maze[y][x] & SOUTH_WALL) !=
-                    (maze[y + 1][x] & NORTH_WALL)) {
-                    maze[y][x] |= SOUTH_WALL;
-                    maze[y + 1][x] |= NORTH_WALL;
-                }
-            }
-        }
-    }
-}
-
-void printMaze() {
-    // 迷路の情報を表示
-    for (int y = 0; y < MAZE_SIZE; y++) {
-        int mazeY = MAZE_SIZE - 1 - y; // y座標を反転
-        // 区画の上部の壁と柱を表示
-        for (int x = 0; x < MAZE_SIZE; x++) {
-            printf(" ");
-            if (maze[y][x] & NORTH_WALL) {
-                printf("--- ---");
-            } else {
-                printf("       ");
-            }
-        }
-        printf(" \n");
-
-        // 区画の左側の壁と区画の内容（空白または経路）を表示
-        for (int x = 0; x < MAZE_SIZE; x++) {
-            if (maze[y][x] & WEST_WALL) {
-                printf("|");
-            } else {
-                printf(" ");
-            }
-            printf("       ");
-        }
-        printf("|\n"); // 行の最後の区画の右側の壁を表示
-
-        // 区画の左側の壁と区画の内容（空白）を表示（2行目）
-        for (int x = 0; x < MAZE_SIZE; x++) {
-            if (path_cell[mazeY][x]) { // 座標反転を適用
-                printf("    +   ");
-            } else {
-                printf("        ");
-            }
-        }
-        printf(" \n"); // 行の最後の区画の右側の壁を表示（+記号）
-
-        // 区画の左側の壁と区画の内容（空白）を表示（3行目）
-        for (int x = 0; x < MAZE_SIZE; x++) {
-            if (maze[y][x] & WEST_WALL) {
-                printf("|       ");
-            } else {
-                printf("        ");
-            }
-        }
-        printf("|\n"); // 行の最後の区画の右側の壁を表示
-    }
-
-    // 迷路の最下部の壁と柱を表示
-    for (int x = 0; x < MAZE_SIZE; x++) {
-        printf(" --- ---");
-    }
-    printf(" \n");
-}
+// printMaze は maze_grid.c に実装
 
 // ノード間のエッジを表す構造体
 typedef struct {
@@ -370,13 +280,4 @@ void dijkstra(Node start, Node goal) {
     convertPathCellToRun();
 }
 
-void reverseArrayYAxis(uint8_t array[MAZE_SIZE][MAZE_SIZE]) {
-    for (int i = 0; i < MAZE_SIZE / 2; i++) {
-        for (int j = 0; j < MAZE_SIZE; j++) {
-            // 一時変数を使用して、行の要素を交換
-            uint8_t temp = array[i][j];
-            array[i][j] = array[MAZE_SIZE - 1 - i][j];
-            array[MAZE_SIZE - 1 - i][j] = temp;
-        }
-    }
-}
+// reverseArrayYAxis は maze_grid.c に実装

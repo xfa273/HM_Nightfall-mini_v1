@@ -6,6 +6,7 @@
  */
 
 #include "global.h"
+#include "solver.h"
 
 // drive.c と同じ条件でPWM反転するための定義（DIR==Lowで反転が既定）
 #ifndef PWM_INVERT_DIR_LEVEL
@@ -392,105 +393,10 @@ void test_mode() {
 
         case 8:
 
-            printf("Test Mode 8 Circuit.\n");
+            printf("Test Mode 8 .\n");
 
-            // 直線
-            acceleration_straight = 10888.9;
-            acceleration_straight_dash = 30000;
-            velocity_straight = 5200;
-            // 90°大回りターン
-            velocity_l_turn_90 = 2200;
-            alpha_l_turn_90 = 28500;
-            angle_l_turn_90 = 85.0;
-            dist_l_turn_out_90 = 101;
-            // 壁制御とケツ当て
-            kp_wall = 0.05;
-            duty_setposition = 40;
-
-            velocity_interrupt = 0;
-
-            led_flash(10);
-
-            drive_variable_reset();
-            IMU_GetOffset();
-            drive_enable_motor();
-            led_flash(5);
-            get_base();
-            drive_fan(800);
-            led_flash(5);
-
-            first_sectionA();
-
-            // 1回目の直線
-            run_straight(12, velocity_straight, 0);
-            run_straight(4, velocity_straight, 0);
-            run_straight(12, velocity_l_turn_90, 0);
-
-            // 1回目のターン
-            l_turn_R90();
-
-            // 2回目の直線
-            run_straight(12, velocity_straight, 0);
-            run_straight(2, velocity_straight, 0);
-            run_straight(12, velocity_l_turn_90, 0);
-
-            // 2回目のターン
-            l_turn_R90();
-
-            // 3回目の直線
-            run_straight(12, velocity_straight, 0);
-            run_straight(2, velocity_straight, 0);
-            run_straight(12, velocity_l_turn_90, 0);
-
-            // 3回目のターン
-            l_turn_R90();
-
-            // 4回目の直線
-            run_straight(12, velocity_straight, 0);
-            run_straight(2, velocity_straight, 0);
-            run_straight(12, velocity_l_turn_90, 0);
-
-            // 4回目のターン
-            l_turn_R90();
-
-            // 5回目の直線
-            run_straight(12, velocity_straight, 0);
-            run_straight(2, velocity_straight, 0);
-            run_straight(12, velocity_l_turn_90, 0);
-
-            // 5回目のターン
-            l_turn_R90();
-
-            // 6回目の直線
-            run_straight(12, velocity_straight, 0);
-            run_straight(2, velocity_straight, 0);
-            run_straight(12, velocity_l_turn_90, 0);
-
-            // 6回目のターン
-            l_turn_R90();
-
-            // 7回目の直線
-            run_straight(12, velocity_straight, 0);
-            run_straight(2, velocity_straight, 0);
-            run_straight(12, velocity_l_turn_90, 0);
-
-            // 7回目のターン
-            l_turn_R90();
-
-            // 8回目の直線
-            run_straight(12, velocity_straight, 0);
-            run_straight(2, velocity_straight, 0);
-            run_straight(12, velocity_l_turn_90, 0);
-
-            // 8回目のターン
-            l_turn_R90();
-
-            half_sectionD(0);
-
-            drive_fan(0);
-
-            led_flash(5);
-            drive_stop();
+            // 新ソルバで経路導出（mode=3, case=3 をデフォルト例として使用）
+            solver_run(3, 3);
 
             break;
 

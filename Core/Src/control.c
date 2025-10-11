@@ -204,18 +204,20 @@ void wall_PID(void) {
         if (ad_r > wall_thr_r && ad_l > wall_thr_l) {
             // 左右壁が両方ある場合
             wall_error = (ad_l - base_l) - (ad_r - base_r);
+            latest_wall_error = wall_error;
         } else if (ad_r < wall_thr_r && ad_l < wall_thr_l) {
             // 左右壁が両方ない場合
             wall_error = 0;
+            latest_wall_error = wall_error;
         } else if (ad_r > wall_thr_r && ad_l < wall_thr_l) {
             // 右壁のみある場合
             wall_error = -2 * (ad_r - base_r);
+            latest_wall_error = wall_error*0.5;
         } else if (ad_r < wall_thr_r && ad_l > wall_thr_l) {
             // 左壁のみある場合
             wall_error = 2 * (ad_l - base_l);
+            latest_wall_error = wall_error*0.5;
         }
-        // 探索側で参照できるように最新の壁誤差を公開
-        latest_wall_error = wall_error;
 
         wall_control = wall_error * kp_wall;
 

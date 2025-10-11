@@ -9,6 +9,7 @@
 #include <math.h>
 #include "../Inc/shortest_run_params.h"
 #include "../Inc/path.h"
+#include "../Inc/solver.h"
 
 void run(void) {
 
@@ -291,9 +292,8 @@ void run_shortest(uint8_t mode, uint8_t case_index) {
     straight_weight = p->straight_weight;
     diagonal_weight = p->diagonal_weight;
 
-    // 経路作成（パラメータテーブルから makePath 引数を選択）
-    int path_type = (case_index == 3) ? pm->makepath_type_case3 : pm->makepath_type_case47;
-    makePath((uint8_t)path_type);
+    // 経路作成（新ソルバを使用）
+    solver_build_path(mode, case_index);
 
     // 走行フラグ
     MF.FLAG.RUNNING = 1;

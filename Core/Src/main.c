@@ -134,7 +134,7 @@ int main(void)
     // IMU_ProbeWHOAMI_Debug();
 
     // 起動メッセージとブザー（初期化で万一詰まっても起動を可視化）
-    printf("Micro Mouse Nightfall-mini 2025 !?\n");
+    printf("Micro Mouse Nightfall-mini 2025\n");
     for (uint16_t i = 1100; i > 300; i -= 150)
     {
         buzzer_beep(i);

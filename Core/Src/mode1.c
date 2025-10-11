@@ -38,9 +38,9 @@ void mode1() {
             velocity_turn90 = 300;
             alpha_turn90 = 9000;
             acceleration_turn = 0;
-            dist_offset_in = 8;
-            dist_offset_out = 15.5; // 32
-            val_offset_in = 1650;
+            dist_offset_in = 9;
+            dist_offset_out = 16.3; // 32
+            val_offset_in = 1780;
             angle_turn_90 = 89.5;
             // 壁切れ後の距離
             dist_wall_end = 12;
