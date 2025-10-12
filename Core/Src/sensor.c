@@ -601,8 +601,9 @@ void detect_wall_end(void) {
     }
 
     // 現在の横壁判定（get_wall_info を呼ばず、ここで独立判定）
-    bool r_has = (ad_r > (uint16_t)(WALL_BASE_R * kx));
-    bool l_has = (ad_l > (uint16_t)(WALL_BASE_L * kx));
+    // 壁切れ専用しきい値（WALL_END_THR_R/L）を使用
+    bool r_has = (ad_r > (uint16_t)(WALL_END_THR_R * kx));
+    bool l_has = (ad_l > (uint16_t)(WALL_END_THR_L * kx));
 
     // 直前状態（関数ローカルに保持）
     static uint8_t s_inited = 0;

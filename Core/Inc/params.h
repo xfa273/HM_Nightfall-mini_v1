@@ -72,6 +72,15 @@
 #define WALL_DIFF_THR 22   // 壁センサ値の変化量のしきい値
 #define K_SENSOR      1.00F // センサの補正値 0.94F
 
+// 壁切れ判定専用しきい値（高速走行向けに独立調整可能）
+// 既定値は探索用と同一。必要に応じて実機に合わせて変更してください。
+#ifndef WALL_END_THR_R
+#define WALL_END_THR_R  300
+#endif
+#ifndef WALL_END_THR_L
+#define WALL_END_THR_L  300
+#endif
+
 #define WALL_CTRL_BASE_L 2135 // 壁制御の基準値（左） 668
 #define WALL_CTRL_BASE_R 2100 // 壁制御の基準値（右） 1101
 
@@ -90,8 +99,8 @@
 
 /* 前壁センサを用いた中央合わせ（非接触）用パラメータ */
 // 区画中央における前壁センサの目標値（実機で調整）
-#define F_ALIGN_TARGET_FR    3750
-#define F_ALIGN_TARGET_FL    3750
+#define F_ALIGN_TARGET_FR    3650
+#define F_ALIGN_TARGET_FL    3650
 
 // アライン実行条件（前壁が十分に見えているか判定する閾値）
 #define F_ALIGN_DETECT_THR   400

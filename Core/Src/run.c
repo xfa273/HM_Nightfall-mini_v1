@@ -24,118 +24,308 @@ void run(void) {
 
     first_sectionA();
 
+    bool skip_next = false; // 壁切れ即時ターンで次要素（ターン）を1回だけスキップするためのフラグ
+
     for (uint8_t path_count = 0; path[path_count] != 0; path_count++) {
+        if (skip_next) {
+            skip_next = false;
+            continue; // 次要素を1回だけ無処理で飛ばす
+        }
         if (200 < path[path_count] && path[path_count] < 300) {
             // 直進
 
-            float straight_sections = (path[path_count] - 200) * DIST_HALF_SEC;
+            float straight_mm = (path[path_count] - 200) * DIST_HALF_SEC; // [mm]
 
-            // 直線の加減速区画を計算
+            // 次動作に応じたターン入口速度を決定（0なら終端）
+            uint16_t next_code = path[path_count + 1];
+            float v_next = 0.0f; // [mm/s]
+            if (next_code >= 300 && next_code < 400) {
+                // 右90
+                v_next = velocity_turn90;
+            } else if (next_code >= 400 && next_code < 500) {
+                // 左90
+                v_next = velocity_turn90;
+            } else if (next_code >= 500 && next_code < 600) {
+                uint8_t l_turn_sections = next_code - 500;
+                v_next = (l_turn_sections == 2) ? velocity_l_turn_180 : velocity_l_turn_90;
+            } else if (next_code >= 600 && next_code < 700) {
+                uint8_t l_turn_sections = next_code - 600;
+                v_next = (l_turn_sections == 2) ? velocity_l_turn_180 : velocity_l_turn_90;
+            } else if (next_code >= 701 && next_code < 800) {
+                v_next = velocity_turn45in;
+            } else if (next_code >= 801 && next_code < 900) {
+                v_next = velocity_turnV90;
+            } else if (next_code >= 901 && next_code < 1000) {
+                v_next = velocity_turn135in;
+            } else {
+                v_next = 0.0f; // 次なし（終端）
+            }
 
-            // 加速時間、加速距離、減速距離の計算
-            float t_acc =
-                velocity_straight / acceleration_straight_dash; // 加速時間 [s]
-            float d_acc = 0.5f * acceleration_straight_dash * t_acc *
-                          t_acc; // 加速距離 [mm]
+            // ゴール停止時（次コード=0）は、最後に half_sectionD(0) で確実に止めるため
+            // 直前直進の終端速度をわずかに残す（0にしてしまうと half_sectionD が走らない）
+            if (next_code == 0) {
+                const float GOAL_ENTRY_SPEED = 120.0f; // [mm/s] 実機で微調整可
+                v_next = GOAL_ENTRY_SPEED;
+            }
+
+            // 次が「実際のターン」かを明示的に判定（直進や終端は含めない）
+            bool next_is_turn =
+                (next_code >= 300 && next_code < 700) ||
+                (next_code == 701 || next_code == 702 || next_code == 703 || next_code == 704) ||
+                (next_code == 801 || next_code == 802) ||
+                (next_code >= 901 && next_code <= 904);
+
+            // 壁切れ用のバッファ距離（次がターンのときのみ適用）
+            const float buffer_mm_cfg = 20.0f; // 要件: 20mm
+            float buffer_mm = next_is_turn ? buffer_mm_cfg : 0.0f;
+            if (buffer_mm > straight_mm) buffer_mm = straight_mm; // 過剰保護
+
+            // バッファを除いた距離で従来の加減速（v_nextで収束）
+            float main_mm = straight_mm - buffer_mm; // [mm]
+
+            // 直線の加減速区画を計算（メイン区間）
+            float t_acc = velocity_straight / acceleration_straight_dash; // [s]
+            float d_acc = 0.5f * acceleration_straight_dash * t_acc * t_acc; // [mm]
 
             // 最高到達速度が走行距離内で到達できるかのチェック
             float d_total_acc_dec = 2 * d_acc; // 加速距離と減速距離の合計 [mm]
             float d_constant = 0.0f;                     // 等速距離 [mm]
             float max_reached_speed = velocity_straight; // 最高到達速度 [mm/s]
 
-            if (d_total_acc_dec > straight_sections) {
-                // 最高速度に達しない場合
-                d_acc = straight_sections / 2; // 加速距離と減速距離は等しい
+            if (d_total_acc_dec > main_mm) {
+                // 最高速度に達しない場合（等加速→等減速の三角形）
+                d_acc = main_mm / 2.0f; // 加速距離と減速距離は等しい
                 d_constant = 0.0f;
-                t_acc = sqrtf(2 * d_acc / acceleration_straight_dash);
+                t_acc = sqrtf(2.0f * d_acc / acceleration_straight_dash);
                 max_reached_speed = acceleration_straight_dash * t_acc;
             } else {
-                // 最高速度に達する場合
-                d_constant = straight_sections - d_total_acc_dec;
+                // 最高速度に達する場合（台形）
+                d_constant = main_mm - d_total_acc_dec;
             }
 
             // 各距離を区画数に変換
             float d_acc_blocks = d_acc / DIST_HALF_SEC;
             float d_constant_blocks = d_constant / DIST_HALF_SEC;
-            float d_dec_blocks = d_acc_blocks; // 減速距離は加速距離と等しい
+            float d_dec_blocks = d_acc_blocks; // 減速距離は加速距離と等しい（従来踏襲）
 
-            // 加速区間
-            run_straight(d_acc_blocks, max_reached_speed, 0);
+            // メイン区間 実行
+            if (d_acc_blocks > 0.0f) {
+                // 加速区間
+                run_straight(d_acc_blocks, max_reached_speed, 0);
+            }
+            if (d_constant_blocks > 0.0f) {
+                // 等速区間
+                run_straight(d_constant_blocks, max_reached_speed, 0);
+            }
+            if (d_dec_blocks > 0.0f) {
+                // 減速区間（ターン入口速度へ）
+                run_straight(d_dec_blocks, v_next, 0);
+            }
 
-            // 等速区間
-            run_straight(d_constant_blocks, max_reached_speed, 0);
-
-            // 減速区間
-
-            if (path[path_count + 1] < 500) {
-                // 次が通常旋回: 直線減速中のみ壁切れ検知をアーム
+            // バッファ区間（等速: v_next）で壁切れ検知をアーム
+            if (buffer_mm > 0.0f) {
+                float buffer_blocks = buffer_mm / DIST_HALF_SEC;
                 MF.FLAG.R_WALL_END = 0;
                 MF.FLAG.L_WALL_END = 0;
-                MF.FLAG.WALL_END = 1;
-                run_straight(d_dec_blocks, velocity_turn90, 0);
-                MF.FLAG.WALL_END = 0;
-            } else if (path[path_count + 1] < 600) {
-                // 次が右大回り旋回
-                uint8_t l_turn_sections = path[path_count + 1] - 500;
+                MF.FLAG.WALL_END = 1; // アーム
+                // 可視化: バッファ区間に入ったことをブザーで通知
+                buzzer_interrupt(1200);
 
-                if (l_turn_sections == 2) {
-                    // 180deg大回り旋回
-                    MF.FLAG.R_WALL_END = 0;
-                    MF.FLAG.L_WALL_END = 0;
-                    MF.FLAG.WALL_END = 1;
-                    run_straight(d_dec_blocks, velocity_l_turn_180, 0);
-                    MF.FLAG.WALL_END = 0;
-                } else {
-                    // 90deg大回り旋回
-                    MF.FLAG.R_WALL_END = 0;
-                    MF.FLAG.L_WALL_END = 0;
-                    MF.FLAG.WALL_END = 1;
-                    run_straight(d_dec_blocks, velocity_l_turn_90, 0);
-                    MF.FLAG.WALL_END = 0;
+                // 小刻み実行して壁切れ検知したら即座に中断してターンへ
+                float remaining = buffer_blocks;
+                const float step_blocks = (2.0f / DIST_HALF_SEC); // 2mm ステップ
+                bool triggered = false;
+                while (remaining > 0.0f) {
+                    float step = (remaining < step_blocks) ? remaining : step_blocks;
+                    run_straight(step, v_next, 0);
+                    if (MF.FLAG.R_WALL_END || MF.FLAG.L_WALL_END) {
+                        triggered = true;
+                        // 消費したので下げる
+                        MF.FLAG.R_WALL_END = 0;
+                        MF.FLAG.L_WALL_END = 0;
+                        break;
+                    }
+                    remaining -= step;
                 }
-            } else if (path[path_count + 1] < 700) {
-                // 次が左大回り旋回
-                uint8_t l_turn_sections = path[path_count + 1] - 600;
+                if (triggered) {
+                    MF.FLAG.WALL_END = 0; // 解除
+                    // 検知後の追従距離を進む（v_next 等速）
+                    if (dist_wall_end > 0.0f && v_next > 0.0f) {
+                        float extra_blocks = dist_wall_end / DIST_HALF_SEC;
+                        run_straight(extra_blocks, v_next, 0);
+                    }
+                    bool consumed = false;
+                    // 壁切れ検知: 次の動作（ターン）を即時開始し、次のパス要素は消費する
+                    if (next_code >= 300 && next_code < 400) {
+                        // 右旋回
+                        turn_R90(1);
+                        turn_dir(DIR_TURN_R90);
+                        consumed = true;
+                    } else if (next_code >= 400 && next_code < 500) {
+                        // 左旋回
+                        turn_L90(1);
+                        turn_dir(DIR_TURN_L90);
+                        consumed = true;
+                    } else if (next_code >= 500 && next_code < 600) {
+                        // 右大回り
+                        uint8_t l_turn_sections = next_code - 500;
+                        if (l_turn_sections == 2) {
+                            l_turn_R180(0);
+                        } else {
+                            l_turn_R90();
+                        }
+                        consumed = true;
+                    } else if (next_code >= 600 && next_code < 700) {
+                        // 左大回り
+                        uint8_t l_turn_sections = next_code - 600;
+                        if (l_turn_sections == 2) {
+                            l_turn_L180(0);
+                        } else {
+                            l_turn_L90();
+                        }
+                        consumed = true;
+                    } else if (next_code == 701) {
+                        turn_R45_In();
+                        consumed = true;
+                    } else if (next_code == 702) {
+                        turn_L45_In();
+                        consumed = true;
+                    } else if (next_code == 703) {
+                        turn_R45_Out();
+                        consumed = true;
+                    } else if (next_code == 704) {
+                        turn_L45_Out();
+                        consumed = true;
+                    } else if (next_code == 801) {
+                        turn_RV90();
+                        consumed = true;
+                    } else if (next_code == 802) {
+                        turn_LV90();
+                        consumed = true;
+                    } else if (next_code == 901) {
+                        turn_R135_In();
+                        consumed = true;
+                    } else if (next_code == 902) {
+                        turn_L135_In();
+                        consumed = true;
+                    } else if (next_code == 903) {
+                        turn_R135_Out();
+                        consumed = true;
+                    } else if (next_code == 904) {
+                        turn_L135_Out();
+                        consumed = true;
+                    } else {
+                        // 次動作なし（終端）
+                    }
 
-                if (l_turn_sections == 2) {
-                    // 180deg大回り旋回
-                    MF.FLAG.R_WALL_END = 0;
-                    MF.FLAG.L_WALL_END = 0;
-                    MF.FLAG.WALL_END = 1;
-                    run_straight(d_dec_blocks, velocity_l_turn_180, 0);
-                    MF.FLAG.WALL_END = 0;
+                    // 次のパス要素（ターン）を消費した場合のみ、次の1要素をスキップ
+                    if (consumed) {
+                        skip_next = true; // for文のインクリメントに任せ、次の1要素のみスキップ
+                        continue;
+                    }
                 } else {
-                    // 90deg大回り旋回
-                    MF.FLAG.R_WALL_END = 0;
-                    MF.FLAG.L_WALL_END = 0;
-                    MF.FLAG.WALL_END = 1;
-                    run_straight(d_dec_blocks, velocity_l_turn_90, 0);
-                    MF.FLAG.WALL_END = 0;
+                    // 壁切れがまだ出ていない: バッファを延長して v_next 等速で継続（検知まで）
+                    if (next_is_turn) {
+                        // 本来の距離（straight_mm）に加えて最大+20mmまで延長
+                        const float extend_mm_cfg = 20.0f;
+                        float extend_remaining_blocks = extend_mm_cfg / DIST_HALF_SEC;
+
+                        bool trig2 = false;
+                        while (!trig2 && extend_remaining_blocks > 0.0f) {
+                            float step = step_blocks; // 2mm 相当
+                            if (extend_remaining_blocks < step) step = extend_remaining_blocks;
+                            run_straight(step, v_next, 0);
+                            extend_remaining_blocks -= step;
+                            if (MF.FLAG.R_WALL_END || MF.FLAG.L_WALL_END) {
+                                // 消費
+                                MF.FLAG.R_WALL_END = 0;
+                                MF.FLAG.L_WALL_END = 0;
+                                trig2 = true;
+                                break;
+                            }
+                        }
+
+                        MF.FLAG.WALL_END = 0; // 解除
+
+                        // 検知後の追従距離を進む（v_next 等速）: 検知が成立した場合のみ
+                        if (trig2 && dist_wall_end > 0.0f && v_next > 0.0f) {
+                            float extra_blocks = dist_wall_end / DIST_HALF_SEC;
+                            run_straight(extra_blocks, v_next, 0);
+                        }
+
+                        // 即時ターン開始し、次のパス要素を消費
+                        bool consumed2 = false;
+                        if (next_code >= 300 && next_code < 400) {
+                            // 右旋回
+                            turn_R90(1);
+                            turn_dir(DIR_TURN_R90);
+                            consumed2 = true;
+                        } else if (next_code >= 400 && next_code < 500) {
+                            // 左旋回
+                            turn_L90(1);
+                            turn_dir(DIR_TURN_L90);
+                            consumed2 = true;
+                        } else if (next_code >= 500 && next_code < 600) {
+                            // 右大回り
+                            uint8_t l_turn_sections = next_code - 500;
+                            if (l_turn_sections == 2) {
+                                l_turn_R180(0);
+                            } else {
+                                l_turn_R90();
+                            }
+                            consumed2 = true;
+                        } else if (next_code >= 600 && next_code < 700) {
+                            // 左大回り
+                            uint8_t l_turn_sections = next_code - 600;
+                            if (l_turn_sections == 2) {
+                                l_turn_L180(0);
+                            } else {
+                                l_turn_L90();
+                            }
+                            consumed2 = true;
+                        } else if (next_code == 701) {
+                            turn_R45_In();
+                            consumed2 = true;
+                        } else if (next_code == 702) {
+                            turn_L45_In();
+                            consumed2 = true;
+                        } else if (next_code == 703) {
+                            turn_R45_Out();
+                            consumed2 = true;
+                        } else if (next_code == 704) {
+                            turn_L45_Out();
+                            consumed2 = true;
+                        } else if (next_code == 801) {
+                            turn_RV90();
+                            consumed2 = true;
+                        } else if (next_code == 802) {
+                            turn_LV90();
+                            consumed2 = true;
+                        } else if (next_code == 901) {
+                            turn_R135_In();
+                            consumed2 = true;
+                        } else if (next_code == 902) {
+                            turn_L135_In();
+                            consumed2 = true;
+                        } else if (next_code == 903) {
+                            turn_R135_Out();
+                            consumed2 = true;
+                        } else if (next_code == 904) {
+                            turn_L135_Out();
+                            consumed2 = true;
+                        } else {
+                            // 次動作なし（終端）
+                        }
+
+                        if (consumed2) {
+                            skip_next = true; // for文のインクリメントに任せ、次の1要素のみスキップ
+                            continue;
+                        }
+                    } else {
+                        // 次動作がない場合は解除のみ
+                        MF.FLAG.WALL_END = 0; // 解除
+                    }
                 }
-            } else if (path[path_count + 1] < 800) {
-                // 次が45degターン
-                MF.FLAG.R_WALL_END = 0;
-                MF.FLAG.L_WALL_END = 0;
-                MF.FLAG.WALL_END = 1;
-                run_straight(d_dec_blocks, velocity_turn45in, 0);
-                MF.FLAG.WALL_END = 0;
-            } else if (path[path_count + 1] < 900) {
-                // 次がV90degターン
-                MF.FLAG.R_WALL_END = 0;
-                MF.FLAG.L_WALL_END = 0;
-                MF.FLAG.WALL_END = 1;
-                run_straight(d_dec_blocks, velocity_turnV90, 0);
-                MF.FLAG.WALL_END = 0;
-            } else if (path[path_count + 1] < 1000) {
-                // 次が135degターン
-                MF.FLAG.R_WALL_END = 0;
-                MF.FLAG.L_WALL_END = 0;
-                MF.FLAG.WALL_END = 1;
-                run_straight(d_dec_blocks, velocity_turn135in, 0);
-                MF.FLAG.WALL_END = 0;
-            } else {
-                // 次が終了
-                run_straight(d_dec_blocks, 0, 0);
             }
 
         } else if (path[path_count] < 400) {
@@ -353,7 +543,7 @@ void run_shortest(uint8_t mode, uint8_t case_index) {
     kp_wall                    = p->kp_wall;
 
     // 壁切れ後の距離・ケツ当て
-    dist_wall_end = 0;
+    dist_wall_end = pm->dist_wall_end;
     duty_setposition = 40;
 
     velocity_interrupt = 0;

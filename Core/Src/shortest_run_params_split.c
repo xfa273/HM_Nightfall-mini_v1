@@ -9,6 +9,7 @@ const ShortestRunModeParams_t shortestRunModeParams2 = {
     .dist_offset_out    = 15.5f,
     .val_offset_in      = 1750.0f,
     .angle_turn_90      = 89.5f,
+    .dist_wall_end      = 2.0f,
     .velocity_l_turn_90 = 500.0f,
     .alpha_l_turn_90    = 4250.0f,
     .angle_l_turn_90    = 89.0f,
@@ -32,7 +33,7 @@ const ShortestRunCaseParams_t shortestRunCaseParamsMode2[5] = {
     },
     {
         .acceleration_straight = 1000.0f, .acceleration_straight_dash = 2000.0f,
-        .velocity_straight = 2000.0f, .kp_wall = 0.05f,
+        .velocity_straight = 500.0f, .kp_wall = 0.05f,
         .straight_weight = 2, .diagonal_weight = 0
     },
     {
@@ -61,6 +62,7 @@ const ShortestRunModeParams_t shortestRunModeParams3 = {
     .dist_offset_out    = 24.0f,
     .val_offset_in      = 1100.0f,
     .angle_turn_90      = 85.0f,
+    .dist_wall_end      = 2.0f,
     .velocity_l_turn_90 = 1000.0f,
     .alpha_l_turn_90    = 22000.0f,
     .angle_l_turn_90    = 88.0f,
@@ -84,7 +86,7 @@ const ShortestRunCaseParams_t shortestRunCaseParamsMode3[5] = {
     },
     {
         .acceleration_straight = 4000.0f, .acceleration_straight_dash = 4000.0f,
-        .velocity_straight = 2000.0f, .kp_wall = 0.05f,
+        .velocity_straight = 1000.0f, .kp_wall = 0.05f,
         .straight_weight = 2, .diagonal_weight = 0
     },
     {
@@ -113,6 +115,7 @@ const ShortestRunModeParams_t shortestRunModeParams4 = {
     .dist_offset_out    = 52.0f,
     .val_offset_in      = 1100.0f,
     .angle_turn_90      = 88.0f,
+    .dist_wall_end      = 12.0f,
     .velocity_l_turn_90 = 1300.0f,
     .alpha_l_turn_90    = 7800.0f,
     .angle_l_turn_90    = 88.0f,
@@ -165,6 +168,7 @@ const ShortestRunModeParams_t shortestRunModeParams5 = {
     .dist_offset_out    = 35.0f,
     .val_offset_in      = 1160.0f,
     .angle_turn_90      = 84.0f,
+    .dist_wall_end      = 12.0f,
     .velocity_l_turn_90 = 1700.0f,
     .alpha_l_turn_90    = 17000.0f,
     .angle_l_turn_90    = 79.5f,
@@ -217,6 +221,7 @@ const ShortestRunModeParams_t shortestRunModeParams6 = {
     .dist_offset_out    = 58.0f,
     .val_offset_in      = 1050.0f,
     .angle_turn_90      = 80.5f,
+    .dist_wall_end      = 12.0f,
     .velocity_l_turn_90 = 2000.0f,
     .alpha_l_turn_90    = 19200.0f,
     .angle_l_turn_90    = 89.5f,
@@ -269,6 +274,7 @@ const ShortestRunModeParams_t shortestRunModeParams7 = {
     .dist_offset_out    = 58.0f,
     .val_offset_in      = 1050.0f,
     .angle_turn_90      = 80.5f,
+    .dist_wall_end      = 12.0f,
     .velocity_l_turn_90 = 2200.0f,
     .alpha_l_turn_90    = 28500.0f,
     .angle_l_turn_90    = 85.0f,
