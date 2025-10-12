@@ -76,7 +76,7 @@ void run(void) {
                 (next_code >= 901 && next_code <= 904);
 
             // 壁切れ用のバッファ距離（次がターンのときのみ適用）
-            const float buffer_mm_cfg = 20.0f; // 基本: 20mm
+            const float buffer_mm_cfg = WALL_END_BUFFER_MM; // params.h から設定
             bool next_is_small_turn = (next_code >= 300 && next_code < 500);
             float buffer_mm = 0.0f;
             if (next_is_turn) {
@@ -237,8 +237,8 @@ void run(void) {
                 } else {
                     // 壁切れがまだ出ていない: バッファを延長して v_next 等速で継続（検知まで）
                     if (next_is_turn) {
-                        // 本来の距離（straight_mm）に加えて最大+20mmまで延長
-                        const float extend_mm_cfg = 20.0f;
+                        // 本来の距離（straight_mm）に加えて最大延長まで探す
+                        const float extend_mm_cfg = WALL_END_EXTEND_MAX_MM;
                         float extend_remaining_blocks = extend_mm_cfg / DIST_HALF_SEC;
 
                         bool trig2 = false;
