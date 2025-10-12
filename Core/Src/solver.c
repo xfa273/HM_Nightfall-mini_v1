@@ -216,6 +216,10 @@ void solver_build_path(uint8_t mode, uint8_t case_index) {
         default: pm = &shortestRunModeParams2; break;
     }
     int path_type = (case_index == 3) ? pm->makepath_type_case3 : pm->makepath_type_case47;
+    // case8/9 は斜め走行を有効化
+    if (case_index >= 8) {
+        path_type = 2;
+    }
 
     simplifyPath();
     if (path_type > 0) {
@@ -231,6 +235,55 @@ void solver_build_path(uint8_t mode, uint8_t case_index) {
     if (path_type > 1) {
         convertDiagonal();
     }
+
+    printMaze();
+
+    for (int i = 0; i < 256 && path[i] != 0; i++) {
+        // printf("%d ", path[i]);
+        if (path[i] < 300) {
+            uint8_t str_sec;
+            str_sec = path[i] - 200;
+            printf("S%d", str_sec);
+        } else if (path[i] == 300) {
+            printf("S-R90");
+        } else if (path[i] == 400) {
+            printf("S-L90");
+        } else if (path[i] == 501) {
+            printf("L-R90");
+        } else if (path[i] == 502) {
+            printf("L-R180");
+        } else if (path[i] == 601) {
+            printf("L-L90");
+        } else if (path[i] == 602) {
+            printf("L-L180");
+        } else if (path[i] == 701) {
+            printf("R45-in");
+        } else if (path[i] == 702) {
+            printf("L45-in");
+        } else if (path[i] == 703) {
+            printf("R45-out");
+        } else if (path[i] == 704) {
+            printf("L45-out");
+        } else if (path[i] == 801) {
+            printf("R-V90");
+        } else if (path[i] == 802) {
+            printf("L-V90");
+        } else if (path[i] == 901) {
+            printf("R135-in");
+        } else if (path[i] == 902) {
+            printf("L135-in");
+        } else if (path[i] == 903) {
+            printf("R135-out");
+        } else if (path[i] == 904) {
+            printf("L135-out");
+        } else if (path[i] > 1000) {
+            uint8_t diag_sec;
+            diag_sec = path[i] - 1000;
+            printf("D-S%d", diag_sec);
+        }
+        printf(", ");
+    }
+    printf("Goal\n");
 }
 
 // 既存の maze[][] の壁ビット（NORTH_WALL/EAST_WALL/SOUTH_WALL/WEST_WALL）に従い移動可否を判定

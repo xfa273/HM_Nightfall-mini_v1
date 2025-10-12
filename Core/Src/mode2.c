@@ -164,6 +164,12 @@ void mode2() {
         case 7:
             run_shortest(2, 7);
             break;
+        case 8:
+            run_shortest(2, 8);
+            break;
+        case 9:
+            run_shortest(2, 9);
+            break;
         }
     }
 }

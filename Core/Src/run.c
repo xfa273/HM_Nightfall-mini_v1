@@ -495,9 +495,9 @@ void run(void) {
 }
 
 void run_shortest(uint8_t mode, uint8_t case_index) {
-    // case_index: 3..7 -> idx 0..4
+    // case_index: 3..9 -> idx 0..6
     uint8_t idx = 0;
-    if (case_index >= 3 && case_index <= 7) {
+    if (case_index >= 3 && case_index <= 9) {
         idx = (uint8_t)(case_index - 3);
     } else {
         // フォールバック: 0 を使用
@@ -515,6 +515,13 @@ void run_shortest(uint8_t mode, uint8_t case_index) {
         case 7: pm = &shortestRunModeParams7; pcases = &shortestRunCaseParamsMode7[0]; break;
         default: pm = &shortestRunModeParams2; pcases = &shortestRunCaseParamsMode2[0]; break;
     }
+
+    // モードごとのケース数でクランプ（mode2/3:7要素、その他:5要素）
+    uint8_t max_idx = 4;
+    if (mode == 2 || mode == 3) {
+        max_idx = 6;
+    }
+    if (idx > max_idx) idx = max_idx;
 
     const ShortestRunCaseParams_t *p = &pcases[idx];
 
@@ -535,6 +542,10 @@ void run_shortest(uint8_t mode, uint8_t case_index) {
     acceleration_straight      = p->acceleration_straight;
     acceleration_straight_dash = p->acceleration_straight_dash;
     velocity_straight          = p->velocity_straight;
+    // 斜め直線（caseごと）
+    acceleration_d_straight      = p->acceleration_d_straight;
+    acceleration_d_straight_dash = p->acceleration_d_straight_dash;
+    velocity_d_straight          = p->velocity_d_straight;
     // ターン（mode共通）
     velocity_turn90            = pm->velocity_turn90;
     alpha_turn90               = pm->alpha_turn90;
@@ -553,6 +564,31 @@ void run_shortest(uint8_t mode, uint8_t case_index) {
     angle_l_turn_180           = pm->angle_l_turn_180;
     dist_l_turn_in_180         = pm->dist_l_turn_in_180;
     dist_l_turn_out_180        = pm->dist_l_turn_out_180;
+    // 斜めターン（mode共通）
+    velocity_turn45in          = pm->velocity_turn45in;
+    alpha_turn45in             = pm->alpha_turn45in;
+    angle_turn45in             = pm->angle_turn45in;
+    dist_turn45in              = pm->dist_turn45in;
+    velocity_turn45out         = pm->velocity_turn45out;
+    alpha_turn45out            = pm->alpha_turn45out;
+    angle_turn45out            = pm->angle_turn45out;
+    dist_turn45out_in          = pm->dist_turn45out_in;
+    dist_turn45out_out         = pm->dist_turn45out_out;
+    velocity_turnV90           = pm->velocity_turnV90;
+    alpha_turnV90              = pm->alpha_turnV90;
+    angle_turnV90              = pm->angle_turnV90;
+    dist_turnV90_in            = pm->dist_turnV90_in;
+    dist_turnV90_out           = pm->dist_turnV90_out;
+    velocity_turn135in         = pm->velocity_turn135in;
+    alpha_turn135in            = pm->alpha_turn135in;
+    angle_turn135in            = pm->angle_turn135in;
+    dist_turn135in_in          = pm->dist_turn135in_in;
+    dist_turn135in_out         = pm->dist_turn135in_out;
+    velocity_turn135out        = pm->velocity_turn135out;
+    alpha_turn135out           = pm->alpha_turn135out;
+    angle_turn135out           = pm->angle_turn135out;
+    dist_turn135out_in         = pm->dist_turn135out_in;
+    dist_turn135out_out        = pm->dist_turn135out_out;
     // 壁制御（caseごと）
     kp_wall                    = p->kp_wall;
 

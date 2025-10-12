@@ -33,6 +33,33 @@ typedef struct {
     float angle_l_turn_180;           ///< 大回り180°ターン角度 (度)
     float dist_l_turn_in_180;         ///< 大回り180°入り距離 (mm)
     float dist_l_turn_out_180;        ///< 大回り180°オフセット (mm)
+    // 斜め45°（入り/出）
+    float velocity_turn45in;          ///< 45°入り 速度 (mm/s)
+    float alpha_turn45in;             ///< 45°入り ハンドリング
+    float angle_turn45in;             ///< 45°入り 角度 (度)
+    float dist_turn45in;              ///< 45°入り オフセット距離 (mm)
+    float velocity_turn45out;         ///< 45°出 速度 (mm/s)
+    float alpha_turn45out;            ///< 45°出 ハンドリング
+    float angle_turn45out;            ///< 45°出 角度 (度)
+    float dist_turn45out_in;          ///< 45°出 入りオフセット (mm)
+    float dist_turn45out_out;         ///< 45°出 出オフセット (mm)
+    // 斜めV90°
+    float velocity_turnV90;           ///< V90° 速度 (mm/s)
+    float alpha_turnV90;              ///< V90° ハンドリング
+    float angle_turnV90;              ///< V90° 角度 (度)
+    float dist_turnV90_in;            ///< V90° 入りオフセット (mm)
+    float dist_turnV90_out;           ///< V90° 出オフセット (mm)
+    // 斜め135°（入り/出）
+    float velocity_turn135in;         ///< 135°入り 速度 (mm/s)
+    float alpha_turn135in;            ///< 135°入り ハンドリング
+    float angle_turn135in;            ///< 135°入り 角度 (度)
+    float dist_turn135in_in;          ///< 135°入り 入りオフセット (mm)
+    float dist_turn135in_out;         ///< 135°入り 出オフセット (mm)
+    float velocity_turn135out;        ///< 135°出 速度 (mm/s)
+    float alpha_turn135out;           ///< 135°出 ハンドリング
+    float angle_turn135out;           ///< 135°出 角度 (度)
+    float dist_turn135out_in;         ///< 135°出 入りオフセット (mm)
+    float dist_turn135out_out;        ///< 135°出 出オフセット (mm)
     // ファン
     uint16_t fan_power;               ///< ファン出力 (0-1000)
     // 経路生成（makePath）引数設定
@@ -48,6 +75,10 @@ typedef struct {
     float acceleration_straight;      ///< 直線加速度 (mm/s^2)
     float acceleration_straight_dash; ///< 二段階直線加速度 (mm/s^2)
     float velocity_straight;          ///< 直線速度 (mm/s)
+    // 斜め直線
+    float acceleration_d_straight;      ///< 斜め直線加速度 (mm/s^2)
+    float acceleration_d_straight_dash; ///< 斜め直線 二段階加速度 (mm/s^2)
+    float velocity_d_straight;          ///< 斜め直線速度 (mm/s)
     // 壁制御
     float kp_wall;                    ///< 壁制御比例ゲイン
     // 経路重み
@@ -63,12 +94,12 @@ extern const ShortestRunModeParams_t shortestRunModeParams5;
 extern const ShortestRunModeParams_t shortestRunModeParams6;
 extern const ShortestRunModeParams_t shortestRunModeParams7;
 
-// ケース個別パラメータ（case3..7の順に5要素）
-extern const ShortestRunCaseParams_t shortestRunCaseParamsMode2[5];
-extern const ShortestRunCaseParams_t shortestRunCaseParamsMode3[5];
-extern const ShortestRunCaseParams_t shortestRunCaseParamsMode4[5];
-extern const ShortestRunCaseParams_t shortestRunCaseParamsMode5[5];
-extern const ShortestRunCaseParams_t shortestRunCaseParamsMode6[5];
-extern const ShortestRunCaseParams_t shortestRunCaseParamsMode7[5];
+// ケース個別パラメータ（case3..N の順、要素数は実装依存）
+extern const ShortestRunCaseParams_t shortestRunCaseParamsMode2[];
+extern const ShortestRunCaseParams_t shortestRunCaseParamsMode3[];
+extern const ShortestRunCaseParams_t shortestRunCaseParamsMode4[];
+extern const ShortestRunCaseParams_t shortestRunCaseParamsMode5[];
+extern const ShortestRunCaseParams_t shortestRunCaseParamsMode6[];
+extern const ShortestRunCaseParams_t shortestRunCaseParamsMode7[];
 
 #endif // SHORTEST_RUN_PARAMS_H

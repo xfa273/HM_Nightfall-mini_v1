@@ -20,12 +20,37 @@ const ShortestRunModeParams_t shortestRunModeParams2 = {
     .angle_l_turn_180   = 179.0f,
     .dist_l_turn_in_180 = 12.0f,
     .dist_l_turn_out_180= 19.0f,
+    // diagonal turn defaults (can be tuned)
+    .velocity_turn45in = 500.0f,
+    .alpha_turn45in    = 6343.0f,
+    .angle_turn45in    = 45.0f,
+    .dist_turn45in     = 27.0f,
+    .velocity_turn45out= 500.0f,
+    .alpha_turn45out   = 6343.0f,
+    .angle_turn45out   = 45.0f,
+    .dist_turn45out_in = 27.0f,
+    .dist_turn45out_out= 0.0f,
+    .velocity_turnV90  = 500.0f,
+    .alpha_turnV90     = 10492.0f,
+    .angle_turnV90     = 90.0f,
+    .dist_turnV90_in   = 7.0f,
+    .dist_turnV90_out  = 7.0f,
+    .velocity_turn135in = 500.0f,
+    .alpha_turn135in    = 6938.0f,
+    .angle_turn135in    = 135.0f,
+    .dist_turn135in_in  = 10.0f,
+    .dist_turn135in_out = 10.0f,
+    .velocity_turn135out = 500.0f,
+    .alpha_turn135out    = 6938.0f,
+    .angle_turn135out    = 135.0f,
+    .dist_turn135out_in  = 10.0f,
+    .dist_turn135out_out = 10.0f,
     .fan_power          = 0,
     .makepath_type_case3 = 0,
     .makepath_type_case47= 1
 };
 
-const ShortestRunCaseParams_t shortestRunCaseParamsMode2[5] = {
+const ShortestRunCaseParams_t shortestRunCaseParamsMode2[7] = {
     {
         .acceleration_straight = 1000.0f, .acceleration_straight_dash = 2000.0f,
         .velocity_straight = 1500.0f, .kp_wall = 0.05f,
@@ -51,6 +76,22 @@ const ShortestRunCaseParams_t shortestRunCaseParamsMode2[5] = {
         .velocity_straight = 4000.0f, .kp_wall = 0.05f,
         .straight_weight = 2, .diagonal_weight = 0
     },
+    // case8 (index 5): diagonal use
+    {
+        .acceleration_straight = 1000.0f, .acceleration_straight_dash = 3500.0f,
+        .velocity_straight = 4000.0f, .kp_wall = 0.05f,
+        .straight_weight = 2, .diagonal_weight = 2,
+        .acceleration_d_straight = 1000.0f, .acceleration_d_straight_dash = 2000.0f,
+        .velocity_d_straight = 1000.0f
+    },
+    // case9 (index 6): diagonal use (same as case8 initial)
+    {
+        .acceleration_straight = 1000.0f, .acceleration_straight_dash = 3500.0f,
+        .velocity_straight = 4000.0f, .kp_wall = 0.05f,
+        .straight_weight = 2, .diagonal_weight = 2,
+        .acceleration_d_straight = 1000.0f, .acceleration_d_straight_dash = 3000.0f,
+        .velocity_d_straight = 3000.0f
+    },
 };
 
 // ========================= Mode 3 =========================
@@ -73,12 +114,37 @@ const ShortestRunModeParams_t shortestRunModeParams3 = {
     .angle_l_turn_180   = 176.0f,
     .dist_l_turn_in_180 = 0.0f,
     .dist_l_turn_out_180= 45.0f,
+    // diagonal turn defaults (can be tuned)
+    .velocity_turn45in = 600.0f,
+    .alpha_turn45in    = 33900.0f,
+    .angle_turn45in    = 45.0f,
+    .dist_turn45in     = 5.0f,
+    .velocity_turn45out= 600.0f,
+    .alpha_turn45out   = 33900.0f,
+    .angle_turn45out   = 45.0f,
+    .dist_turn45out_in = 5.0f,
+    .dist_turn45out_out= 5.0f,
+    .velocity_turnV90  = 600.0f,
+    .alpha_turnV90     = 33900.0f,
+    .angle_turnV90     = 90.0f,
+    .dist_turnV90_in   = 5.0f,
+    .dist_turnV90_out  = 5.0f,
+    .velocity_turn135in = 600.0f,
+    .alpha_turn135in    = 33900.0f,
+    .angle_turn135in    = 135.0f,
+    .dist_turn135in_in  = 5.0f,
+    .dist_turn135in_out = 5.0f,
+    .velocity_turn135out = 600.0f,
+    .alpha_turn135out    = 33900.0f,
+    .angle_turn135out    = 135.0f,
+    .dist_turn135out_in  = 5.0f,
+    .dist_turn135out_out = 5.0f,
     .fan_power          = 600,
     .makepath_type_case3 = 0,
     .makepath_type_case47= 1
 };
 
-const ShortestRunCaseParams_t shortestRunCaseParamsMode3[5] = {
+const ShortestRunCaseParams_t shortestRunCaseParamsMode3[7] = {
     {
         .acceleration_straight = 4000.0f, .acceleration_straight_dash = 4000.0f,
         .velocity_straight = 1000.0f, .kp_wall = 0.05f,
@@ -103,6 +169,22 @@ const ShortestRunCaseParams_t shortestRunCaseParamsMode3[5] = {
         .acceleration_straight = 4000.0f, .acceleration_straight_dash = 10000.0f,
         .velocity_straight = 3000.0f, .kp_wall = 0.05f,
         .straight_weight = 2, .diagonal_weight = 0
+    },
+    // case8 (index 5): diagonal use
+    {
+        .acceleration_straight = 4000.0f, .acceleration_straight_dash = 10000.0f,
+        .velocity_straight = 3000.0f, .kp_wall = 0.05f,
+        .straight_weight = 2, .diagonal_weight = 2,
+        .acceleration_d_straight = 4000.0f, .acceleration_d_straight_dash = 8000.0f,
+        .velocity_d_straight = 2500.0f
+    },
+    // case9 (index 6): diagonal use
+    {
+        .acceleration_straight = 4000.0f, .acceleration_straight_dash = 10000.0f,
+        .velocity_straight = 3000.0f, .kp_wall = 0.05f,
+        .straight_weight = 2, .diagonal_weight = 2,
+        .acceleration_d_straight = 4000.0f, .acceleration_d_straight_dash = 8000.0f,
+        .velocity_d_straight = 2500.0f
     },
 };
 

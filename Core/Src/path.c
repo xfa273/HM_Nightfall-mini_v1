@@ -178,8 +178,8 @@ void convertDiagonal(void) {
                     convertedPath[j - 1] -= 1; // 直前の直進を半区画縮める
                     convertedPath[j] = 901; // 右斜め135°に変換
                 } else {
-                    convertedPath[j - 1] = 901; // 右斜め135°に変換
-                    // 直前の直進を上書きで削除
+                    // 直前がS1の場合は削除せず保持し、続きに135°入りを挿入
+                    convertedPath[j] = 901; // 右斜め135°に変換（直前の直進は保持）
                 }
 
                 i++; // 次の小回りとまとめたので次パスをスキップ
@@ -188,14 +188,13 @@ void convertDiagonal(void) {
 
                 if (path[i - 1] - 200 > 1) {
                     convertedPath[j - 1] -= 1; // 直前の直進を半区画縮める
-                    convertedPath[j] = 701; // 右斜め45°に変換
+                    convertedPath[j] = 701;     // 右斜め45°に変換
                 } else {
-                    convertedPath[j - 1] = 701; // 右斜め45°に変換
-                    j--;
-                    // 直前の直進を上書きで削除
+                    // 直前がS1の場合は削除せず保持し、その後に45°入りを挿入
+                    convertedPath[j] = 701;     // 右斜め45°に変換（S1は保持）
                 }
 
-                // j--;
+                // j--
             }
         } else if (path[i] >= 400 && path[i] < 500 && path[i - 1] < 300) {
             // 左小回りの開始
@@ -207,8 +206,8 @@ void convertDiagonal(void) {
                     convertedPath[j - 1] -= 1; // 直前の直進を半区画縮める
                     convertedPath[j] = 902; // 左斜め135°に変換
                 } else {
-                    convertedPath[j - 1] = 902; // 左斜め135°に変換
-                    // 直前の直進を上書きで削除
+                    // 直前がS1の場合は削除せず保持し、続きに135°入りを挿入
+                    convertedPath[j] = 902; // 左斜め135°に変換（直前の直進は保持）
                 }
                 i++; // 次の小回りとまとめたので次パスをスキップ
             } else {
@@ -218,11 +217,10 @@ void convertDiagonal(void) {
                     convertedPath[j - 1] -= 1; // 直前の直進を半区画縮める
                     convertedPath[j] = 702; // 左斜め45°に変換
                 } else {
-                    convertedPath[j - 1] = 702; // 左斜め45°に変換
-                    j--;
-                    // 直前の直進を上書きで削除
+                    // 直前がS1の場合は削除せず保持し、その後に45°入りを挿入
+                    convertedPath[j] = 702; // 左斜め45°に変換（直前の直進は保持）
                 }
-                // j--;
+                // j--
             }
         } else {
             convertedPath[j] = path[i];
@@ -271,7 +269,9 @@ void convertDiagonal(void) {
                     j++;
 
                 } else {
-                    // 直後の直進をスキップして削除
+                    // 直後がS1の場合は削除せず保持
+                    convertedPath[j + 1] = 201; // S1 を保持
+                    j++;
                 }
                 i++;
 
@@ -286,7 +286,18 @@ void convertDiagonal(void) {
                     j++;
 
                 } else {
-                    // 直後の直進をスキップして削除
+                    // 直後がS1の場合
+                    // パターンが [703,201,701/702] のときは S1 を挟まず即座に斜め入りを出力して連結
+                    if (path[i + 2] == 701 || path[i + 2] == 702) {
+                        convertedPath[j + 1] = path[i + 2]; // 703 の直後に 701/702 を出力
+                        j += 2;   // 703 と 701/702 の2要素を書いた
+                        i += 3;   // 入力側から 703, S1, 701/702 を消費
+                        continue; // 次の入力要素から処理を再開
+                    } else {
+                        // それ以外はS1を保持
+                        convertedPath[j + 1] = 201; // S1 を保持
+                        j++;
+                    }
                 }
                 i++;
             }
@@ -307,7 +318,9 @@ void convertDiagonal(void) {
                     j++;
 
                 } else {
-                    // 直後の直進をスキップして削除
+                    // 直後がS1の場合は削除せず保持
+                    convertedPath[j + 1] = 201; // S1 を保持
+                    j++;
                 }
                 i++;
             } else {
@@ -321,11 +334,23 @@ void convertDiagonal(void) {
                     j++;
 
                 } else {
-                    // 直後の直進をスキップして削除
+                    // 直後がS1の場合
+                    // パターンが [704,201,701/702] のときは S1 を挟まず即座に斜め入りを出力して連結
+                    if (path[i + 2] == 701 || path[i + 2] == 702) {
+                        convertedPath[j + 1] = path[i + 2]; // 704 の直後に 701/702 を出力
+                        j += 2;   // 704 と 701/702 の2要素を書いた
+                        i += 3;   // 入力側から 704, S1, 701/702 を消費
+                        continue; // 次の入力要素から処理を再開
+                    } else {
+                        // それ以外はS1を保持
+                        convertedPath[j + 1] = 201; // S1 を保持
+                        j++;
+                    }
                 }
                 i++;
             }
         } else {
+            // 非該当（直進など）はそのままコピー
             convertedPath[j] = path[i];
         }
 

@@ -188,6 +188,12 @@ void mode3() {
         case 7:
             run_shortest(3, 7);
             break;
+        case 8:
+            run_shortest(3, 8);
+            break;
+        case 9:
+            run_shortest(3, 9);
+            break;
         }
     }
 }
