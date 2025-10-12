@@ -81,12 +81,12 @@ void mode1() {
             acceleration_straight_dash = 4000; // 5000
             // ターン
             velocity_turn90 = 600;
-            alpha_turn90 = 34000;
+            alpha_turn90 = 33900;
             acceleration_turn = 0;
             dist_offset_in = 5;
-            dist_offset_out = 20;
-            val_offset_in = 1000;
-            angle_turn_90 = 88;
+            dist_offset_out = 24;
+            val_offset_in = 1100;
+            angle_turn_90 = 85;
             // 壁切れ後の距離
             dist_wall_end = 12;
 
@@ -111,7 +111,7 @@ void mode1() {
 
             drive_start();
 
-            drive_fan(600);
+            drive_fan(300);
 
             adachi();
 

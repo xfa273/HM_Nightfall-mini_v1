@@ -584,45 +584,5 @@ void indicate_sensor(void) {
     }
 }
 
-// 壁切れの判定
-void wall_end(void) {
-    get_wall_info();
-
-    if (1) {
-        // 直前に右壁が有ったとき
-        if (MF.FLAG.R_WALL) {
-            // 右壁がなくなっていたら
-            if (!r_wall && wall_end_count < 2) {
-                MF.FLAG.R_WALL_END = 1; // 右壁切れフラグを立てる
-                wall_end_count = 3;
-            }
-        } else {
-            MF.FLAG.R_WALL_END = 0;
-        }
-        if (MF.FLAG.L_WALL) {
-            if (!l_wall && wall_end_count < 2) {
-                MF.FLAG.L_WALL_END = 1; // 左壁切れフラグを立てる
-                wall_end_count = 3;
-            }
-        } else {
-            MF.FLAG.L_WALL_END = 0;
-        }
-
-        // 壁情報からフラグを管理
-        if (r_wall) {
-            MF.FLAG.R_WALL = 1;
-        } else {
-            MF.FLAG.R_WALL = 0;
-        }
-        if (l_wall) {
-            MF.FLAG.L_WALL = 1;
-        } else {
-            MF.FLAG.L_WALL = 0;
-        }
-    } else {
-        MF.FLAG.R_WALL = 0;
-        MF.FLAG.L_WALL = 0;
-        MF.FLAG.R_WALL_END = 0;
-        MF.FLAG.L_WALL_END = 0;
-    }
-}
+// 壁切れの判定（現状は未使用のため空実装）
+void wall_end(void) {}

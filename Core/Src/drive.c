@@ -135,7 +135,7 @@ void half_sectionAD(uint16_t val) {
     }
 
     MF.FLAG.CTRL = 1;
-    driveA(DIST_D_HALF_SEC, speed_now, speed_out, dist_wall_end + 90);
+    driveA(DIST_D_HALF_SEC, speed_now, speed_out, 0);
     MF.FLAG.CTRL = 0;
     speed_now = speed_out;
 
@@ -316,14 +316,10 @@ void half_sectionU(void) {
 // 戻り値：なし
 //+++++++++++++++++++++++++++++++++++++++++++++++
 void run_straight(float section, float spd_out, float dist_wallend) {
+    (void)dist_wallend;
 
     MF.FLAG.CTRL = 1;
-
-    if (dist_wallend > 0 && section > 1 && spd_out > 100) {
-        driveA(DIST_HALF_SEC * section, speed_now, spd_out, dist_wallend);
-    } else {
-        driveA(DIST_HALF_SEC * section, speed_now, spd_out, 0);
-    }
+    driveA(DIST_HALF_SEC * section, speed_now, spd_out, 0);
 
     MF.FLAG.CTRL = 0;
     speed_now = spd_out;
@@ -858,6 +854,8 @@ void match_position(uint16_t target_value) {
 //+++++++++++++++++++++++++++++++++++++++++++++++
 void driveA(float dist, float spd_in, float spd_out, float dist_wallend) {
 
+    (void)dist_wallend;
+
     // printf("driveA: %.2f, %.2f, %.2f\n", dist, spd_in, spd_out);
 
     // 加速度を設定
@@ -877,12 +875,6 @@ void driveA(float dist, float spd_in, float spd_out, float dist_wallend) {
 
     drive_start();
 
-    if (dist_wallend > 0) {
-        // MF.FLAG.WALL_END = 1;
-    } else {
-        // MF.FLAG.WALL_END = 0;
-    }
-
     // 実際の距離が目標距離になるまで走行
     if (acceleration_interrupt > 0) {
 
@@ -895,32 +887,11 @@ void driveA(float dist, float spd_in, float spd_out, float dist_wallend) {
             while (real_distance < dist && velocity_interrupt > 0 &&
                    (ad_fl + ad_fr) < thr_f_wall) {
             };
-        } else if (MF.FLAG.WALL_END) {
-            if (dist > 90) {
-                while (real_distance < dist - 90) {
-                };
-            }
-            while (real_distance < (dist + 10) && velocity_interrupt > 0 &&
-                   !MF.FLAG.R_WALL_END && !MF.FLAG.L_WALL_END) {
-            };
-            if (MF.FLAG.R_WALL_END || MF.FLAG.L_WALL_END) {
-                buzzer_interrupt(300);
-                // 走行距離カウントをリセット
-                real_distance = 0;
-                encoder_distance_r = 0;
-                encoder_distance_l = 0;
-                while (real_distance < dist_wallend) {
-                };
-            }
-
         } else {
             while (real_distance < dist && velocity_interrupt > 0) {
             };
         }
     }
-
-    MF.FLAG.WALL_END = 0;
-
     // 割込み内の変数をリセット
     drive_variable_reset();
 
@@ -1191,74 +1162,7 @@ void driveFWall(float dist, float spd_in, float spd_out) {
 }
 
 void driveWallEnd(float dist, float spd_in, float spd_out) {
-
-    // printf("driveA: %.2f, %.2f, %.2f\n", dist, spd_in, spd_out);
-
-    // 加速度を設定
-    acceleration_interrupt = (spd_out * spd_out - spd_in * spd_in) / (2 * dist);
-
-    // printf("acceleration_interrupt: %.2f\n", acceleration_interrupt);
-
-    // 回転角度カウントをリセット
-    real_angle = 0;
-    IMU_angle = 0;
-    target_angle = 0;
-
-    // 走行距離カウントをリセット
-    real_distance = 0;
-    encoder_distance_r = 0;
-    encoder_distance_l = 0;
-
-    drive_start();
-
-    // 実際の距離が目標距離になるか壁切れ検知まで走行
-    if (r_wall && l_wall) {
-        // 左右壁がある
-
-        while (real_distance < dist && (r_wall && l_wall))
-            ;
-
-        if (real_distance < (dist - 5)) {
-            // 指定の後距離を走行
-            dist_wall_end += real_distance;
-            while (real_distance < dist_wall_end)
-                ;
-        }
-    } else if (r_wall) {
-        // 右壁だけある
-
-        while (real_distance < dist && r_wall)
-            ;
-
-        if (real_distance < dist - 5) {
-            // 指定の後距離を走行
-            dist_wall_end += real_distance;
-            while (real_distance < dist_wall_end)
-                ;
-        }
-    } else if (r_wall) {
-        // 左壁だけある
-
-        while (real_distance < dist && l_wall)
-            ;
-
-        if (real_distance < dist - 5) {
-            // 指定の後距離を走行
-            dist_wall_end += real_distance;
-            while (real_distance < dist_wall_end)
-                ;
-        }
-    }
-
-    velocity_interrupt = spd_out;
-
-    // 割込み内の変数をリセット
-    drive_variable_reset();
-
-    // 走行距離カウントをリセット
-    real_distance = 0;
-    encoder_distance_r = 0;
-    encoder_distance_l = 0;
+    driveA(dist, spd_in, spd_out, 0);
 }
 
 void adjust_wallend(void) {}
