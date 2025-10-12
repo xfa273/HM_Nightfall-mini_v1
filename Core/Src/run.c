@@ -76,8 +76,17 @@ void run(void) {
                 (next_code >= 901 && next_code <= 904);
 
             // 壁切れ用のバッファ距離（次がターンのときのみ適用）
-            const float buffer_mm_cfg = 20.0f; // 要件: 20mm
-            float buffer_mm = next_is_turn ? buffer_mm_cfg : 0.0f;
+            const float buffer_mm_cfg = 20.0f; // 基本: 20mm
+            bool next_is_small_turn = (next_code >= 300 && next_code < 500);
+            float buffer_mm = 0.0f;
+            if (next_is_turn) {
+                buffer_mm = buffer_mm_cfg;
+                // 小回りターンでは壁切れ後に半区間前進するため、
+                // 事前の直進距離を半区間ぶん短縮してトータル距離を一定に保つ（= バッファを半区間ぶん拡張）
+                if (next_is_small_turn) {
+                    buffer_mm += (float)DIST_HALF_SEC;
+                }
+            }
             if (buffer_mm > straight_mm) buffer_mm = straight_mm; // 過剰保護
 
             // バッファを除いた距離で従来の加減速（v_nextで収束）
@@ -150,8 +159,10 @@ void run(void) {
                 if (triggered) {
                     MF.FLAG.WALL_END = 0; // 解除
                     // 検知後の追従距離を進む（v_next 等速）
-                    if (dist_wall_end > 0.0f && v_next > 0.0f) {
-                        float extra_blocks = dist_wall_end / DIST_HALF_SEC;
+                    // 小回りターン（300-499）の場合は半区間、その他は dist_wall_end
+                    float follow_mm = ((next_code >= 300 && next_code < 500) ? (float)DIST_HALF_SEC : dist_wall_end);
+                    if (follow_mm > 0.0f && v_next > 0.0f) {
+                        float extra_blocks = follow_mm / DIST_HALF_SEC;
                         run_straight(extra_blocks, v_next, 0);
                     }
                     bool consumed = false;
@@ -248,9 +259,12 @@ void run(void) {
                         MF.FLAG.WALL_END = 0; // 解除
 
                         // 検知後の追従距離を進む（v_next 等速）: 検知が成立した場合のみ
-                        if (trig2 && dist_wall_end > 0.0f && v_next > 0.0f) {
-                            float extra_blocks = dist_wall_end / DIST_HALF_SEC;
-                            run_straight(extra_blocks, v_next, 0);
+                        if (trig2) {
+                            float follow_mm2 = ((next_code >= 300 && next_code < 500) ? (float)DIST_HALF_SEC : dist_wall_end);
+                            if (follow_mm2 > 0.0f && v_next > 0.0f) {
+                                float extra_blocks = follow_mm2 / DIST_HALF_SEC;
+                                run_straight(extra_blocks, v_next, 0);
+                            }
                         }
 
                         // 即時ターン開始し、次のパス要素を消費

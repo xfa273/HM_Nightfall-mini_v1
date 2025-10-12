@@ -888,14 +888,8 @@ void driveA(float dist, float spd_in, float spd_out, float dist_wallend) {
                    (ad_fl + ad_fr) < thr_f_wall) {
             };
         } else {
-            // ゴール停止など spd_out==0 のときは、速度が0になっても距離条件で最後まで走る
-            if (spd_out <= 0.0f) {
-                while (real_distance < dist) {
-                };
-            } else {
-                while (real_distance < dist && velocity_interrupt > 0) {
-                };
-            }
+            while (real_distance < dist && velocity_interrupt > 0) {
+            };
         }
     }
     // 割込み内の変数をリセット
