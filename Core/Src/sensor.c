@@ -586,3 +586,56 @@ void indicate_sensor(void) {
 
 // 壁切れの判定（現状は未使用のため空実装）
 void wall_end(void) {}
+
+//+++++++++++++++++++++++++++++++++++++++++++++++
+// detect_wall_end
+// 横壁センサの「有り → 無し」の立ち下がりで壁切れを検出
+// 既存の get_wall_info とは独立に動作し、r_wall/l_wall は変更しない
+// 検出直後にブザーを鳴らし、R_WALL_END / L_WALL_END を即座にクリア
+//+++++++++++++++++++++++++++++++++++++++++++++++
+void detect_wall_end(void) {
+    // 有効なしきい値係数を決定
+    float kx = sensor_kx;
+    if (kx < 0.3f || kx > 2.0f) {
+        kx = 1.0f;
+    }
+
+    // 現在の横壁判定（get_wall_info を呼ばず、ここで独立判定）
+    bool r_has = (ad_r > (uint16_t)(WALL_BASE_R * kx));
+    bool l_has = (ad_l > (uint16_t)(WALL_BASE_L * kx));
+
+    // 直前状態（関数ローカルに保持）
+    static uint8_t s_inited = 0;
+    static bool s_prev_r = false;
+    static bool s_prev_l = false;
+
+    if (!s_inited) {
+        s_prev_r = r_has;
+        s_prev_l = l_has;
+        s_inited = 1;
+        return;
+    }
+
+    // ゲート条件: 最短走行中(SCND)かつWALL_ENDアーム中のみ最終フラグを立てる
+    const bool gate_on = (MF.FLAG.SCND && MF.FLAG.WALL_END);
+
+    // 右側の立ち下がり（有→無）
+    if (s_prev_r && !r_has) {
+        if (gate_on) {
+            MF.FLAG.R_WALL_END = 1; // 最終フラグ: 消費側で明示的にクリア
+            buzzer_interrupt(2000); // 確認用（SUCTION時は抑制）
+        }
+    }
+
+    // 左側の立ち下がり（有→無）
+    if (s_prev_l && !l_has) {
+        if (gate_on) {
+            MF.FLAG.L_WALL_END = 1; // 最終フラグ: 消費側で明示的にクリア
+            buzzer_interrupt(2400);
+        }
+    }
+
+    // 状態を更新
+    s_prev_r = r_has;
+    s_prev_l = l_has;
+}

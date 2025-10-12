@@ -68,17 +68,30 @@ void run(void) {
             // 減速区間
 
             if (path[path_count + 1] < 500) {
+                // 次が通常旋回: 直線減速中のみ壁切れ検知をアーム
+                MF.FLAG.R_WALL_END = 0;
+                MF.FLAG.L_WALL_END = 0;
+                MF.FLAG.WALL_END = 1;
                 run_straight(d_dec_blocks, velocity_turn90, 0);
+                MF.FLAG.WALL_END = 0;
             } else if (path[path_count + 1] < 600) {
                 // 次が右大回り旋回
                 uint8_t l_turn_sections = path[path_count + 1] - 500;
 
                 if (l_turn_sections == 2) {
                     // 180deg大回り旋回
+                    MF.FLAG.R_WALL_END = 0;
+                    MF.FLAG.L_WALL_END = 0;
+                    MF.FLAG.WALL_END = 1;
                     run_straight(d_dec_blocks, velocity_l_turn_180, 0);
+                    MF.FLAG.WALL_END = 0;
                 } else {
                     // 90deg大回り旋回
+                    MF.FLAG.R_WALL_END = 0;
+                    MF.FLAG.L_WALL_END = 0;
+                    MF.FLAG.WALL_END = 1;
                     run_straight(d_dec_blocks, velocity_l_turn_90, 0);
+                    MF.FLAG.WALL_END = 0;
                 }
             } else if (path[path_count + 1] < 700) {
                 // 次が左大回り旋回
@@ -86,20 +99,40 @@ void run(void) {
 
                 if (l_turn_sections == 2) {
                     // 180deg大回り旋回
+                    MF.FLAG.R_WALL_END = 0;
+                    MF.FLAG.L_WALL_END = 0;
+                    MF.FLAG.WALL_END = 1;
                     run_straight(d_dec_blocks, velocity_l_turn_180, 0);
+                    MF.FLAG.WALL_END = 0;
                 } else {
                     // 90deg大回り旋回
+                    MF.FLAG.R_WALL_END = 0;
+                    MF.FLAG.L_WALL_END = 0;
+                    MF.FLAG.WALL_END = 1;
                     run_straight(d_dec_blocks, velocity_l_turn_90, 0);
+                    MF.FLAG.WALL_END = 0;
                 }
             } else if (path[path_count + 1] < 800) {
                 // 次が45degターン
+                MF.FLAG.R_WALL_END = 0;
+                MF.FLAG.L_WALL_END = 0;
+                MF.FLAG.WALL_END = 1;
                 run_straight(d_dec_blocks, velocity_turn45in, 0);
+                MF.FLAG.WALL_END = 0;
             } else if (path[path_count + 1] < 900) {
                 // 次がV90degターン
+                MF.FLAG.R_WALL_END = 0;
+                MF.FLAG.L_WALL_END = 0;
+                MF.FLAG.WALL_END = 1;
                 run_straight(d_dec_blocks, velocity_turnV90, 0);
+                MF.FLAG.WALL_END = 0;
             } else if (path[path_count + 1] < 1000) {
                 // 次が135degターン
+                MF.FLAG.R_WALL_END = 0;
+                MF.FLAG.L_WALL_END = 0;
+                MF.FLAG.WALL_END = 1;
                 run_straight(d_dec_blocks, velocity_turn135in, 0);
+                MF.FLAG.WALL_END = 0;
             } else {
                 // 次が終了
                 run_straight(d_dec_blocks, 0, 0);

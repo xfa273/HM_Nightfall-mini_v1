@@ -103,6 +103,8 @@ uint8_t get_base();   // センサ基準値を取得
 void get_wall_info(); // 壁情報を読む
 void indicate_sensor();
 void wall_end();
+// 壁切れ検知（横壁の立ち下がりエッジ検出）
+void detect_wall_end(void);
 
 // フラッシュ保存/読込API（迷路用領域とは別セクタに保存）
 // センサ基準値・オフセットなどを保存/読込する

@@ -95,6 +95,9 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
             // バッテリー消耗
         }
 
+        // 横壁の立ち下がりによる壁切れ検知（探索用の壁判断とは独立）
+        detect_wall_end();
+
         if (MF.FLAG.OVERRIDE == 0) {
 
             // 壁制御
