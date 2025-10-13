@@ -81,6 +81,7 @@ typedef struct {
     float velocity_d_straight;          ///< 斜め直線速度 (mm/s)
     // 壁制御
     float kp_wall;                    ///< 壁制御比例ゲイン
+    float kp_diagonal;                ///< 斜め直進用 壁制御比例ゲイン
     // 経路重み
     int   straight_weight;            ///< 経路導出: 直線の優先度
     int   diagonal_weight;            ///< 経路導出: 斜めの優先度

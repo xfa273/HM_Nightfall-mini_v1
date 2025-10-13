@@ -215,7 +215,7 @@ void solver_build_path(uint8_t mode, uint8_t case_index) {
         case 7: pm = &shortestRunModeParams7; break;
         default: pm = &shortestRunModeParams2; break;
     }
-    int path_type = (case_index == 3) ? pm->makepath_type_case3 : pm->makepath_type_case47;
+    int path_type = ((case_index == 1) || (case_index == 3)) ? pm->makepath_type_case3 : pm->makepath_type_case47;
     // case8/9 は斜め走行を有効化
     if (case_index >= 8) {
         path_type = 2;

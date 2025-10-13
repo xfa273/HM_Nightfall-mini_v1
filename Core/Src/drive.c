@@ -560,6 +560,7 @@ void turn_R45_Out(void) {
 void turn_L45_In(void) {
 
     MF.FLAG.CTRL = 0;
+    MF.FLAG.CTRL_DIAGONAL = 0;
     driveSL(angle_turn45in, alpha_turn45in);
     driveA(dist_turn45in, speed_now, velocity_turn45in, 0);
 }
@@ -573,6 +574,7 @@ void turn_L45_In(void) {
 void turn_L45_Out(void) {
 
     MF.FLAG.CTRL = 0;
+    MF.FLAG.CTRL_DIAGONAL = 0;
     driveA(dist_turn45out_in, speed_now, velocity_turn45out, 0);
     driveSL(angle_turn45out, alpha_turn45out);
     driveA(dist_turn45out_out, speed_now, velocity_turn45out, 0);
@@ -587,6 +589,7 @@ void turn_L45_Out(void) {
 void turn_RV90(void) {
 
     MF.FLAG.CTRL = 0;
+    MF.FLAG.CTRL_DIAGONAL = 0;
     driveA(dist_turnV90_in, speed_now, velocity_turnV90, 0);
     driveSR(angle_turnV90, alpha_turnV90);
     driveA(dist_turnV90_out, speed_now, velocity_turnV90, 0);
@@ -601,6 +604,7 @@ void turn_RV90(void) {
 void turn_LV90(void) {
 
     MF.FLAG.CTRL = 0;
+    MF.FLAG.CTRL_DIAGONAL = 0;
     driveA(dist_turnV90_in, speed_now, velocity_turnV90, 0);
     driveSL(angle_turnV90, alpha_turnV90);
     driveA(dist_turnV90_out, speed_now, velocity_turnV90, 0);
@@ -615,6 +619,7 @@ void turn_LV90(void) {
 void turn_R135_In(void) {
 
     MF.FLAG.CTRL = 0;
+    MF.FLAG.CTRL_DIAGONAL = 0;
     driveA(dist_turn135in_in, speed_now, velocity_turn135in, 0);
     driveSR(angle_turn135in, alpha_turn135in);
     driveA(dist_turn135in_out, speed_now, velocity_turn135in, 0);
@@ -629,6 +634,7 @@ void turn_R135_In(void) {
 void turn_R135_Out(void) {
 
     MF.FLAG.CTRL = 0;
+    MF.FLAG.CTRL_DIAGONAL = 0;
     driveA(dist_turn135out_in, speed_now, velocity_turn135out, 0);
     driveSR(angle_turn135out, alpha_turn135out);
     driveA(dist_turn135out_out, speed_now, velocity_turn135out, 0);
@@ -643,6 +649,7 @@ void turn_R135_Out(void) {
 void turn_L135_In(void) {
 
     MF.FLAG.CTRL = 0;
+    MF.FLAG.CTRL_DIAGONAL = 0;
     driveA(dist_turn135in_in, speed_now, velocity_turn135in, 0);
     driveSL(angle_turn135in, alpha_turn135in);
     driveA(dist_turn135in_out, speed_now, velocity_turn135in, 0);
@@ -657,6 +664,7 @@ void turn_L135_In(void) {
 void turn_L135_Out(void) {
 
     MF.FLAG.CTRL = 0;
+    MF.FLAG.CTRL_DIAGONAL = 0;
     driveA(dist_turn135out_in, speed_now, velocity_turn135out, 0);
     driveSL(angle_turn135out, alpha_turn135out);
     driveA(dist_turn135out_out, speed_now, velocity_turn135out, 0);
@@ -670,8 +678,9 @@ void turn_L135_Out(void) {
 //+++++++++++++++++++++++++++++++++++++++++++++++
 void run_diagonal(float section, float spd_out) {
     MF.FLAG.CTRL = 0;
-    MF.FLAG.CTRL_DIAGONAL = 1;
-
+    if(spd_out>1){
+        MF.FLAG.CTRL_DIAGONAL = 1;
+    }
     driveA(DIST_D_HALF_SEC * section, speed_now, spd_out, 0);
 
     MF.FLAG.CTRL = 0;
