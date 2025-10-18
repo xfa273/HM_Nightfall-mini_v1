@@ -441,7 +441,46 @@ void l_turn_R90(void) {
     MF.FLAG.SLALOM_R = 1;
     driveSR(angle_l_turn_90, alpha_l_turn_90);
     MF.FLAG.CTRL = 1;
-    driveA(dist_l_turn_out_90, speed_now, velocity_l_turn_90, 0);
+    {
+        // 壁切れ補正: 90°大回りターン直後の直進は全区間を検出区間とする
+        const float v_const = velocity_l_turn_90;
+
+        // 検出をアーム
+        MF.FLAG.R_WALL_END = 0;
+        MF.FLAG.L_WALL_END = 0;
+        MF.FLAG.WALL_END   = 1;
+
+        // 最大探索距離: 既定の出オフセット距離 + 追加上限
+        float max_mm = dist_l_turn_out_90 + WALL_END_EXTEND_MAX_MM;
+        float remaining_blocks = max_mm / DIST_HALF_SEC;
+        const float step_blocks = (2.0f / DIST_HALF_SEC); // 2mm相当で刻む
+        bool triggered = false;
+
+        while (remaining_blocks > 0.0f) {
+            float step = (remaining_blocks < step_blocks) ? remaining_blocks : step_blocks;
+            run_straight(step, v_const, 0);
+            if (MF.FLAG.R_WALL_END || MF.FLAG.L_WALL_END) {
+                // 消費（クリア）
+                MF.FLAG.R_WALL_END = 0;
+                MF.FLAG.L_WALL_END = 0;
+                triggered = true;
+                break;
+            }
+            remaining_blocks -= step;
+        }
+
+        // 検出アーム解除
+        MF.FLAG.WALL_END = 0;
+
+        // 検出後の追従距離（一定速度でそのまま追従）
+        if (triggered) {
+            float follow_mm = dist_wall_end;
+            if (follow_mm > 0.0f) {
+                float extra_blocks = follow_mm / DIST_HALF_SEC;
+                run_straight(extra_blocks, v_const, 0);
+            }
+        }
+    }
     MF.FLAG.CTRL = 0;
     MF.FLAG.SLALOM_R = 0;
 }
@@ -467,7 +506,46 @@ void l_turn_L90(void) {
     MF.FLAG.SLALOM_L = 1;
     driveSL(angle_l_turn_90, alpha_l_turn_90);
     MF.FLAG.CTRL = 1;
-    driveA(dist_l_turn_out_90, speed_now, velocity_l_turn_90, 0);
+    {
+        // 壁切れ補正: 90°大回りターン直後の直進は全区間を検出区間とする
+        const float v_const = velocity_l_turn_90;
+
+        // 検出をアーム
+        MF.FLAG.R_WALL_END = 0;
+        MF.FLAG.L_WALL_END = 0;
+        MF.FLAG.WALL_END   = 1;
+
+        // 最大探索距離: 既定の出オフセット距離 + 追加上限
+        float max_mm = dist_l_turn_out_90 + WALL_END_EXTEND_MAX_MM;
+        float remaining_blocks = max_mm / DIST_HALF_SEC;
+        const float step_blocks = (2.0f / DIST_HALF_SEC); // 2mm相当で刻む
+        bool triggered = false;
+
+        while (remaining_blocks > 0.0f) {
+            float step = (remaining_blocks < step_blocks) ? remaining_blocks : step_blocks;
+            run_straight(step, v_const, 0);
+            if (MF.FLAG.R_WALL_END || MF.FLAG.L_WALL_END) {
+                // 消費（クリア）
+                MF.FLAG.R_WALL_END = 0;
+                MF.FLAG.L_WALL_END = 0;
+                triggered = true;
+                break;
+            }
+            remaining_blocks -= step;
+        }
+
+        // 検出アーム解除
+        MF.FLAG.WALL_END = 0;
+
+        // 検出後の追従距離（一定速度でそのまま追従）
+        if (triggered) {
+            float follow_mm = dist_wall_end;
+            if (follow_mm > 0.0f) {
+                float extra_blocks = follow_mm / DIST_HALF_SEC;
+                run_straight(extra_blocks, v_const, 0);
+            }
+        }
+    }
     MF.FLAG.CTRL = 0;
     MF.FLAG.SLALOM_L = 0;
 }
@@ -493,7 +571,46 @@ void l_turn_R180(uint8_t fwall) {
     MF.FLAG.SLALOM_R = 1;
     driveSR(angle_l_turn_180, alpha_l_turn_180);
     MF.FLAG.CTRL = 1;
-    driveA(dist_l_turn_out_180, speed_now, velocity_l_turn_180, 0);
+    {
+        // 壁切れ補正: 180°大回りターン直後の直進は全区間を検出区間とする
+        const float v_const = velocity_l_turn_180;
+
+        // 検出をアーム
+        MF.FLAG.R_WALL_END = 0;
+        MF.FLAG.L_WALL_END = 0;
+        MF.FLAG.WALL_END   = 1;
+
+        // 最大探索距離: 既定の出オフセット距離 + 追加上限
+        float max_mm = dist_l_turn_out_180 + WALL_END_EXTEND_MAX_MM;
+        float remaining_blocks = max_mm / DIST_HALF_SEC;
+        const float step_blocks = (2.0f / DIST_HALF_SEC); // 2mm相当で刻む
+        bool triggered = false;
+
+        while (remaining_blocks > 0.0f) {
+            float step = (remaining_blocks < step_blocks) ? remaining_blocks : step_blocks;
+            run_straight(step, v_const, 0);
+            if (MF.FLAG.R_WALL_END || MF.FLAG.L_WALL_END) {
+                // 消費（クリア）
+                MF.FLAG.R_WALL_END = 0;
+                MF.FLAG.L_WALL_END = 0;
+                triggered = true;
+                break;
+            }
+            remaining_blocks -= step;
+        }
+
+        // 検出アーム解除
+        MF.FLAG.WALL_END = 0;
+
+        // 検出後の追従距離（一定速度でそのまま追従）
+        if (triggered) {
+            float follow_mm = dist_wall_end;
+            if (follow_mm > 0.0f) {
+                float extra_blocks = follow_mm / DIST_HALF_SEC;
+                run_straight(extra_blocks, v_const, 0);
+            }
+        }
+    }
     MF.FLAG.CTRL = 0;
     MF.FLAG.SLALOM_R = 0;
 }
@@ -519,7 +636,46 @@ void l_turn_L180(uint8_t fwall) {
     MF.FLAG.SLALOM_L = 1;
     driveSL(angle_l_turn_180, alpha_l_turn_180);
     MF.FLAG.CTRL = 1;
-    driveA(dist_l_turn_out_180, speed_now, velocity_l_turn_180, 0);
+    {
+        // 壁切れ補正: 180°大回りターン直後の直進は全区間を検出区間とする
+        const float v_const = velocity_l_turn_180;
+
+        // 検出をアーム
+        MF.FLAG.R_WALL_END = 0;
+        MF.FLAG.L_WALL_END = 0;
+        MF.FLAG.WALL_END   = 1;
+
+        // 最大探索距離: 既定の出オフセット距離 + 追加上限
+        float max_mm = dist_l_turn_out_180 + WALL_END_EXTEND_MAX_MM;
+        float remaining_blocks = max_mm / DIST_HALF_SEC;
+        const float step_blocks = (2.0f / DIST_HALF_SEC); // 2mm相当で刻む
+        bool triggered = false;
+
+        while (remaining_blocks > 0.0f) {
+            float step = (remaining_blocks < step_blocks) ? remaining_blocks : step_blocks;
+            run_straight(step, v_const, 0);
+            if (MF.FLAG.R_WALL_END || MF.FLAG.L_WALL_END) {
+                // 消費（クリア）
+                MF.FLAG.R_WALL_END = 0;
+                MF.FLAG.L_WALL_END = 0;
+                triggered = true;
+                break;
+            }
+            remaining_blocks -= step;
+        }
+
+        // 検出アーム解除
+        MF.FLAG.WALL_END = 0;
+
+        // 検出後の追従距離（一定速度でそのまま追従）
+        if (triggered) {
+            float follow_mm = dist_wall_end;
+            if (follow_mm > 0.0f) {
+                float extra_blocks = follow_mm / DIST_HALF_SEC;
+                run_straight(extra_blocks, v_const, 0);
+            }
+        }
+    }
     MF.FLAG.CTRL = 0;
     MF.FLAG.SLALOM_L = 0;
 }

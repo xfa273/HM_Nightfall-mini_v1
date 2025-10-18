@@ -75,17 +75,17 @@
 // 壁切れ判定専用しきい値（高速走行向けに独立調整可能）
 // 既定値は探索用と同一。必要に応じて実機に合わせて変更してください。
 #ifndef WALL_END_THR_R
-#define WALL_END_THR_R  300
+#define WALL_END_THR_R  250
 #endif
 #ifndef WALL_END_THR_L
-#define WALL_END_THR_L  300
+#define WALL_END_THR_L  250
 #endif
 
 // 壁切れバッファ距離（ターン前に等速で走る距離）[mm]
 // 例: 20mm。小回り時は半区間(DIST_HALF_SEC)を追加で短縮・追従する実装のため、
 // この値は「基本バッファ」として機能します。
 #ifndef WALL_END_BUFFER_MM
-#define WALL_END_BUFFER_MM  20.0F
+#define WALL_END_BUFFER_MM  40.0F
 #endif
 
 // 壁切れ未検知時の最大延長距離（本来の距離に追加して等速で探す上限）[mm]
@@ -112,8 +112,8 @@
 
 /* 前壁センサを用いた中央合わせ（非接触）用パラメータ */
 // 区画中央における前壁センサの目標値（実機で調整）
-#define F_ALIGN_TARGET_FR    3650
-#define F_ALIGN_TARGET_FL    3650
+#define F_ALIGN_TARGET_FR    3700
+#define F_ALIGN_TARGET_FL    3700
 
 // アライン実行条件（前壁が十分に見えているか判定する閾値）
 #define F_ALIGN_DETECT_THR   400
