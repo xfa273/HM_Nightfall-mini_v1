@@ -335,6 +335,7 @@ extern volatile float previous_ad_r;
 extern volatile float previous_ad_l;
 extern volatile float kp_wall; // 壁制御ゲイン
 extern volatile float latest_wall_error; // 壁偏差（探索側トリガ用）
+extern volatile uint32_t fan_last_off_ms; // 最後にファンを停止した時刻（ms）
 
 /*斜め制御用*/
 extern volatile float diagonal_control_thr;

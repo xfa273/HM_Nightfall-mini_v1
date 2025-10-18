@@ -33,7 +33,7 @@ void mode1() {
 
             // 直線
             acceleration_straight = 1000;
-            acceleration_straight_dash = 3000; // 5000
+            acceleration_straight_dash = 1200; // 5000
             // ターン
             velocity_turn90 = 300;
             alpha_turn90 = 9000;

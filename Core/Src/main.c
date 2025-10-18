@@ -145,6 +145,18 @@ int main(void)
 
     sensor_init();
 
+    // 起動直後に割込みが動作し、ad_bat が更新されるのを少し待つ
+    HAL_Delay(50);
+
+    // 低電圧警告: 閾値未満なら警告用パターン（低めのトーンを複数回）
+    if (ad_bat < BAT_WARN_ADC_THR) {
+        printf("[WARN] Battery low: ADC=%u < %u\r\n", (unsigned)ad_bat, (unsigned)BAT_WARN_ADC_THR);
+        for (int i = 0; i < 3; i++) {
+            buzzer_beep(2500);
+            HAL_Delay(60);
+        }
+    }
+
     drive_init();
 
     int mode = 0;

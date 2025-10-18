@@ -488,9 +488,8 @@ void run(void) {
 
     half_sectionD(0);
 
-    led_flash(5);
-    buzzer_beep(300);
-
+    // ゴール演出（LED/Buzzer）は run_shortest() 側で必要に応じて実施する。
+    // ここでは直後にファン停止やLED消灯を行うため、一時的な再点灯/再起動を避ける目的で呼ばない。
     drive_stop();
 }
 
@@ -623,4 +622,5 @@ void run_shortest(uint8_t mode, uint8_t case_index) {
     MF.FLAG.RUNNING = 0;
 
     led_write(0,0);
+    led_wait();
 }

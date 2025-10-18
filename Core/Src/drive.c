@@ -46,6 +46,9 @@ static volatile uint8_t s_outputs_locked = 0;
 // モータドライバの有効/無効状態（STBY+PWM）
 static volatile uint8_t s_motor_enabled = 0;
 
+// 最後にファンを停止した時刻（ms）: ブザー起動のクールダウン制御用
+volatile uint32_t fan_last_off_ms = 0;
+
 /*==========================================================
     走行系 上位関数
 ==========================================================*/
@@ -1710,6 +1713,8 @@ void drive_fan(uint16_t fan_power) {
     } else {
         __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, 0);
         HAL_TIM_PWM_Stop(&htim3, TIM_CHANNEL_1);
+        // 停止時刻を記録（同一TIM3を使うブザーとの干渉を避けるためのクールダウン判定用）
+        fan_last_off_ms = HAL_GetTick();
     }
 }
 

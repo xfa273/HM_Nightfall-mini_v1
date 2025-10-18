@@ -6,6 +6,7 @@
  */
 
 #include "global.h"
+#include "drive.h"
 
 //+++++++++++++++++++++++++++++++++++++++++++++++
 // led_write
@@ -75,7 +76,9 @@ void led_wait(void) {
 //+++++++++++++++++++++++++++++++++++++++++++++++
 
 void buzzer_beep(uint16_t tone) {
-    if (!MF.FLAG.SUCTION) {
+    // ファン停止直後はクールダウン中はブザーを抑止（TIM3共有による干渉回避）
+    const uint32_t now_ms = HAL_GetTick();
+    if (!MF.FLAG.SUCTION && (fan_last_off_ms == 0u || (now_ms - fan_last_off_ms) > 200u)) {
         HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);
         __HAL_TIM_SET_AUTORELOAD(&htim3, tone);
         __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_2, tone * 0.6);
@@ -92,7 +95,9 @@ void buzzer_beep(uint16_t tone) {
 //+++++++++++++++++++++++++++++++++++++++++++++++
 
 void buzzer_interrupt(uint16_t tone) {
-    if (!MF.FLAG.SUCTION) {
+    // ファン停止直後はクールダウン中はブザーを抑止（TIM3共有による干渉回避）
+    const uint32_t now_ms = HAL_GetTick();
+    if (!MF.FLAG.SUCTION && (fan_last_off_ms == 0u || (now_ms - fan_last_off_ms) > 200u)) {
         HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);
         __HAL_TIM_SET_AUTORELOAD(&htim3, tone);
         __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_2, tone * 0.6);
