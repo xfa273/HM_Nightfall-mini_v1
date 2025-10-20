@@ -288,11 +288,56 @@ void one_section(void) {}
 //+++++++++++++++++++++++++++++++++++++++++++++++
 void one_sectionU(uint8_t CTRL) {
     (void)CTRL;
+    // 壁制御ONのまま、1区画を2mm刻みで走行しながら壁切れ検知を監視する
     MF.FLAG.CTRL = 1;
-    driveA(DIST_HALF_SEC * 2, speed_now, speed_now, 0);
+
+    const float v_const = speed_now; // 等速維持
+
+    // 壁切れ検知のアーム（探索中でも検出できるようにSCNDを一時的に有効化）
+    uint8_t prev_scnd = MF.FLAG.SCND;
+    MF.FLAG.R_WALL_END = 0;
+    MF.FLAG.L_WALL_END = 0;
+    MF.FLAG.WALL_END   = 1;
+    MF.FLAG.SCND       = 1; // detect_wall_end() のゲート条件を満たすため一時的に有効化
+
+    // 1区画 = 半区画2つ分 = blocksで2.0
+    float remaining_blocks = 2.0f;
+    const float step_blocks = (2.0f / DIST_HALF_SEC); // 2mm相当で刻む
+    bool triggered = false;
+
+    while (remaining_blocks > 0.0f) {
+        float step = (remaining_blocks < step_blocks) ? remaining_blocks : step_blocks;
+        run_straight(step, v_const, 0);
+        if (MF.FLAG.R_WALL_END || MF.FLAG.L_WALL_END) {
+            // 消費（クリア）
+            MF.FLAG.R_WALL_END = 0;
+            MF.FLAG.L_WALL_END = 0;
+            triggered = true;
+            break;
+        }
+        remaining_blocks -= step;
+    }
+
+    // 検出アーム解除とSCND復帰
+    MF.FLAG.WALL_END = 0;
+    MF.FLAG.SCND = prev_scnd;
+
+    if (triggered) {
+        // 検出後は「半区画 + dist_wall_end」を等速で追従
+        float follow_mm = (float)DIST_HALF_SEC + dist_wall_end;
+        if (follow_mm > 0.0f) {
+            float extra_blocks = follow_mm / DIST_HALF_SEC;
+            run_straight(extra_blocks, v_const, 0);
+        }
+    } else {
+        // 未検知の場合、残りがあれば従来通り1区画分を完了
+        if (remaining_blocks > 0.0f) {
+            run_straight(remaining_blocks, v_const, 0);
+        }
+    }
 
     MF.FLAG.CTRL = 0;
-    speed_now = speed_now;
+    speed_now = v_const;
 
     get_wall_info();
 }

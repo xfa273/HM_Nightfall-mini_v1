@@ -39,11 +39,11 @@ void mode1() {
             alpha_turn90 = 8850;
             acceleration_turn = 0;
             dist_offset_in = 8;
-            dist_offset_out = 15.0; // 32
+            dist_offset_out = 15.5; // 32
             val_offset_in = 1750;
             angle_turn_90 = 89.5;
             // 壁切れ後の距離
-            dist_wall_end = 12;
+            dist_wall_end = 0;
 
             // 壁制御とケツ当て
             kp_wall = 0.015;

@@ -609,7 +609,7 @@ void run_shortest(uint8_t mode, uint8_t case_index) {
     velocity_interrupt = 0;
 
     // センサ・モータ初期化
-    led_flash(10);
+    led_flash(4);
     drive_variable_reset();
     IMU_GetOffset();
     drive_enable_motor();
@@ -617,7 +617,7 @@ void run_shortest(uint8_t mode, uint8_t case_index) {
     MF.FLAG.SCND = 1;
     MF.FLAG.RETURN = 0;
 
-    led_flash(5);
+    led_flash(2);
     get_base();
 
     led_write(1,1);

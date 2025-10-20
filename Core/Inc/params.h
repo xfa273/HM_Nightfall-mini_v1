@@ -15,11 +15,11 @@
     走行系
 ------------------------------------------------------------*/
 /*走行パラメータ*/
-#define D_TIRE            13.315F  // タイヤ直径[mm]
+#define D_TIRE            13.65F  // タイヤ直径[mm]
 #define DIST_HALF_SEC     45     // 迷路の半区間距離[mm]
 #define DIST_D_HALF_SEC   67.279 // 斜めの半区間距離[mm]
 #define DIST_FIRST_SEC    13     // 最初の区画の距離[mm]
-#define DIST_SET_POSITION 15     // 壁当て後の前進距離[mm]
+#define DIST_SET_POSITION 13     // 壁当て後の前進距離[mm]
 
 #define ALPHA_ROTATE_90   3000  // 超信地旋回の角加速度[deg/sec^2]
 #define ANGLE_ROTATE_90_R 89.0F // 超信地旋回の角度[deg]
@@ -67,8 +67,8 @@
 /*壁判断閾値*/
 #define WALL_BASE_FR  400   // 前壁右センサ    //700
 #define WALL_BASE_FL  400   // 前壁左センサ    //700
-#define WALL_BASE_R   400   // 右壁センサ  //800
-#define WALL_BASE_L   400   // 左壁センサ  //800
+#define WALL_BASE_R   450   // 右壁センサ  //800
+#define WALL_BASE_L   450   // 左壁センサ  //800
 #define WALL_DIFF_THR 22   // 壁センサ値の変化量のしきい値
 #define K_SENSOR      1.00F // センサの補正値 0.94F
 
@@ -114,12 +114,12 @@
 #define IR_WAIT_US 30
 
 // 探索中の横壁ズレ検出しきい値（wall_PIDで算出するlatest_wall_error[ADcount]の絶対値）
-#define WALL_ALIGN_ERR_THR  550
+#define WALL_ALIGN_ERR_THR  700
 
 /* 前壁センサを用いた中央合わせ（非接触）用パラメータ */
 // 区画中央における前壁センサの目標値（実機で調整）
 #define F_ALIGN_TARGET_FR    3750
-#define F_ALIGN_TARGET_FL    3780
+#define F_ALIGN_TARGET_FL    3790
 
 // アライン実行条件（前壁が十分に見えているか判定する閾値）
 #define F_ALIGN_DETECT_THR   500
