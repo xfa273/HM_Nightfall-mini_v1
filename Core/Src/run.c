@@ -78,6 +78,12 @@ void run(void) {
             // 壁切れ用のバッファ距離（次がターンのときのみ適用）
             const float buffer_mm_cfg = WALL_END_BUFFER_MM; // params.h から設定
             bool next_is_small_turn = (next_code >= 300 && next_code < 500);
+            // 追加条件: 直進が半区画(S1=201)で、かつ直前が大回り・次が小回りの組み合わせでは
+            // 壁切れ補正を行わず、単純に指定距離を走行する（本機体の幾何に合わせてズレを防止）
+            uint16_t prev_code = (path_count > 0) ? path[path_count - 1] : 0;
+            bool prev_is_large_turn = (prev_code >= 500 && prev_code < 700);
+            bool straight_is_S1 = (path[path_count] == 201);
+            bool disable_wall_cut_on_S1 = (straight_is_S1 && prev_is_large_turn && next_is_small_turn);
             float buffer_mm = 0.0f;
             if (next_is_turn) {
                 buffer_mm = buffer_mm_cfg;
@@ -86,6 +92,10 @@ void run(void) {
                 if (next_is_small_turn) {
                     buffer_mm += (float)DIST_HALF_SEC;
                 }
+            }
+            // 大回り→S1→小回りのときは、S1での壁切れ補正を無効化（= バッファを使わない）
+            if (disable_wall_cut_on_S1) {
+                buffer_mm = 0.0f;
             }
             if (buffer_mm > straight_mm) buffer_mm = straight_mm; // 過剰保護
 

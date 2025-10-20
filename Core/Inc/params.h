@@ -114,15 +114,15 @@
 #define IR_WAIT_US 30
 
 // 探索中の横壁ズレ検出しきい値（wall_PIDで算出するlatest_wall_error[ADcount]の絶対値）
-#define WALL_ALIGN_ERR_THR  500
+#define WALL_ALIGN_ERR_THR  550
 
 /* 前壁センサを用いた中央合わせ（非接触）用パラメータ */
 // 区画中央における前壁センサの目標値（実機で調整）
 #define F_ALIGN_TARGET_FR    3750
-#define F_ALIGN_TARGET_FL    3750
+#define F_ALIGN_TARGET_FL    3780
 
 // アライン実行条件（前壁が十分に見えているか判定する閾値）
-#define F_ALIGN_DETECT_THR   400
+#define F_ALIGN_DETECT_THR   500
 
 // 閉ループ制御ゲイン（実機調整用）
 #define MATCH_POS_KP_TRANS   0.3F   // [mm/s] / [ADcount]
