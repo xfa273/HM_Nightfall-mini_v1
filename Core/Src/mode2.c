@@ -57,7 +57,8 @@ static void apply_turn_d45in_mode2(void) {
     velocity_turn45in = m->velocity_turn45in;
     alpha_turn45in = m->alpha_turn45in;
     angle_turn45in = m->angle_turn45in;
-    dist_turn45in = m->dist_turn45in;
+    dist_turn45in_in = m->dist_turn45in_in;
+    dist_turn45in_out = m->dist_turn45in_out;
 }
 
 static void apply_turn_d45out_mode2(void) {
@@ -222,7 +223,7 @@ void mode2() {
                 led_flash(5);
 
                 run_diagonal(1,velocity_turn45out);
-                turn_R45_Out();
+                turn_L45_Out();
                 run_diagonal(1,0);
 
                 led_flash(5);
@@ -244,7 +245,7 @@ void mode2() {
                 led_flash(5);
 
                 run_diagonal(1,velocity_turnV90);
-                turn_RV90();
+                turn_LV90();
                 run_diagonal(1,0);
 
                 led_flash(5);
@@ -265,7 +266,7 @@ void mode2() {
 
                 led_flash(5);
 
-                run_diagonal(1,velocity_turn135in);
+                half_sectionA(velocity_turn135in);
                 turn_R135_In();
                 run_diagonal(1,0);
 
@@ -288,7 +289,7 @@ void mode2() {
                 led_flash(5);
 
                 run_diagonal(1,velocity_turn135out);
-                turn_R135_Out();
+                turn_L135_Out();
                 run_diagonal(1,0);
 
                 led_flash(5);

@@ -18,7 +18,7 @@
 #define D_TIRE            13.315F  // タイヤ直径[mm]
 #define DIST_HALF_SEC     45     // 迷路の半区間距離[mm]
 #define DIST_D_HALF_SEC   67.279 // 斜めの半区間距離[mm]
-#define DIST_FIRST_SEC    14     // 最初の区画の距離[mm]
+#define DIST_FIRST_SEC    13     // 最初の区画の距離[mm]
 #define DIST_SET_POSITION 15     // 壁当て後の前進距離[mm]
 
 #define ALPHA_ROTATE_90   3000  // 超信地旋回の角加速度[deg/sec^2]
@@ -94,13 +94,13 @@
 #define WALL_END_EXTEND_MAX_MM  15.0F
 #endif
 
-#define WALL_CTRL_BASE_L 2135 // 壁制御の基準値（左） 668
-#define WALL_CTRL_BASE_R 2100 // 壁制御の基準値（右） 1101
+#define WALL_CTRL_BASE_L 1941 // 壁制御の基準値（左） 2135
+#define WALL_CTRL_BASE_R 1989 // 壁制御の基準値（右） 2100
 
 // バッテリー電圧の警告しきい値（ADCカウント）
 // 例: 3000。割り込み内/起動時チェックで共通利用。
 #ifndef BAT_WARN_ADC_THR
-#define BAT_WARN_ADC_THR 3000
+#define BAT_WARN_ADC_THR 2150
 #endif
 
 /*制御閾値*/
@@ -118,8 +118,8 @@
 
 /* 前壁センサを用いた中央合わせ（非接触）用パラメータ */
 // 区画中央における前壁センサの目標値（実機で調整）
-#define F_ALIGN_TARGET_FR    3700
-#define F_ALIGN_TARGET_FL    3700
+#define F_ALIGN_TARGET_FR    3750
+#define F_ALIGN_TARGET_FL    3750
 
 // アライン実行条件（前壁が十分に見えているか判定する閾値）
 #define F_ALIGN_DETECT_THR   400

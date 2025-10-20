@@ -57,7 +57,8 @@ static void apply_turn_d45in_mode4(void) {
     velocity_turn45in = m->velocity_turn45in;
     alpha_turn45in = m->alpha_turn45in;
     angle_turn45in = m->angle_turn45in;
-    dist_turn45in = m->dist_turn45in;
+    dist_turn45in_in = m->dist_turn45in_in;
+    dist_turn45in_out = m->dist_turn45in_out;
 }
 
 static void apply_turn_d45out_mode4(void) {
@@ -132,12 +133,15 @@ void mode4() {
                 drive_enable_motor();
 
                 led_flash(5);
+                drive_fan(shortestRunModeParams4.fan_power);
+                led_flash(5);
 
                 half_sectionA(velocity_turn90);
                 turn_R90(0);
                 half_sectionD(0);
 
                 led_flash(5);
+                drive_fan(0);
                 drive_stop();
                 break;
             case 1: // 90deg大回り
@@ -154,12 +158,15 @@ void mode4() {
                 drive_enable_motor();
 
                 led_flash(5);
+                drive_fan(shortestRunModeParams4.fan_power);
+                led_flash(5);
 
                 half_sectionA(velocity_l_turn_90);
                 l_turn_R90();
                 half_sectionD(0);
 
                 led_flash(5);
+                drive_fan(0);
                 drive_stop();
                 break;
             case 2: // 180deg大回り
@@ -176,12 +183,15 @@ void mode4() {
                 drive_enable_motor();
 
                 led_flash(5);
+                drive_fan(shortestRunModeParams4.fan_power);
+                led_flash(5);
 
                 half_sectionA(velocity_l_turn_180);
                 l_turn_R180(0);
                 half_sectionD(0);
 
                 led_flash(5);
+                drive_fan(0);
                 drive_stop();
                 break;
             case 3: // 45deg 入り
@@ -198,12 +208,15 @@ void mode4() {
                 drive_enable_motor();
 
                 led_flash(5);
-
+                drive_fan(shortestRunModeParams3.fan_power);
+                led_flash(5);
+                    
                 half_sectionA(velocity_turn45in);
                 turn_R45_In();
                 run_diagonal(1,0);
 
                 led_flash(5);
+                drive_fan(0);
                 drive_stop();
                 break;
             case 4: // 45deg 出
@@ -220,12 +233,15 @@ void mode4() {
                 drive_enable_motor();
 
                 led_flash(5);
+                drive_fan(shortestRunModeParams4.fan_power);
+                led_flash(5);
 
                 run_diagonal(1,velocity_turn45out);
-                turn_R45_Out();
+                turn_L45_Out();
                 run_diagonal(1,0);
 
                 led_flash(5);
+                drive_fan(0);
                 drive_stop();
                 break;
             case 5: // V90
@@ -242,12 +258,15 @@ void mode4() {
                 drive_enable_motor();
 
                 led_flash(5);
+                drive_fan(shortestRunModeParams4.fan_power);
+                led_flash(5);
 
                 run_diagonal(1,velocity_turnV90);
                 turn_RV90();
                 run_diagonal(1,0);
 
                 led_flash(5);
+                drive_fan(0);
                 drive_stop();
                 break;
             case 6: // 135deg 入り
@@ -264,12 +283,15 @@ void mode4() {
                 drive_enable_motor();
 
                 led_flash(5);
+                drive_fan(shortestRunModeParams4.fan_power);
+                led_flash(5);
 
                 run_diagonal(1,velocity_turn135in);
                 turn_R135_In();
                 run_diagonal(1,0);
 
                 led_flash(5);
+                drive_fan(0);
                 drive_stop();
                 break;
             case 7: // 135deg 出
@@ -286,12 +308,15 @@ void mode4() {
                 drive_enable_motor();
 
                 led_flash(5);
+                drive_fan(shortestRunModeParams4.fan_power);
+                led_flash(5);
 
                 run_diagonal(1,velocity_turn135out);
-                turn_R135_Out();
+                turn_L135_Out();
                 run_diagonal(1,0);
 
                 led_flash(5);
+                drive_fan(0);
                 drive_stop();
                 break;
             default:

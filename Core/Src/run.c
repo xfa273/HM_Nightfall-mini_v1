@@ -567,7 +567,8 @@ void run_shortest(uint8_t mode, uint8_t case_index) {
     velocity_turn45in          = pm->velocity_turn45in;
     alpha_turn45in             = pm->alpha_turn45in;
     angle_turn45in             = pm->angle_turn45in;
-    dist_turn45in              = pm->dist_turn45in;
+    dist_turn45in_in           = pm->dist_turn45in_in;
+    dist_turn45in_out          = pm->dist_turn45in_out;
     velocity_turn45out         = pm->velocity_turn45out;
     alpha_turn45out            = pm->alpha_turn45out;
     angle_turn45out            = pm->angle_turn45out;

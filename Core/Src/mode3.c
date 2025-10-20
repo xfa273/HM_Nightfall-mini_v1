@@ -57,7 +57,8 @@ static void apply_turn_d45in_mode3(void) {
     velocity_turn45in = m->velocity_turn45in;
     alpha_turn45in = m->alpha_turn45in;
     angle_turn45in = m->angle_turn45in;
-    dist_turn45in = m->dist_turn45in;
+    dist_turn45in_in = m->dist_turn45in_in;
+    dist_turn45in_out = m->dist_turn45in_out;
 }
 
 static void apply_turn_d45out_mode3(void) {
@@ -144,12 +145,54 @@ void mode3() {
                 drive_stop();
                 break;
             case 1: // 最短(case1)
-                printf("Mode 3-1 Shortest (case1).\n");
-                run_shortest(3, 1);
+                apply_case_params_mode3_idx(idx_normal);
+                apply_turn_large90_mode3();
+                printf("Loaded params: large 90deg (mode3).\n");
+
+                velocity_interrupt = 0;
+
+                led_flash(10);
+
+                drive_variable_reset();
+                IMU_GetOffset();
+                drive_enable_motor();
+
+                led_flash(5);
+                drive_fan(shortestRunModeParams3.fan_power);
+                led_flash(5);
+
+                half_sectionA(velocity_l_turn_90);
+                l_turn_R90();
+                half_sectionD(0);
+
+                led_flash(5);
+                drive_fan(0);
+                drive_stop();
                 break;
             case 2: // 最短(case2)
-                printf("Mode 3-2 Shortest (case2).\n");
-                run_shortest(3, 2);
+                apply_case_params_mode3_idx(idx_normal);
+                apply_turn_large180_mode3();
+                printf("Loaded params: large 180deg (mode3).\n");
+
+                velocity_interrupt = 0;
+
+                led_flash(10);
+
+                drive_variable_reset();
+                IMU_GetOffset();
+                drive_enable_motor();
+
+                led_flash(5);
+                drive_fan(shortestRunModeParams3.fan_power);
+                led_flash(5);
+
+                half_sectionA(velocity_l_turn_180);
+                l_turn_R180(0);
+                half_sectionD(0);
+
+                led_flash(5);
+                drive_fan(0);
+                drive_stop();
                 break;
             case 3: // 45deg 入り
                 apply_case_params_mode3_idx(idx_diag);
@@ -194,7 +237,7 @@ void mode3() {
                 led_flash(5);
 
                 run_diagonal(1,velocity_turn45out);
-                turn_R45_Out();
+                turn_L45_Out();
                 run_diagonal(1,0);
 
                 led_flash(5);
@@ -219,7 +262,7 @@ void mode3() {
                 led_flash(5);
 
                 run_diagonal(1,velocity_turnV90);
-                turn_RV90();
+                turn_LV90();
                 run_diagonal(1,0);
 
                 led_flash(5);
@@ -243,7 +286,7 @@ void mode3() {
                 drive_fan(shortestRunModeParams3.fan_power);
                 led_flash(5);
                     
-                run_diagonal(1,velocity_turn135in);
+                half_sectionA(velocity_turn135in);
                 turn_R135_In();
                 run_diagonal(1,0);
 
@@ -269,7 +312,7 @@ void mode3() {
                 led_flash(5);
 
                 run_diagonal(1,velocity_turn135out);
-                turn_R135_Out();
+                turn_L135_Out();
                 run_diagonal(1,0);
 
                 led_flash(5);

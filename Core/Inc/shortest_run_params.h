@@ -37,7 +37,8 @@ typedef struct {
     float velocity_turn45in;          ///< 45°入り 速度 (mm/s)
     float alpha_turn45in;             ///< 45°入り ハンドリング
     float angle_turn45in;             ///< 45°入り 角度 (度)
-    float dist_turn45in;              ///< 45°入り オフセット距離 (mm)
+    float dist_turn45in_in;           ///< 45°入り 前直進距離 (mm)
+    float dist_turn45in_out;          ///< 45°入り 出オフセット距離 (mm)
     float velocity_turn45out;         ///< 45°出 速度 (mm/s)
     float alpha_turn45out;            ///< 45°出 ハンドリング
     float angle_turn45out;            ///< 45°出 角度 (度)

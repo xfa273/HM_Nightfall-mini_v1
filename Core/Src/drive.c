@@ -692,8 +692,13 @@ void l_turn_L180(uint8_t fwall) {
 void turn_R45_In(void) {
 
     MF.FLAG.CTRL = 0;
+    MF.FLAG.CTRL_DIAGONAL = 0;
+    // 前直進（必要量）
+    driveA(dist_turn45in_in, speed_now, velocity_turn45in, 0);
+    // 旋回
     driveSR(angle_turn45in, alpha_turn45in);
-    driveA(dist_turn45in, speed_now, velocity_turn45in, 0);
+    // 出オフセット
+    driveA(dist_turn45in_out, speed_now, velocity_turn45in, 0);
 }
 
 //+++++++++++++++++++++++++++++++++++++++++++++++
@@ -720,8 +725,12 @@ void turn_L45_In(void) {
 
     MF.FLAG.CTRL = 0;
     MF.FLAG.CTRL_DIAGONAL = 0;
+    // 前直進（必要量）
+    driveA(dist_turn45in_in, speed_now, velocity_turn45in, 0);
+    // 旋回
     driveSL(angle_turn45in, alpha_turn45in);
-    driveA(dist_turn45in, speed_now, velocity_turn45in, 0);
+    // 出オフセット
+    driveA(dist_turn45in_out, speed_now, velocity_turn45in, 0);
 }
 
 //+++++++++++++++++++++++++++++++++++++++++++++++

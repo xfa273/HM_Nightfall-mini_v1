@@ -90,7 +90,6 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
         // バッテリー電圧の監視
         if (ad_bat > 3000) { // 3.3*3060/4095*3=7.4[V]で発動
             // バッテリーOK
-
         } else {
             // バッテリー消耗
         }
