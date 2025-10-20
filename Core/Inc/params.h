@@ -15,7 +15,7 @@
     走行系
 ------------------------------------------------------------*/
 /*走行パラメータ*/
-#define D_TIRE            13.65F  // タイヤ直径[mm]
+#define D_TIRE            13.75F  // タイヤ直径[mm] 13.70F
 #define DIST_HALF_SEC     45     // 迷路の半区間距離[mm]
 #define DIST_D_HALF_SEC   67.279 // 斜めの半区間距離[mm]
 #define DIST_FIRST_SEC    13     // 最初の区画の距離[mm]
@@ -65,10 +65,10 @@
     センサ系
 ------------------------------------------------------------*/
 /*壁判断閾値*/
-#define WALL_BASE_FR  400   // 前壁右センサ    //700
-#define WALL_BASE_FL  400   // 前壁左センサ    //700
-#define WALL_BASE_R   450   // 右壁センサ  //800
-#define WALL_BASE_L   450   // 左壁センサ  //800
+#define WALL_BASE_FR  360   // 前壁右センサ    //700
+#define WALL_BASE_FL  360   // 前壁左センサ    //700
+#define WALL_BASE_R   410   // 右壁センサ  //800
+#define WALL_BASE_L   410   // 左壁センサ  //800
 #define WALL_DIFF_THR 22   // 壁センサ値の変化量のしきい値
 #define K_SENSOR      1.00F // センサの補正値 0.94F
 

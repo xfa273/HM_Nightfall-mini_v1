@@ -141,14 +141,14 @@ void adachi(void) {
             } else if (!known_straight && acceled) {
                 one_sectionD();
                 acceled = false;
-            } else if (!acceled && fabsf(latest_wall_error) > WALL_ALIGN_ERR_THR) {
-                if (r_wall) {
+            } else if (!acceled && fabsf(latest_wall_error) > WALL_ALIGN_ERR_THR && MF.FLAG.WALL_ALIGN) {
+                if (ad_r > WALL_BASE_R * 1.3) {
                     half_sectionD(0);
                     rotate_R90();
                     match_position(0);
                     rotate_L90();
                     half_sectionA(1);
-                } else if (l_wall) {
+                } else if (ad_l > WALL_BASE_L * 1.3) {
                     half_sectionD(0);
                     rotate_L90();
                     match_position(0);

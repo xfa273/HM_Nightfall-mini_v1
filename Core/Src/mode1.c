@@ -27,7 +27,7 @@ void mode1() {
 
             break;
 
-        case 1: // 足立法全面探索 600mm/s
+        case 1: // 足立法全面探索 300mm/s
 
             printf("Mode 1-1.\n");
 
@@ -38,8 +38,8 @@ void mode1() {
             velocity_turn90 = 300;
             alpha_turn90 = 8850;
             acceleration_turn = 0;
-            dist_offset_in = 8;
-            dist_offset_out = 15.5; // 32
+            dist_offset_in = 8;   // 8
+            dist_offset_out = 16.0; // 15.5
             val_offset_in = 1750;
             angle_turn_90 = 89.5;
             // 壁切れ後の距離
@@ -52,6 +52,8 @@ void mode1() {
             // 壁判断しきい値の係数
             sensor_kx = 1.0;
 
+            MF.FLAG.WALL_ALIGN = 1;
+
             velocity_interrupt = 0;
 
             led_flash(10);
@@ -72,31 +74,33 @@ void mode1() {
 
             break;
 
-        case 2: // 足立法全面探索 1000mm/s
+        case 2: // 足立法全面探索 300mm/s
 
             printf("Mode 1-2.\n");
 
             // 直線
-            acceleration_straight = 4000;
-            acceleration_straight_dash = 4000; // 5000
+            acceleration_straight = 1000;
+            acceleration_straight_dash = 1200; // 5000
             // ターン
-            velocity_turn90 = 600;
-            alpha_turn90 = 33900;
+            velocity_turn90 = 300;
+            alpha_turn90 = 8850;
             acceleration_turn = 0;
-            dist_offset_in = 5;
-            dist_offset_out = 24;
-            val_offset_in = 1100;
-            angle_turn_90 = 85;
+            dist_offset_in = 8;   // 8
+            dist_offset_out = 16.0; // 15.5
+            val_offset_in = 1750;
+            angle_turn_90 = 89.5;
             // 壁切れ後の距離
-            dist_wall_end = 12;
+            dist_wall_end = 0;
 
             // 壁制御とケツ当て
-            kp_wall = 0.05;
+            kp_wall = 0.015;
             duty_setposition = 40;
 
             // 壁判断しきい値の係数
             sensor_kx = 1.0;
 
+            MF.FLAG.WALL_ALIGN = 0;
+
             velocity_interrupt = 0;
 
             led_flash(10);
@@ -111,42 +115,38 @@ void mode1() {
 
             drive_start();
 
-            drive_fan(300);
-
             adachi();
-
-            drive_fan(0);
 
             led_wait();
 
             break;
 
-        case 3: // 足立法全面探索 1000mm/s しきい値高め
+        case 3: // 足立法全面探索 300mm/s しきい値高め
 
             printf("Mode 1-3.\n");
 
             // 直線
-            acceleration_straight = 5555.6;
-            acceleration_straight_dash = 3000;
-            velocity_straight = 4000;
+            acceleration_straight = 1000;
+            acceleration_straight_dash = 1200; // 5000
             // ターン
-            velocity_turn90 = 1000;
-            alpha_turn90 = 22400;
+            velocity_turn90 = 300;
+            alpha_turn90 = 8850;
             acceleration_turn = 0;
-            dist_offset_in = 10;
-            dist_offset_out = 45;
-            val_offset_in = 1100;
-            angle_turn_90 = 88.5;
+            dist_offset_in = 8;   // 8
+            dist_offset_out = 16.0; // 15.5
+            val_offset_in = 1750;
+            angle_turn_90 = 89.5;
             // 壁切れ後の距離
             dist_wall_end = 0;
 
             // 壁制御とケツ当て
-            kp_wall = 0.05;
-            thr_f_wall = 770;
+            kp_wall = 0.015;
             duty_setposition = 40;
 
             // 壁判断しきい値の係数
-            sensor_kx = 1.15;
+            sensor_kx = 1.1;
+
+            MF.FLAG.WALL_ALIGN = 1;
 
             velocity_interrupt = 0;
 
@@ -161,10 +161,6 @@ void mode1() {
             get_base();
 
             drive_start();
-
-            drive_fan(120);
-
-            led_flash(10);
 
             adachi();
 
@@ -172,31 +168,31 @@ void mode1() {
 
             break;
 
-        case 4: // // 足立法全面探索 1000mm/s  しきい値低め
+        case 4: // // 足立法全面探索 300mm/s  しきい値低め
             printf("Mode 1-4.\n");
 
             // 直線
-            acceleration_straight = 5555.6;
-            acceleration_straight_dash = 3000;
-            velocity_straight = 4000;
+            acceleration_straight = 1000;
+            acceleration_straight_dash = 1200; // 5000
             // ターン
-            velocity_turn90 = 1000;
-            alpha_turn90 = 22400;
+            velocity_turn90 = 300;
+            alpha_turn90 = 8850;
             acceleration_turn = 0;
-            dist_offset_in = 10;
-            dist_offset_out = 45;
-            val_offset_in = 1100;
-            angle_turn_90 = 88.5;
+            dist_offset_in = 8;   // 8
+            dist_offset_out = 16.0; // 15.5
+            val_offset_in = 1750;
+            angle_turn_90 = 89.5;
             // 壁切れ後の距離
             dist_wall_end = 0;
 
             // 壁制御とケツ当て
-            kp_wall = 0.05;
-            thr_f_wall = 770;
+            kp_wall = 0.015;
             duty_setposition = 40;
 
             // 壁判断しきい値の係数
-            sensor_kx = 0.85;
+            sensor_kx = 0.9;
+
+            MF.FLAG.WALL_ALIGN = 1;
 
             velocity_interrupt = 0;
 
@@ -211,10 +207,6 @@ void mode1() {
             get_base();
 
             drive_start();
-
-            drive_fan(120);
-
-            led_flash(10);
 
             adachi();
 
