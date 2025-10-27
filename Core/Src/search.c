@@ -628,8 +628,14 @@ int make_smap(uint8_t target_x, uint8_t target_y) {
     //====ゴール座標を0にする/未探索セルを0にする====
     uint16_t m_step = 0; // 歩数カウンタを0にする
     if (g_search_mode == SEARCH_MODE_GOAL) {
-        // ゴールモード: params.h の複数ゴールを起点(0)にする
-        seed_goals_zero_in_smap();
+        // ゴールモード
+        if (g_goal_is_start) {
+            // 復路: スタート座標を起点(0)にする（ゴール群は無視）
+            smap[START_Y][START_X] = 0;
+        } else {
+            // 往路: params.h の複数ゴールを起点(0)にする
+            seed_goals_zero_in_smap();
+        }
     } else {
         // 全面探索: 未探索セルを起点(0)にする
         for (y = 0; y <= (MAZE_SIZE - 1); y++) {     // 各Y座標で実行
