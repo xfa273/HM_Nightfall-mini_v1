@@ -10,6 +10,9 @@
 #include "dijkstra.h"
 #include <math.h>
 
+// 経路なし終了を検出する内部フラグ（adachi() 実行中のみ有効）
+static bool s_no_path_exit = false;
+
 // 内部ヘルパ: ゴール座標(9個まで)の配列を走査して、現在座標が含まれるか判定
 static inline bool is_in_goal_cells(uint8_t x, uint8_t y) {
     const uint8_t goals[9][2] = {
@@ -176,6 +179,8 @@ void searchB(uint16_t fan_duty) {
 //+++++++++++++++++++++++++++++++++++++++++++++++
 void adachi(void) {
 
+    s_no_path_exit = false;
+
     drive_start();
 
 
@@ -308,6 +313,7 @@ void adachi(void) {
                         }
                     } else {
                         // 経路がない場合は保存せず探索走行を終了
+                        s_no_path_exit = true;
                         search_end = true;
                     }
                 }
@@ -372,7 +378,9 @@ void adachi(void) {
 
     drive_wait();
 
-    store_map_in_eeprom(); // ROMにマップ情報を書き込む
+    if (!s_no_path_exit) {
+        (void)try_store_map_safely(); // 経路がない場合は保存しない
+    }
 
     drive_stop();
 
@@ -380,11 +388,20 @@ void adachi(void) {
 
     led_flash(2);
 
-    for (uint8_t i = 0; i < 3; i++) {
-
-        buzzer_enter(300);
-
-        HAL_Delay(150);
+    if (s_no_path_exit) {
+        // 経路なし終了用のブザーパターン（高→中を2セット）
+        for (uint8_t i = 0; i < 2; i++) {
+            buzzer_enter(900);
+            HAL_Delay(120);
+            buzzer_enter(600);
+            HAL_Delay(180);
+        }
+    } else {
+        // 従来の終了ブザー
+        for (uint8_t i = 0; i < 3; i++) {
+            buzzer_enter(300);
+            HAL_Delay(150);
+        }
     }
 }
 
