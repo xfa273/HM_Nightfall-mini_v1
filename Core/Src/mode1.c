@@ -381,9 +381,76 @@ void mode1() {
 
             break;
 
-        case 7: // ターン調整 900mm/s
+        case 7: // ゴール探索→保存→スタートへ復帰（300mm/s）
 
-            printf("Mode 1-7.\n");
+            printf("Mode 1-7 (Goal->Save->Return to Start).\n");
+
+            // ===== 走行パラメータ（case 2 と同一） =====
+            // 直線
+            acceleration_straight = 1000;
+            acceleration_straight_dash = 0; // 5000
+            // ターン
+            velocity_turn90 = 300;
+            alpha_turn90 = 8850;
+            acceleration_turn = 0;
+            dist_offset_in = 10;   // 8
+            dist_offset_out = 17.0; // 15.5
+            val_offset_in = 1750;
+            angle_turn_90 = 89.5;
+            // 壁切れ後の距離
+            dist_wall_end = 0;
+
+            // 壁制御とケツ当て
+            kp_wall = 0.015;
+            duty_setposition = 40;
+
+            // 壁判断しきい値の係数
+            sensor_kx = 1.0;
+
+            MF.FLAG.WALL_ALIGN = 0;
+
+            velocity_interrupt = 0;
+
+            // ===== 事前準備 =====
+            led_flash(10);
+
+            drive_variable_reset();
+            IMU_GetOffset();
+            drive_enable_motor();
+
+            led_flash(2);
+
+            // ===== 第1フェーズ: ゴール到達で終了 =====
+            get_base();
+            drive_start();
+            set_search_mode(SEARCH_MODE_GOAL);
+            g_goal_is_start = false; // ゴールセルを到達判定
+            goal_x = GOAL_X; goal_y = GOAL_Y; // 念のため明示
+            search_end = false;
+            adachi();
+
+            // ゴール到達後に一度だけ安全に保存（Uターン時に保存済みなら二重保存を避ける）
+            if (save_count == 0) {
+                if (try_store_map_safely()) {
+                    save_count = 1; // 以後の自動保存を抑制
+                }
+            }
+
+            // ===== 第2フェーズ: スタートへ復帰（スタート到達で終了） =====
+            led_flash(2);
+            get_base();
+            drive_start();
+            set_search_mode(SEARCH_MODE_GOAL);
+            MF.FLAG.GOALED = 0; // 復路ではゴール判定フラグに依存しない
+            g_goal_is_start = true; // スタート座標を到達判定に使用
+            goal_x = START_X; goal_y = START_Y; // 経路導出もスタートへ
+            search_end = false;
+            adachi();
+
+            // 後処理
+            g_goal_is_start = false; // 後続モードへの影響を避ける
+
+            led_wait();
 
             break;
         }

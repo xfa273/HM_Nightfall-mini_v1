@@ -71,6 +71,7 @@ void search_init(void) {
     save_count = 0;
     g_search_mode = SEARCH_MODE_FULL; // デフォルトは全面探索
     g_suppress_first_stop_save = false; // 初期状態では抑制しない
+    g_goal_is_start = false; // 初期状態ではスタートをゴール扱いしない
 }
 
 //+++++++++++++++++++++++++++++++++++++++++++++++
@@ -441,7 +442,9 @@ void conf_route() {
 
     if (g_search_mode == SEARCH_MODE_GOAL) {
         // ゴールに到達したら終了（複数ゴール対応）
-        if (is_in_goal_cells(mouse.x, mouse.y)) {
+        // 復路(g_goal_is_start=true)ではスタート到達だけを判定対象にし、ゴール座標は無視
+        if ((g_goal_is_start && mouse.x == START_X && mouse.y == START_Y) ||
+            (!g_goal_is_start && is_in_goal_cells(mouse.x, mouse.y))) {
             search_end = true;
             return;
         }
