@@ -65,6 +65,7 @@ void search_init(void) {
     search_end = false;
     save_count = 0;
     g_search_mode = SEARCH_MODE_FULL; // デフォルトは全面探索
+    g_suppress_first_stop_save = false; // 初期状態では抑制しない
 }
 
 //+++++++++++++++++++++++++++++++++++++++++++++++
@@ -231,16 +232,22 @@ void adachi(void) {
             half_sectionD(0); // 半区間分減速しながら走行し停止
 
             if (MF.FLAG.GOALED && save_count == 0) {
-                drive_variable_reset();
-                alpha_interrupt = 0;
-                acceleration_interrupt = 0;
-                drive_wait();
-                store_map_in_eeprom(); // ROMにマップ情報を書き込む
-                buzzer_beep(200);
+                if (g_search_mode == SEARCH_MODE_FULL && g_suppress_first_stop_save) {
+                    // フル探索直後の最初の停止での保存はスキップ（1回だけ）
+                    g_suppress_first_stop_save = false;
+                    save_count = 1; // このフェーズでは以後の自動保存も抑止
+                } else {
+                    drive_variable_reset();
+                    alpha_interrupt = 0;
+                    acceleration_interrupt = 0;
+                    drive_wait();
+                    store_map_in_eeprom(); // ROMにマップ情報を書き込む
+                    buzzer_beep(200);
 
-                save_count++;
-                if (save_count > 2) {
-                    save_count = 0;
+                    save_count++;
+                    if (save_count > 2) {
+                        save_count = 0;
+                    }
                 }
             }
 

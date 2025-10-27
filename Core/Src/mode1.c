@@ -372,6 +372,8 @@ void mode1() {
             get_base();
             drive_start();
             set_search_mode(SEARCH_MODE_FULL);
+            // フル探索に切り替えた直後の「最初の停止での保存」を1回抑制
+            g_suppress_first_stop_save = true;
             search_end = false;
             adachi();
 

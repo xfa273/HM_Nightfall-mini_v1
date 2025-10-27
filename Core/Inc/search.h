@@ -94,6 +94,9 @@ float fwall_kx;
 /* 探索モード */
 search_mode_t g_search_mode;
 
+/* ゴール探索→全面探索に切り替えた直後の「最初の停止でのFlash保存」を抑制するフラグ */
+bool g_suppress_first_stop_save;
+
 #else // main.c以外からこのファイルが呼ばれている場合
 /*グローバル変数の宣言*/
 extern uint16_t map[MAZE_SIZE][MAZE_SIZE];         // マップ格納配列
@@ -129,6 +132,9 @@ extern float sensor_kx;
 
 /* 探索モード */
 extern search_mode_t g_search_mode;
+
+/* フラッシュ保存抑制フラグ（trueなら次の停止時保存を1回だけスキップ） */
+extern bool g_suppress_first_stop_save;
 
 #endif
 
