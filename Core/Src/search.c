@@ -379,7 +379,9 @@ void adachi(void) {
     drive_wait();
 
     if (!s_no_path_exit) {
-        (void)try_store_map_safely(); // 経路がない場合は保存しない
+        if (!try_store_map_safely()) { // 経路がない場合は保存しない＋終了表示へ
+            s_no_path_exit = true;
+        }
     }
 
     drive_stop();
@@ -389,15 +391,10 @@ void adachi(void) {
     led_flash(2);
 
     if (s_no_path_exit) {
-        // 経路なし終了通知: 短いブザー（高→中）→ 大きな回数でLED点滅 → 無限点滅で待機
-        for (uint8_t i = 0; i < 1; i++) {
-            buzzer_enter(900);
-            HAL_Delay(100);
-            buzzer_enter(600);
-            HAL_Delay(150);
+        // 経路なし終了通知
+        while(1){
+            led_flash(5);
         }
-        led_flash(100);
-        led_wait(); // 以後戻らず、LEDが点滅し続ける
     } else {
         // 従来の終了ブザー
         for (uint8_t i = 0; i < 3; i++) {
