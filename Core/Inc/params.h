@@ -15,7 +15,7 @@
     走行系
 ------------------------------------------------------------*/
 /*走行パラメータ*/
-#define D_TIRE            13.73F  // タイヤ直径[mm] 13.75F
+#define D_TIRE            13.75F  // タイヤ直径[mm] 13.75F
 #define DIST_HALF_SEC     45     // 迷路の半区間距離[mm]
 #define DIST_D_HALF_SEC   67.279 // 斜めの半区間距離[mm]
 #define DIST_FIRST_SEC    13     // 最初の区画の距離[mm]

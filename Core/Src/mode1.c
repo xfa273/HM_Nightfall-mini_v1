@@ -331,7 +331,7 @@ void mode1() {
             alpha_turn90 = 8850;
             acceleration_turn = 0;
             dist_offset_in = 10;   // 8
-            dist_offset_out = 16.5; // 15.5
+            dist_offset_out = 17.0; // 15.5
             val_offset_in = 1750;
             angle_turn_90 = 89.5;
             // 壁切れ後の距離
