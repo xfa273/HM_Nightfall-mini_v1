@@ -88,7 +88,7 @@ void mode1() {
             velocity_turn90 = 300;
             alpha_turn90 = 8850;
             acceleration_turn = 0;
-            dist_offset_in = 9;   // 8
+            dist_offset_in = 10;   // 8
             dist_offset_out = 16.5; // 15.5
             val_offset_in = 1750;
             angle_turn_90 = 89.5;
@@ -182,8 +182,8 @@ void mode1() {
             velocity_turn90 = 300;
             alpha_turn90 = 8850;
             acceleration_turn = 0;
-            dist_offset_in = 8;   // 8
-            dist_offset_out = 16.0; // 15.5
+            dist_offset_in = 10;   // 8
+            dist_offset_out = 16.5; // 15.5
             val_offset_in = 1750;
             angle_turn_90 = 89.5;
             // 壁切れ後の距離
@@ -228,8 +228,8 @@ void mode1() {
             velocity_turn90 = 300;
             alpha_turn90 = 8850;
             acceleration_turn = 0;
-            dist_offset_in = 8;   // 8
-            dist_offset_out = 16.0; // 15.5
+            dist_offset_in = 10;   // 8
+            dist_offset_out = 16.5; // 15.5
             val_offset_in = 1750;
             angle_turn_90 = 89.5;
             // 壁切れ後の距離
@@ -274,12 +274,12 @@ void mode1() {
             acceleration_straight = 4000;
             acceleration_straight_dash = 0; // 5000
             // ターン
-            velocity_turn90 = 600;
-            alpha_turn90 = 33900;
+            velocity_turn90 = 300;
+            alpha_turn90 = 8850;
             acceleration_turn = 0;
-            dist_offset_in = 8;   // 8
-            dist_offset_out = 19.5; // 15.5
-            val_offset_in = 1100;
+            dist_offset_in = 10;   // 8
+            dist_offset_out = 16.5; // 15.5
+            val_offset_in = 1750;
             angle_turn_90 = 89.5;
             // 壁切れ後の距離
             dist_wall_end = 0;
@@ -331,7 +331,7 @@ void mode1() {
             alpha_turn90 = 8850;
             acceleration_turn = 0;
             dist_offset_in = 10;   // 8
-            dist_offset_out = 17.0; // 15.5
+            dist_offset_out = 16.5; // 15.5
             val_offset_in = 1750;
             angle_turn_90 = 89.5;
             // 壁切れ後の距離
@@ -394,7 +394,7 @@ void mode1() {
             alpha_turn90 = 8850;
             acceleration_turn = 0;
             dist_offset_in = 10;   // 8
-            dist_offset_out = 17.0; // 15.5
+            dist_offset_out = 16.5; // 15.5
             val_offset_in = 1750;
             angle_turn_90 = 89.5;
             // 壁切れ後の距離
