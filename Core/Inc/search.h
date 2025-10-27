@@ -162,6 +162,9 @@ void findClosestUnvisitedCell(uint8_t, uint8_t); // 最近の未探索区画を�
 void store_map_in_eeprom(void);
 void load_map_from_eeprom(void);
 
+// 経路が存在する場合のみFlashへ保存する。保存したらtrue、保存しなければfalse。
+bool try_store_map_safely(void);
+
 // 探索モード設定
 void set_search_mode(search_mode_t mode);
 

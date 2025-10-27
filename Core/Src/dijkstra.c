@@ -31,6 +31,110 @@ void initializePath() {
     }
 }
 
+// 前方宣言
+int getDistance(Node a, Node b);
+
+// 経路のトレースを行わず、総コストのみ返す（到達不能時は INFINITY）
+int dijkstra_cost_only(Node start, Node goal) {
+    // 初期化
+    int dist[NODE_COUNT], prev[NODE_COUNT];
+    bool visited[NODE_COUNT] = {false};
+
+    for (int i = 0; i < NODE_COUNT; i++) {
+        dist[i] = INFINITY;
+        prev[i] = -1;
+    }
+
+    dist[(MAZE_SIZE - 1 - start.y) * MAZE_SIZE + start.x] = 0;
+
+    for (int i = 0; i < NODE_COUNT - 1; i++) {
+        int min = INFINITY, min_index = 0;
+        for (int v = 0; v < NODE_COUNT; v++) {
+            if (!visited[v] && dist[v] <= min) {
+                min = dist[v];
+                min_index = v;
+            }
+        }
+
+        int u = min_index;
+        visited[u] = true;
+
+        for (int v = 0; v < NODE_COUNT; v++) {
+            Node uNode = {u % MAZE_SIZE, u / MAZE_SIZE};
+            Node vNode = {v % MAZE_SIZE, v / MAZE_SIZE};
+
+            int distance = getDistance(uNode, vNode);
+
+            if (distance > 0) {
+                int prevNodeIndex = prev[u];
+                if (prevNodeIndex != -1) {
+                    if (vNode.x == uNode.x) {
+                        if (straight_counter % 10 == 1) {
+                            straight_counter += 10;
+                        } else {
+                            straight_counter = 1;
+                        }
+                    } else if (vNode.y == uNode.y) {
+                        if (straight_counter % 10 == 2) {
+                            straight_counter += 10;
+                        } else {
+                            straight_counter = 2;
+                        }
+                    } else {
+                        straight_counter = 0;
+                    }
+
+                    if (straight_counter > 10) {
+                        distance -= straight_counter * straight_weight;
+                    }
+
+                    if ((vNode.x == uNode.x + 1 && vNode.y == uNode.y + 1)) {
+                        if (diagonal_counter % 10 == 1) {
+                            diagonal_counter += 10;
+                        } else {
+                            diagonal_counter = 1;
+                        }
+                    } else if ((vNode.x == uNode.x + 1 && vNode.y == uNode.y - 1)) {
+                        if (diagonal_counter % 10 == 2) {
+                            diagonal_counter += 10;
+                        } else {
+                            diagonal_counter = 2;
+                        }
+                    } else if ((vNode.x == uNode.x - 1 && vNode.y == uNode.y + 1)) {
+                        if (diagonal_counter % 10 == 3) {
+                            diagonal_counter += 10;
+                        } else {
+                            diagonal_counter = 3;
+                        }
+                    } else if ((vNode.x == uNode.x - 1 && vNode.y == uNode.y - 1)) {
+                        if (diagonal_counter % 10 == 4) {
+                            diagonal_counter += 10;
+                        } else {
+                            diagonal_counter = 4;
+                        }
+                    } else {
+                        diagonal_counter = 0;
+                    }
+
+                    if (diagonal_counter > 10) {
+                        distance -= diagonal_counter * diagonal_weight;
+                    }
+                }
+            }
+
+            if (!visited[v] && distance && dist[u] != INFINITY &&
+                dist[u] + distance < dist[v]) {
+                dist[v] = dist[u] + distance;
+                prev[v] = u;
+            }
+        }
+    }
+
+    int goalIndex = (MAZE_SIZE - 1 - goal.y) * MAZE_SIZE + goal.x;
+    last_dijkstra_cost = dist[goalIndex];
+    return last_dijkstra_cost;
+}
+
 void convertPathCellToRun() {
     int8_t Direction = NORTH;
     for (int i = 0; i < 256; i++) {

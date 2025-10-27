@@ -6,6 +6,8 @@
  */
 
 #include "global.h"
+#include "maze_grid.h"
+#include "dijkstra.h"
 #include <math.h>
 
 // 内部ヘルパ: ゴール座標(9個まで)の配列を走査して、現在座標が含まれるか判定
@@ -76,6 +78,64 @@ void search_init(void) {
 //+++++++++++++++++++++++++++++++++++++++++++++++
 void set_search_mode(search_mode_t mode) {
     g_search_mode = mode;
+}
+
+// 内部ヘルパ: 現在の map[][] から迷路を構築し、スタートからいずれかのゴールへの
+// 経路が存在するかを判定する（存在すれば true）。
+static bool path_exists_from_current_map(void) {
+    uint8_t fixedMap[MAZE_SIZE][MAZE_SIZE];
+
+    // 迷路の初期化
+    initializeMaze(fixedMap);
+
+    // 上位4ビット（2次走行用）を使用して壁を抽出
+    for (int y = 0; y < MAZE_SIZE; y++) {
+        for (int x = 0; x < MAZE_SIZE; x++) {
+            fixedMap[y][x] = (map[y][x] >> 4) & 0xF;
+        }
+    }
+
+    // dijkstra用配列へ転記
+    reverseArrayYAxis(fixedMap);
+    setMazeWalls(fixedMap);
+    correctWallInconsistencies();
+
+    Node start = (Node){START_X, START_Y};
+    const uint8_t goals[9][2] = {
+        {GOAL1_X, GOAL1_Y}, {GOAL2_X, GOAL2_Y}, {GOAL3_X, GOAL3_Y},
+        {GOAL4_X, GOAL4_Y}, {GOAL5_X, GOAL5_Y}, {GOAL6_X, GOAL6_Y},
+        {GOAL7_X, GOAL7_Y}, {GOAL8_X, GOAL8_Y}, {GOAL9_X, GOAL9_Y},
+    };
+
+    bool defined = false;
+    for (int i = 0; i < 9; i++) {
+        uint8_t gx = goals[i][0];
+        uint8_t gy = goals[i][1];
+        if (gx == 0 && gy == 0) continue; // 未使用
+        if (gx >= MAZE_SIZE || gy >= MAZE_SIZE) continue; // 範囲外
+        defined = true;
+        if (dijkstra_cost_only(start, (Node){gx, gy}) != INFINITY) {
+            return true; // いずれかへ到達可能
+        }
+    }
+
+    if (!defined) {
+        // 候補が未設定なら従来のGOAL_X/GOAL_Yで判定
+        if (dijkstra_cost_only(start, (Node){GOAL_X, GOAL_Y}) != INFINITY) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+// 外部公開: 経路が存在する場合のみFlashへ保存する。保存したらtrue、保存しなければfalse。
+bool try_store_map_safely(void) {
+    if (!path_exists_from_current_map()) {
+        return false;
+    }
+    store_map_in_eeprom();
+    return true;
 }
 
 /*===========================================================
@@ -235,18 +295,20 @@ void adachi(void) {
                 if (g_search_mode == SEARCH_MODE_FULL && g_suppress_first_stop_save) {
                     // フル探索直後の最初の停止での保存はスキップ（1回だけ）
                     g_suppress_first_stop_save = false;
-                    save_count = 1; // このフェーズでは以後の自動保存も抑止
                 } else {
                     drive_variable_reset();
                     alpha_interrupt = 0;
                     acceleration_interrupt = 0;
                     drive_wait();
-                    store_map_in_eeprom(); // ROMにマップ情報を書き込む
-                    buzzer_beep(200);
-
-                    save_count++;
-                    if (save_count > 2) {
-                        save_count = 0;
+                    if (try_store_map_safely()) {
+                        buzzer_beep(200);
+                        save_count++;
+                        if (save_count > 2) {
+                            save_count = 0;
+                        }
+                    } else {
+                        // 経路がない場合は保存せず探索走行を終了
+                        search_end = true;
                     }
                 }
             }
