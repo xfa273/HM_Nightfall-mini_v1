@@ -1178,17 +1178,20 @@ void driveA(float dist, float spd_in, float spd_out, float dist_wallend) {
     // 実際の距離が目標距離になるまで走行
     if (acceleration_interrupt > 0) {
 
-        while (real_distance < dist)
-            ;
+        while (real_distance < dist) {
+            background_replan_tick();
+        }
 
     } else if (acceleration_interrupt <= 0) {
 
         if (MF.FLAG.F_WALL_STOP) {
             while (real_distance < dist && velocity_interrupt > 0 &&
                    (ad_fl + ad_fr) < thr_f_wall) {
+                background_replan_tick();
             };
         } else {
             while (real_distance < dist && velocity_interrupt > 0) {
+                background_replan_tick();
             };
         }
     }
@@ -1231,21 +1234,25 @@ void driveR(float angle) {
 
     // 実際の角度が目標角度（30°）になるまで角加速走行
     if (angle >= 0) {
-        while (real_angle > -angle * 0.333 && !MF.FLAG.FAILED)
-            ;
+        while (real_angle > -angle * 0.333 && !MF.FLAG.FAILED) {
+            background_replan_tick();
+        }
     } else {
-        while (real_angle < -angle * 0.333 && !MF.FLAG.FAILED)
-            ;
+        while (real_angle < -angle * 0.333 && !MF.FLAG.FAILED) {
+            background_replan_tick();
+        }
     }
 
     // 実際の角度が目標角度（30°）になるまで等角速度走行
     alpha_interrupt = 0;
     if (angle >= 0) {
-        while (real_angle > -angle * 0.666 && !MF.FLAG.FAILED)
-            ;
+        while (real_angle > -angle * 0.666 && !MF.FLAG.FAILED) {
+            background_replan_tick();
+        }
     } else {
-        while (real_angle < -angle * 0.666 && !MF.FLAG.FAILED)
-            ;
+        while (real_angle < -angle * 0.666 && !MF.FLAG.FAILED) {
+            background_replan_tick();
+        }
     }
 
     // 実際の角度が目標角度（30°）になるまで角減速走行
@@ -1255,11 +1262,13 @@ void driveR(float angle) {
         alpha_interrupt = +ALPHA_ROTATE_90;
     };
     if (angle >= 0) {
-        while (real_angle > -angle && !MF.FLAG.FAILED)
-            ;
+        while (real_angle > -angle && !MF.FLAG.FAILED) {
+            background_replan_tick();
+        }
     } else {
-        while (real_angle < -angle && !MF.FLAG.FAILED)
-            ;
+        while (real_angle < -angle && !MF.FLAG.FAILED) {
+            background_replan_tick();
+        }
     }
 
     alpha_interrupt = 0;
@@ -1327,22 +1336,25 @@ void driveSR(float angle_turn, float alpha_turn) {
     acceleration_interrupt = -acceleration_turn;
 
     // 実際の角度が目標角度（30°）になるまで角加速走行
-    while (real_angle > -angle_turn * 0.333 && !MF.FLAG.FAILED)
-        ;
+    while (real_angle > -angle_turn * 0.333 && !MF.FLAG.FAILED) {
+        background_replan_tick();
+    }
 
     // 実際の角度が目標角度（30°）になるまで等角速度走行
     alpha_interrupt = 0;
     acceleration_interrupt = 0;
 
-    while (real_angle > -angle_turn * 0.666 && !MF.FLAG.FAILED)
-        ;
+    while (real_angle > -angle_turn * 0.666 && !MF.FLAG.FAILED) {
+        background_replan_tick();
+    }
 
     // 実際の角度が目標角度（30°）になるまで角減速走行
     alpha_interrupt = -alpha_turn;
     acceleration_interrupt = acceleration_turn;
 
-    while (real_angle > -angle_turn && !MF.FLAG.FAILED)
-        ;
+    while (real_angle > -angle_turn && !MF.FLAG.FAILED) {
+        background_replan_tick();
+    }
 
     alpha_interrupt = 0;
     velocity_interrupt = speed_now;
@@ -1388,21 +1400,24 @@ void driveSL(float angle_turn, float alpha_turn) {
     drive_start();
 
     // 実際の角度が目標角度（30°）になるまで角加速走行
-    while (real_angle < angle_turn * 0.333 && !MF.FLAG.FAILED)
-        ;
+    while (real_angle < angle_turn * 0.333 && !MF.FLAG.FAILED) {
+        background_replan_tick();
+    }
 
     // 実際の角度が目標角度（30°）になるまで等角速度走行
     alpha_interrupt = 0;
     acceleration_interrupt = 0;
-    while (real_angle < angle_turn * 0.666 && !MF.FLAG.FAILED)
-        ;
+    while (real_angle < angle_turn * 0.666 && !MF.FLAG.FAILED) {
+        background_replan_tick();
+    }
 
     // 実際の角度が目標角度（30°）になるまで角減速走行
     alpha_interrupt = alpha_turn;
     acceleration_interrupt = acceleration_turn;
 
-    while (real_angle < angle_turn && !MF.FLAG.FAILED)
-        ;
+    while (real_angle < angle_turn && !MF.FLAG.FAILED) {
+        background_replan_tick();
+    }
 
     alpha_interrupt = 0;
     velocity_interrupt = speed_now;
@@ -1441,13 +1456,46 @@ void driveFWall(float dist, float spd_in, float spd_out) {
 
     drive_start();
 
-    // 実際の距離が目標距離になるか前壁距離に達するまで走行
+    // 実際の距離が目標距離になるか前壁しきい値に達した時点で抜ける。
+    // 未検知の場合は、WALL_END_EXTEND_MAX_MM の範囲で距離を延長して検出を待つ。
+    bool reached = false;
     if (MF.FLAG.SLALOM_R) {
-        while (((ad_fr + ad_fl) < val_offset_in && MF.FLAG.F_WALL) || real_distance < dist)
-            ;
+        while (real_distance < dist) {
+            background_replan_tick();
+            if (MF.FLAG.F_WALL && (ad_fr + ad_fl) >= val_offset_in) {
+                reached = true;
+                break;
+            }
+        }
     } else if (MF.FLAG.SLALOM_L) {
-        while (((ad_fr + ad_fl) < val_offset_in && MF.FLAG.F_WALL) || real_distance < dist)
-            ;
+        while (real_distance < dist) {
+            background_replan_tick();
+            if (MF.FLAG.F_WALL && (ad_fr + ad_fl) >= val_offset_in) {
+                reached = true;
+                break;
+            }
+        }
+    }
+
+    // 前壁しきい値に達していなければ延長して待つ（上限: WALL_END_EXTEND_MAX_MM）
+    if (!reached) {
+        const float extend_limit_mm = WALL_END_EXTEND_MAX_MM;
+        if (extend_limit_mm > 0.0f) {
+            const float dist_end = dist + extend_limit_mm;
+            // 延長区間は等速で追従
+            acceleration_interrupt = 0;
+            velocity_interrupt = spd_out;
+            while (real_distance < dist_end) {
+                background_replan_tick();
+                if (MF.FLAG.F_WALL && (ad_fr + ad_fl) >= val_offset_in) {
+                    reached = true;
+                    break;
+                }
+                if (MF.FLAG.FAILED) {
+                    break;
+                }
+            }
+        }
     }
 
     velocity_interrupt = spd_out;

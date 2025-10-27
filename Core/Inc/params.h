@@ -15,7 +15,7 @@
     走行系
 ------------------------------------------------------------*/
 /*走行パラメータ*/
-#define D_TIRE            13.75F  // タイヤ直径[mm] 13.70F
+#define D_TIRE            13.73F  // タイヤ直径[mm] 13.75F
 #define DIST_HALF_SEC     45     // 迷路の半区間距離[mm]
 #define DIST_D_HALF_SEC   67.279 // 斜めの半区間距離[mm]
 #define DIST_FIRST_SEC    13     // 最初の区画の距離[mm]
@@ -91,11 +91,13 @@
 // 壁切れ未検知時の最大延長距離（本来の距離に追加して等速で探す上限）[mm]
 // 例: 20mm。未検知でも暴走しないよう上限を設けるための値です。
 #ifndef WALL_END_EXTEND_MAX_MM
-#define WALL_END_EXTEND_MAX_MM  15.0F
+#define WALL_END_EXTEND_MAX_MM  20.0F
 #endif
 
 #define WALL_CTRL_BASE_L 1941 // 壁制御の基準値（左） 2135
 #define WALL_CTRL_BASE_R 1989 // 壁制御の基準値（右） 2100
+// 小鷺田寮: L1941 R1989
+// 九州: L1861 R2060
 
 // バッテリー電圧の警告しきい値（ADCカウント）
 // 例: 3000。割り込み内/起動時チェックで共通利用。
@@ -120,6 +122,8 @@
 // 区画中央における前壁センサの目標値（実機で調整）
 #define F_ALIGN_TARGET_FR    3750
 #define F_ALIGN_TARGET_FL    3790
+// 小鷺田寮: FR3750 FL3790
+// 九州: FR3587 FL3587
 
 // アライン実行条件（前壁が十分に見えているか判定する閾値）
 #define F_ALIGN_DETECT_THR   500
@@ -141,10 +145,58 @@
     探索系
 ------------------------------------------------------------*/
 //----ゴール座標----
-#define GOAL_X    1 // 7
-#define GOAL_Y    0 // 7
+#define GOAL_X    7 // 7
+#define GOAL_Y    7 // 7
 #define MAZE_SIZE 16
 #define START_X   0
 #define START_Y   0
+
+// 複数ゴール設定（最大3x3=9個）。
+// 1セル/2x2で使用する場合は未使用分を (0,0) とし、無視します。
+// 既定では GOAL1 に従来の GOAL_X/GOAL_Y を入れ、その他は (0,0)。
+#ifndef GOAL1_X
+#define GOAL1_X GOAL_X
+#define GOAL1_Y GOAL_Y
+#endif
+
+#ifndef GOAL2_X
+#define GOAL2_X 7
+#define GOAL2_Y 8
+#endif
+
+#ifndef GOAL3_X
+#define GOAL3_X 8
+#define GOAL3_Y 7
+#endif
+
+#ifndef GOAL4_X
+#define GOAL4_X 8
+#define GOAL4_Y 8
+#endif
+
+#ifndef GOAL5_X
+#define GOAL5_X 0
+#define GOAL5_Y 0
+#endif
+
+#ifndef GOAL6_X
+#define GOAL6_X 0
+#define GOAL6_Y 0
+#endif
+
+#ifndef GOAL7_X
+#define GOAL7_X 0
+#define GOAL7_Y 0
+#endif
+
+#ifndef GOAL8_X
+#define GOAL8_X 0
+#define GOAL8_Y 0
+#endif
+
+#ifndef GOAL9_X
+#define GOAL9_X 0
+#define GOAL9_Y 0
+#endif
 
 #endif /* INC_PARAMS_H_ */

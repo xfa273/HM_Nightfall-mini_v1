@@ -20,6 +20,9 @@
 int diagonal_counter = 0;
 int straight_counter = 0;
 
+// 直近の dijkstra() 実行での総コストを保持（到達不能時は INFINITY）
+int last_dijkstra_cost = INFINITY;
+
 // initializeMaze は maze_grid.c に実装
 
 void initializePath() {
@@ -129,6 +132,8 @@ int getDistance(Node a, Node b) {
 
 // ダイクストラ法による最短経路を計算する関数
 void dijkstra(Node start, Node goal) {
+    // 初期化
+    last_dijkstra_cost = INFINITY;
 
     int dist[NODE_COUNT], prev[NODE_COUNT];
     bool visited[NODE_COUNT] = {false};
@@ -238,9 +243,13 @@ void dijkstra(Node start, Node goal) {
         }
     }
 
+    // ゴールのインデックスと総コストを取得
+    int goalIndex = (MAZE_SIZE - 1 - goal.y) * MAZE_SIZE + goal.x;
+    last_dijkstra_cost = dist[goalIndex];
+
     // ゴールから最短経路をトレースする
     int stack[NODE_COUNT], stackSize = 0;
-    int index = (MAZE_SIZE - 1 - goal.y) * MAZE_SIZE + goal.x;
+    int index = goalIndex;
     while (index != -1) {
         int y = MAZE_SIZE - 1 - (index / MAZE_SIZE); // y座標反転
         int x = index % MAZE_SIZE;

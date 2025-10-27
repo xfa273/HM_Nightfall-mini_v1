@@ -27,19 +27,69 @@ void mode1() {
 
             break;
 
+        case 8: // 足立法 ゴール到達で終了 300mm/s
+
+            printf("Mode 1-8 (Goal Stop).\n");
+
+            // 直線
+            acceleration_straight = 1000;
+            acceleration_straight_dash = 0; // 5000
+            // ターン
+            velocity_turn90 = 300;
+            alpha_turn90 = 8850;
+            acceleration_turn = 0;
+            dist_offset_in = 10;   // 8
+            dist_offset_out = 16.5; // 15.5
+            val_offset_in = 1750;
+            angle_turn_90 = 89.5;
+            // 壁切れ後の距離
+            dist_wall_end = 0;
+
+            // 壁制御とケツ当て
+            kp_wall = 0.015;
+            duty_setposition = 40;
+
+            // 壁判断しきい値の係数
+            sensor_kx = 1.0;
+
+            MF.FLAG.WALL_ALIGN = 0;
+
+            velocity_interrupt = 0;
+
+            led_flash(10);
+
+            drive_variable_reset();
+            IMU_GetOffset();
+            drive_enable_motor();
+
+            led_flash(2);
+
+            get_base();
+
+            drive_start();
+
+            // ゴール到達で終了モード
+            set_search_mode(SEARCH_MODE_GOAL);
+
+            adachi();
+
+            led_wait();
+
+            break;
+
         case 1: // 足立法全面探索 300mm/s
 
             printf("Mode 1-1.\n");
 
             // 直線
             acceleration_straight = 1000;
-            acceleration_straight_dash = 1200; // 5000
+            acceleration_straight_dash = 0; // 5000
             // ターン
             velocity_turn90 = 300;
             alpha_turn90 = 8850;
             acceleration_turn = 0;
-            dist_offset_in = 8;   // 8
-            dist_offset_out = 16.0; // 15.5
+            dist_offset_in = 9;   // 8
+            dist_offset_out = 16.5; // 15.5
             val_offset_in = 1750;
             angle_turn_90 = 89.5;
             // 壁切れ後の距離
@@ -80,13 +130,13 @@ void mode1() {
 
             // 直線
             acceleration_straight = 1000;
-            acceleration_straight_dash = 1200; // 5000
+            acceleration_straight_dash = 0; // 5000
             // ターン
             velocity_turn90 = 300;
             alpha_turn90 = 8850;
             acceleration_turn = 0;
-            dist_offset_in = 8;   // 8
-            dist_offset_out = 16.0; // 15.5
+            dist_offset_in = 10;   // 8
+            dist_offset_out = 16.5; // 15.5
             val_offset_in = 1750;
             angle_turn_90 = 89.5;
             // 壁切れ後の距離
@@ -127,7 +177,7 @@ void mode1() {
 
             // 直線
             acceleration_straight = 1000;
-            acceleration_straight_dash = 1200; // 5000
+            acceleration_straight_dash = 0; // 5000
             // ターン
             velocity_turn90 = 300;
             alpha_turn90 = 8850;
@@ -146,7 +196,7 @@ void mode1() {
             // 壁判断しきい値の係数
             sensor_kx = 1.1;
 
-            MF.FLAG.WALL_ALIGN = 1;
+            MF.FLAG.WALL_ALIGN = 0;
 
             velocity_interrupt = 0;
 
@@ -173,7 +223,7 @@ void mode1() {
 
             // 直線
             acceleration_straight = 1000;
-            acceleration_straight_dash = 1200; // 5000
+            acceleration_straight_dash = 0; // 5000
             // ターン
             velocity_turn90 = 300;
             alpha_turn90 = 8850;
@@ -192,7 +242,7 @@ void mode1() {
             // 壁判断しきい値の係数
             sensor_kx = 0.9;
 
-            MF.FLAG.WALL_ALIGN = 1;
+            MF.FLAG.WALL_ALIGN = 0;
 
             velocity_interrupt = 0;
 
@@ -214,74 +264,35 @@ void mode1() {
 
             break;
 
-        case 5: // ターン調整 600mm/s
+        case 5: // 吸引探索 600mm/s
 
             printf("Mode 1-5.\n");
 
             MF.FLAG.RUNNING = 1;
 
             // 直線
-            acceleration_straight = 2000;
-            acceleration_straight_dash = 2000; // 5000
+            acceleration_straight = 4000;
+            acceleration_straight_dash = 0; // 5000
             // ターン
             velocity_turn90 = 600;
-            alpha_turn90 = 10300;
+            alpha_turn90 = 33900;
             acceleration_turn = 0;
-            dist_offset_in = 20;
-            dist_offset_out = 28; // 32
-            val_offset_in = 730;
-            angle_turn_90 = 89;
+            dist_offset_in = 8;   // 8
+            dist_offset_out = 19.5; // 15.5
+            val_offset_in = 1100;
+            angle_turn_90 = 89.5;
             // 壁切れ後の距離
-            dist_wall_end = 12;
-
-            // 壁制御とケツ当て
-            kp_wall = 0.05;
-            duty_setposition = 50;
-
-            velocity_interrupt = 0;
-
-            led_flash(10);
-
-            drive_variable_reset();
-            IMU_GetOffset();
-            drive_enable_motor();
-
-            led_flash(5);
-
-            half_sectionA(600);
-            half_sectionU();
-            turn_R90(0);
-            half_sectionD(0);
-
-            led_flash(5);
-            drive_stop();
-
-            MF.FLAG.RUNNING = 0;
-
-            break;
-
-        case 6: // ターン調整 700mm/s
-
-            printf("Mode 1-6.\n");
-
-            MF.FLAG.RUNNING = 1;
-
-            // 直線
-            acceleration_straight = 2722;
-            acceleration_straight_dash = 2000; // 5000
-            // ターン
-            velocity_turn90 = 700;
-            alpha_turn90 = 12700;
-            acceleration_turn = 0;
-            dist_offset_in = 10;
-            dist_offset_out = 41;
-            val_offset_in = 680;
-            angle_turn_90 = 85;
+            dist_wall_end = 0;
 
             // 壁制御とケツ当て
             kp_wall = 0.05;
             duty_setposition = 40;
 
+            // 壁判断しきい値の係数
+            sensor_kx = 1.0;
+
+            MF.FLAG.WALL_ALIGN = 0;
+
             velocity_interrupt = 0;
 
             led_flash(10);
@@ -290,67 +301,87 @@ void mode1() {
             IMU_GetOffset();
             drive_enable_motor();
 
-            led_flash(5);
+            led_flash(2);
 
-            half_sectionA(700);
-            half_sectionU();
-            turn_R90(0);
-            half_sectionD(0);
+            get_base();
 
-            led_flash(5);
-            drive_stop();
+            drive_fan(300);
+            led_flash(3);
 
-            MF.FLAG.RUNNING = 0;
+            drive_start();
+
+            adachi();
+
+            drive_fan(0);
+
+            led_wait();
+
+            break;
+
+        case 6: // まずゴール探索→保存→全面探索（300mm/s）
+
+            printf("Mode 1-6 (Goal->Save->Full Explore).\n");
+
+            // ===== 走行パラメータ（case 2 と同一） =====
+            // 直線
+            acceleration_straight = 1000;
+            acceleration_straight_dash = 0; // 5000
+            // ターン
+            velocity_turn90 = 300;
+            alpha_turn90 = 8850;
+            acceleration_turn = 0;
+            dist_offset_in = 10;   // 8
+            dist_offset_out = 16.5; // 15.5
+            val_offset_in = 1750;
+            angle_turn_90 = 89.5;
+            // 壁切れ後の距離
+            dist_wall_end = 0;
+
+            // 壁制御とケツ当て
+            kp_wall = 0.015;
+            duty_setposition = 40;
+
+            // 壁判断しきい値の係数
+            sensor_kx = 1.0;
+
+            MF.FLAG.WALL_ALIGN = 0;
+
+            velocity_interrupt = 0;
+
+            // ===== 事前準備 =====
+            led_flash(10);
+
+            drive_variable_reset();
+            IMU_GetOffset();
+            drive_enable_motor();
+
+            led_flash(2);
+
+            // ===== 第1フェーズ: ゴール到達で終了 =====
+            get_base();
+            drive_start();
+            set_search_mode(SEARCH_MODE_GOAL);
+            search_end = false;
+            adachi();
+
+            // 一旦マップ保存
+            store_map_in_eeprom();
+
+            // ===== 第2フェーズ: 全面探索 =====
+            led_flash(2);
+            get_base();
+            drive_start();
+            set_search_mode(SEARCH_MODE_FULL);
+            search_end = false;
+            adachi();
+
+            led_wait();
 
             break;
 
         case 7: // ターン調整 900mm/s
 
             printf("Mode 1-7.\n");
-
-            MF.FLAG.RUNNING = 1;
-
-            // 直線
-            acceleration_straight = 4500;
-            acceleration_straight_dash = 2000; // 5000
-            // ターン
-            velocity_turn90 = 900;
-            alpha_turn90 = 22100;
-            acceleration_turn = 0;
-            dist_offset_in = 10;
-            dist_offset_out = 47;
-            val_offset_in = 680;
-            angle_turn_90 = 79;
-
-            // 壁制御とケツ当て
-            kp_wall = 0.05;
-            duty_setposition = 40;
-
-            velocity_interrupt = 0;
-
-            led_flash(10);
-
-            drive_variable_reset();
-            IMU_GetOffset();
-            drive_enable_motor();
-
-            drive_fan(130);
-
-            led_flash(20);
-
-            velocity_interrupt = 0;
-
-            half_sectionA(900);
-            half_sectionU();
-            turn_R90(0);
-            half_sectionD(0);
-
-            led_flash(5);
-            drive_fan(0);
-            led_flash(5);
-            drive_stop();
-
-            MF.FLAG.RUNNING = 0;
 
             break;
         }

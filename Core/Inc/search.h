@@ -8,6 +8,11 @@
 #ifndef INC_SEARCH_H_
 #define INC_SEARCH_H_
 
+// 経路配列の最大長（迷路全マス数に追従）
+#ifndef ROUTE_MAX_LEN
+#define ROUTE_MAX_LEN (MAZE_SIZE * MAZE_SIZE)
+#endif
+
 /*============================================================
     各種定数・変数宣言
 ============================================================*/
@@ -45,19 +50,25 @@ extern volatile struct coordinate_and_direction mouse;
 #define DIR_TURN_L90 0xff // 左90度回転
 #define DIR_TURN_180 0x02 // 180度回転
 
+// 探索モードの定義（0: 全面探索, 1: ゴール到達で終了）
+typedef enum {
+    SEARCH_MODE_FULL = 0,
+    SEARCH_MODE_GOAL = 1,
+} search_mode_t;
+
 //====変数====
 #ifdef MAIN_C_ // main.cからこのファイルが呼ばれている場合
 /*グローバル変数の定義*/
-uint16_t map[16][16];         // マップ格納配列
-uint16_t smap[16][16];        // 歩数マップ格納配列
-bool visited[16][16];         // 探索済区画の配列
+uint16_t map[MAZE_SIZE][MAZE_SIZE];         // マップ格納配列
+uint16_t smap[MAZE_SIZE][MAZE_SIZE];        // 歩数マップ格納配列
+bool visited[MAZE_SIZE][MAZE_SIZE];         // 探索済区画の配列
 uint16_t closest_unvisited_x; // 最近の未探索区画のX座標
 uint16_t closest_unvisited_y; // 最近の未探索区画のY座標
 bool search_end;              // 全面探索の終了
 uint16_t wall_info;           // 壁情報格納変数
 uint16_t goal_x, goal_y;      // ゴール座標
-uint16_t route[256];          // 最短経路格納配列
-uint16_t path[256];           // 最短経路パス配列
+uint16_t route[ROUTE_MAX_LEN];          // 最短経路格納配列
+uint16_t path[ROUTE_MAX_LEN];           // 最短経路パス配列
 uint16_t r_cnt;               // 経路カウンタ
 
 /*直線加速用*/
@@ -80,18 +91,21 @@ int diagonal_weight; // 斜めの優先度
 float sensor_kx;
 float fwall_kx;
 
+/* 探索モード */
+search_mode_t g_search_mode;
+
 #else // main.c以外からこのファイルが呼ばれている場合
 /*グローバル変数の宣言*/
-extern uint16_t map[16][16];         // マップ格納配列
-extern uint16_t smap[16][16];        // 歩数マップ格納配列
-extern bool visited[16][16];         // 探索済区画の配列
+extern uint16_t map[MAZE_SIZE][MAZE_SIZE];         // マップ格納配列
+extern uint16_t smap[MAZE_SIZE][MAZE_SIZE];        // 歩数マップ格納配列
+extern bool visited[MAZE_SIZE][MAZE_SIZE];         // 探索済区画の配列
 extern uint16_t closest_unvisited_x; // 最近の未探索区画のX座標
 extern uint16_t closest_unvisited_y; // 最近の未探索区画のY座標
 extern bool search_end;              // 全面探索の終了
 extern uint16_t wall_info;           // 壁情報格納変数
 extern uint16_t goal_x, goal_y;      // ゴール座標
-extern uint16_t route[256];          // 最短経路格納配列
-extern uint16_t path[256];           // 最短経路パス配列
+extern uint16_t route[ROUTE_MAX_LEN];          // 最短経路格納配列
+extern uint16_t path[ROUTE_MAX_LEN];           // 最短経路パス配列
 extern uint16_t r_cnt;               // 経路カウンタ
 
 /*直線加速用*/
@@ -112,6 +126,9 @@ extern int diagonal_weight; // 斜めの優先度
 
 /*壁判定用のセンサ補正係数*/
 extern float sensor_kx;
+
+/* 探索モード */
+extern search_mode_t g_search_mode;
 
 #endif
 
@@ -138,5 +155,26 @@ void findClosestUnvisitedCell(uint8_t, uint8_t); // 最近の未探索区画を�
 
 void store_map_in_eeprom(void);
 void load_map_from_eeprom(void);
+
+// 探索モード設定
+void set_search_mode(search_mode_t mode);
+
+//==== 背景再計算（走行中に実行）====
+// 現在の移動内容（routeの要素: 0x88直進, 0x44右, 0x22U, 0x11左）から、
+// 次区画の予測座標をもとに make_smap/make_route を先行実行する
+void arm_background_replan(uint16_t move_opcode);
+void background_replan_tick(void);
+extern volatile bool bg_plan_ready; // 先行計算が完了し、route[] が次区画起点で準備済み
+
+// 背景再計算の有効/無効を切り替えるマクロ（0: 無効, 1: 有効）
+#ifndef ENABLE_BG_REPLAN
+#define ENABLE_BG_REPLAN 0
+#endif
+
+#if !ENABLE_BG_REPLAN
+// 無効化時はノーオペに展開
+#define background_replan_tick() ((void)0)
+#define arm_background_replan(move_opcode) ((void)(move_opcode))
+#endif
 
 #endif /* INC_SEARCH_H_ */

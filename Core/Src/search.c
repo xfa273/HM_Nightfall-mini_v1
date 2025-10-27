@@ -8,6 +8,43 @@
 #include "global.h"
 #include <math.h>
 
+// 内部ヘルパ: ゴール座標(9個まで)の配列を走査して、現在座標が含まれるか判定
+static inline bool is_in_goal_cells(uint8_t x, uint8_t y) {
+    const uint8_t goals[9][2] = {
+        {GOAL1_X, GOAL1_Y}, {GOAL2_X, GOAL2_Y}, {GOAL3_X, GOAL3_Y},
+        {GOAL4_X, GOAL4_Y}, {GOAL5_X, GOAL5_Y}, {GOAL6_X, GOAL6_Y},
+        {GOAL7_X, GOAL7_Y}, {GOAL8_X, GOAL8_Y}, {GOAL9_X, GOAL9_Y},
+    };
+    for (int i = 0; i < 9; i++) {
+        uint8_t gx = goals[i][0];
+        uint8_t gy = goals[i][1];
+        // (0,0) は無視（未使用スロット）
+        if (gx == 0 && gy == 0) continue;
+        if (gx < MAZE_SIZE && gy < MAZE_SIZE && x == gx && y == gy) {
+            return true;
+        }
+    }
+    return false;
+}
+
+// 内部ヘルパ: smap に複数ゴールのゼロをシードする
+static inline void seed_goals_zero_in_smap(void) {
+    const uint8_t goals[9][2] = {
+        {GOAL1_X, GOAL1_Y}, {GOAL2_X, GOAL2_Y}, {GOAL3_X, GOAL3_Y},
+        {GOAL4_X, GOAL4_Y}, {GOAL5_X, GOAL5_Y}, {GOAL6_X, GOAL6_Y},
+        {GOAL7_X, GOAL7_Y}, {GOAL8_X, GOAL8_Y}, {GOAL9_X, GOAL9_Y},
+    };
+    for (int i = 0; i < 9; i++) {
+        uint8_t gx = goals[i][0];
+        uint8_t gy = goals[i][1];
+        // (0,0) は未使用スロットとして無視
+        if (gx == 0 && gy == 0) continue;
+        if (gx < MAZE_SIZE && gy < MAZE_SIZE) {
+            smap[gy][gx] = 0;
+        }
+    }
+}
+
 //+++++++++++++++++++++++++++++++++++++++++++++++
 // search_init
 // 探索系の変数とマップの初期化をする
@@ -27,6 +64,17 @@ void search_init(void) {
     mouse.dir = 0; // マウスの向きの初期化
     search_end = false;
     save_count = 0;
+    g_search_mode = SEARCH_MODE_FULL; // デフォルトは全面探索
+}
+
+//+++++++++++++++++++++++++++++++++++++++++++++++
+// set_search_mode
+// 探索モードを設定する
+// 引数：mode（SEARCH_MODE_FULL / SEARCH_MODE_GOAL）
+// 戻り値：なし
+//+++++++++++++++++++++++++++++++++++++++++++++++
+void set_search_mode(search_mode_t mode) {
+    g_search_mode = mode;
 }
 
 /*===========================================================
@@ -166,12 +214,14 @@ void adachi(void) {
             break;
         //----右折----
         case 0x44:
+            arm_background_replan(route[r_cnt]);
 
             led_write(0, 1);
 
+            // スラローム右90°
             turn_R90(1);
 
-            turn_dir(DIR_TURN_R90); // マイクロマウス内部位置情報でも右回転処理
+            turn_dir(DIR_TURN_R90); // 内部位置情報でも右回転処理
 
             led_write(0, 0);
 
@@ -219,12 +269,14 @@ void adachi(void) {
             break;
         //----左折----
         case 0x11:
+            arm_background_replan(route[r_cnt]);
 
             led_write(1, 0);
 
+            // スラローム左90°
             turn_L90(1);
 
-            turn_dir(DIR_TURN_L90); // マイクロマウス内部位置情報でも右回転処理
+            turn_dir(DIR_TURN_L90); // 内部位置情報でも左回転処理
 
             led_write(0, 0);
 
@@ -235,7 +287,7 @@ void adachi(void) {
 
         markVisited(mouse.x, mouse.y); // 探索済区画として記録
 
-        if (mouse.x == GOAL_X && mouse.y == GOAL_Y) {
+        if (is_in_goal_cells(mouse.x, mouse.y)) {
             MF.FLAG.GOALED = 1;
         }
 
@@ -300,18 +352,38 @@ void conf_route() {
     //----壁情報書き込み----
     write_map();
 
-    if (make_smap(goal_x, goal_y) > (16 * 16 - 15)) {
-        search_end = true;
-    } else {
+    int mstep = make_smap(goal_x, goal_y);
+
+    if (g_search_mode == SEARCH_MODE_GOAL) {
+        // ゴールに到達したら終了（複数ゴール対応）
+        if (is_in_goal_cells(mouse.x, mouse.y)) {
+            search_end = true;
+            return;
+        }
+
+        // 経路が見つからない（壁で遮断）などの異常時も終了
+        if (mstep > (MAZE_SIZE * MAZE_SIZE - (MAZE_SIZE - 1))) {
+            search_end = true;
+            return;
+        }
+
         make_route(); // 最短経路を更新
         r_cnt = 0;    // 経路カウンタを0に
+    } else {
+        // 全面探索モード（未探索セルに向かう）
+        if (mstep > (MAZE_SIZE * MAZE_SIZE - (MAZE_SIZE - 1))) {
+            search_end = true;
+        } else {
+            make_route(); // 最短経路を更新
+            r_cnt = 0;    // 経路カウンタを0に
+        }
     }
 
     // buzzer_interrupt(300);
 
     /*
     if (wall_info & route[r_cnt]) {
-        if (make_smap(goal_x, goal_y) > (16 * 16 - 15)) {
+        if (make_smap(goal_x, goal_y) > (MAZE_SIZE * MAZE_SIZE - (MAZE_SIZE - 1))) {
             search_end = true;
         } else {
             make_route(); // 最短経路を更新
@@ -333,16 +405,16 @@ void map_Init() {
 
     //====初期化開始====
     // マップのクリア
-    for (y = 0; y < 16; y++) {     // 各Y座標で実行
-        for (x = 0; x < 16; x++) { // 各X座標で実行
+    for (y = 0; y < MAZE_SIZE; y++) {     // 各Y座標で実行
+        for (x = 0; x < MAZE_SIZE; x++) { // 各X座標で実行
             map[y][x] =
                 0xf0; // 上位4ビット（2次走行時）を壁あり，下位4ビット（1次走行時）を壁なしとする。
         }
     }
 
     // 探索済区画のクリア
-    for (y = 0; y < 16; y++) {     // 各Y座標で実行
-        for (x = 0; x < 16; x++) { // 各X座標で実行
+    for (y = 0; y < MAZE_SIZE; y++) {     // 各Y座標で実行
+        for (x = 0; x < MAZE_SIZE; x++) { // 各X座標で実行
             visited[y][x] = false;
         }
     }
@@ -373,6 +445,10 @@ void write_map() {
     //====壁情報の補正格納====
     m_temp = (wall_info >> mouse.dir) &
              0x0f; // センサ壁情報をmouse.dirで向きを補正させて下位4bit分を残す
+    // スタート区画はルール上、北（前）以外の3壁（E/S/W）が常に存在
+    if (mouse.x == START_X && mouse.y == START_Y) {
+        m_temp |= 0x07; // E(0x04) + S(0x02) + W(0x01)
+    }
     m_temp |=
         (m_temp
          << 4); // 上位4bitに下位4bitをコピー。この作業でm_tempにNESW順で壁が格納
@@ -381,7 +457,7 @@ void write_map() {
     map[mouse.y][mouse.x] = m_temp; // 現在地に壁情報書き込み
     //----周辺に書き込む----
     // 北側について
-    if (mouse.y != 15) {     // 現在最北端でないとき
+    if (mouse.y != (MAZE_SIZE - 1)) {     // 現在最北端でないとき
         if (m_temp & 0x88) { // 北壁がある場合
             map[mouse.y + 1][mouse.x] |=
                 0x22; // 北側の区画から見て南壁ありを書き込む
@@ -391,7 +467,7 @@ void write_map() {
         }
     }
     // 東側について
-    if (mouse.x != 15) {     // 現在最東端でないとき
+    if (mouse.x != (MAZE_SIZE - 1)) {     // 現在最東端でないとき
         if (m_temp & 0x44) { // 東壁がある場合
             map[mouse.y][mouse.x + 1] |=
                 0x11; // 東側の区画から見て西壁ありを書き込む
@@ -420,6 +496,14 @@ void write_map() {
                 0xBB; // 西側の区画から見て東側なしを書き込む
         }
     }
+
+    //====スタート区画の既知壁を強制保持====
+    // ルールにより (START_X, START_Y) は北以外（E/S/W）に壁がある。
+    map[START_Y][START_X] |= 0x77; // E(0x44) + S(0x22) + W(0x11)
+    // 東隣が迷路内なら、東隣の西壁も常に立てる
+    if ((START_X + 1) < MAZE_SIZE) {
+        map[START_Y][START_X + 1] |= 0x11; // 隣マスから見た西壁あり
+    }
 }
 
 //+++++++++++++++++++++++++++++++++++++++++++++++
@@ -447,20 +531,24 @@ int make_smap(uint8_t target_x, uint8_t target_y) {
     uint8_t x, y; // for文用変数
 
     //====歩数マップのクリア====
-    for (y = 0; y <= 15; y++) {     // 各Y座標で実行
-        for (x = 0; x <= 15; x++) { // 各X座標で実行
+    for (y = 0; y <= (MAZE_SIZE - 1); y++) {     // 各Y座標で実行
+        for (x = 0; x <= (MAZE_SIZE - 1); x++) { // 各X座標で実行
             smap[y][x] = 0xffff;    // 未記入部分は歩数最大とする
         }
     }
 
-    //====ゴール座標を0にする====
-    uint8_t m_step = 0; // 歩数カウンタを0にする
-    // smap[target_y][target_x] = 0;
-
-    for (y = 0; y <= 15; y++) {     // 各Y座標で実行
-        for (x = 0; x <= 15; x++) { // 各X座標で実行
-            if (visited[y][x] == false) {
-                smap[y][x] = 0;
+    //====ゴール座標を0にする/未探索セルを0にする====
+    uint16_t m_step = 0; // 歩数カウンタを0にする
+    if (g_search_mode == SEARCH_MODE_GOAL) {
+        // ゴールモード: params.h の複数ゴールを起点(0)にする
+        seed_goals_zero_in_smap();
+    } else {
+        // 全面探索: 未探索セルを起点(0)にする
+        for (y = 0; y <= (MAZE_SIZE - 1); y++) {     // 各Y座標で実行
+            for (x = 0; x <= (MAZE_SIZE - 1); x++) { // 各X座標で実行
+                if (visited[y][x] == false) {
+                    smap[y][x] = 0;
+                }
             }
         }
     }
@@ -468,8 +556,8 @@ int make_smap(uint8_t target_x, uint8_t target_y) {
     //====自分の座標にたどり着くまでループ====
     do {
         //----マップ全域を捜索----
-        for (y = 0; y <= 15; y++) {     // 各Y座標で実行
-            for (x = 0; x <= 15; x++) { // 各X座標で実行
+        for (y = 0; y <= (MAZE_SIZE - 1); y++) {     // 各Y座標で実行
+            for (x = 0; x <= (MAZE_SIZE - 1); x++) { // 各X座標で実行
                 //----現在最大の歩数を発見したとき----
                 if (smap[y][x] ==
                     m_step) { // 歩数カウンタm_stepの値が現在最大の歩数
@@ -482,7 +570,7 @@ int make_smap(uint8_t target_x, uint8_t target_y) {
                     }
                     //----北壁についての処理----
                     if (!(m_temp & 0x08) &&
-                        y != 15) { // 北壁がなく現在最北端でないとき
+                        y != (MAZE_SIZE - 1)) { // 北壁がなく現在最北端でないとき
                         if (smap[y + 1][x] == 0xffff) { // 北側が未記入なら
 
                             smap[y + 1][x] = m_step + 1; // 次の歩数を書き込む
@@ -490,7 +578,7 @@ int make_smap(uint8_t target_x, uint8_t target_y) {
                     }
                     //----東壁についての処理----
                     if (!(m_temp & 0x04) &&
-                        x != 15) { // 東壁がなく現在最東端でないとき
+                        x != (MAZE_SIZE - 1)) { // 東壁がなく現在最東端でないとき
                         if (smap[y][x + 1] == 0xffff) { // 東側が未記入なら
                             smap[y][x + 1] = m_step + 1; // 次の歩数を書き込む
                         }
@@ -515,7 +603,7 @@ int make_smap(uint8_t target_x, uint8_t target_y) {
         //====歩数カウンタのインクリメント====
         m_step++;
     } while (smap[mouse.y][mouse.x] == 0xffff &&
-             m_step < (16 * 16 - 10)); // 現在座標が未記入ではなくなるまで実行
+             m_step < (MAZE_SIZE * MAZE_SIZE - 10)); // 現在座標が未記入ではなくなるまで実行
 
     return m_step;
 }
@@ -534,12 +622,12 @@ void make_route() {
 
     //====最短経路を初期化====
     uint16_t i;
-    for (i = 0; i < 256; i++) {
+    for (i = 0; i < ROUTE_MAX_LEN; i++) {
         route[i] = 0xffff; // routeを0xffで初期化
     }
 
     //====歩数カウンタをセット====
-    uint8_t m_step = smap[mouse.y][mouse.x]; // 現在座標の歩数マップ値を取得
+    uint16_t m_step = smap[mouse.y][mouse.x]; // 現在座標の歩数マップ値を取得
 
     //====x, yに現在座標を書き込み====
     x = mouse.x;
@@ -656,10 +744,10 @@ void store_map_in_eeprom(void) {
     eeprom_enable_write();
 
     int i;
-    for (i = 0; i < 16; i++) {
+    for (i = 0; i < MAZE_SIZE; i++) {
         int j;
-        for (j = 0; j < 16; j++) {
-            eeprom_write_halfword((uint32_t)(i * 16 + j), (uint16_t)map[i][j]);
+        for (j = 0; j < MAZE_SIZE; j++) {
+            eeprom_write_halfword((uint32_t)(i * MAZE_SIZE + j), (uint16_t)map[i][j]);
         }
     }
     eeprom_disable_write();
@@ -673,10 +761,16 @@ void store_map_in_eeprom(void) {
 //+++++++++++++++++++++++++++++++++++++++++++++++
 void load_map_from_eeprom(void) {
     int i;
-    for (i = 0; i < 16; i++) {
+    for (i = 0; i < MAZE_SIZE; i++) {
         int j;
-        for (j = 0; j < 16; j++) {
-            map[i][j] = (uint8_t)eeprom_read_halfword(i * 16 + j);
+        for (j = 0; j < MAZE_SIZE; j++) {
+            map[i][j] = (uint8_t)eeprom_read_halfword(i * MAZE_SIZE + j);
         }
+    }
+
+    // スタート区画の既知壁を強制保持（E/S/W）。
+    map[START_Y][START_X] |= 0x77; // E(0x44) + S(0x22) + W(0x11)
+    if ((START_X + 1) < MAZE_SIZE) {
+        map[START_Y][START_X + 1] |= 0x11; // 東隣の西壁も立てる
     }
 }

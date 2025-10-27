@@ -8,7 +8,7 @@
 #include "global.h"
 
 void simplifyPath(void) {
-    int simplifiedPath[256]; // 結果を格納するための配列
+    int simplifiedPath[ROUTE_MAX_LEN]; // 結果を格納するための配列
     int currentIndex = 0; // simplifiedPathにおける現在のインデックス
     int currentAction = path[0]; // 現在処理している動作
     int count = 1;               // 現在の動作のカウント
@@ -48,7 +48,7 @@ void simplifyPath(void) {
     }
 
     // pathの残りをクリア
-    for (int j = currentIndex; j < 256; j++) {
+    for (int j = currentIndex; j < ROUTE_MAX_LEN; j++) {
         path[j] = 0;
     }
 
@@ -56,7 +56,7 @@ void simplifyPath(void) {
 }
 
 void convertLTurn() {
-    int convertedPath[256];
+    int convertedPath[ROUTE_MAX_LEN];
     int i = 0;
     int j = 0;
 
@@ -141,7 +141,7 @@ void convertLTurn() {
     }
 
     // pathの残りをクリア
-    for (int l = j; l < 256; l++) {
+    for (int l = j; l < ROUTE_MAX_LEN; l++) {
         path[l] = 0;
     }
 
@@ -149,9 +149,9 @@ void convertLTurn() {
     int m, n;
 
     // 値が200の要素を削除し、後ろの要素を前に詰める
-    for (m = 0; m < 256 - count; m++) {
+    for (m = 0; m < ROUTE_MAX_LEN - count; m++) {
         if (path[m] == 200) {
-            for (n = m; n < 255 - count; n++) {
+            for (n = m; n < (ROUTE_MAX_LEN - 1) - count; n++) {
                 path[n] = path[n + 1];
             }
             count++; // 削除した要素の数をインクリメント
@@ -161,7 +161,7 @@ void convertLTurn() {
 }
 
 void convertDiagonal(void) {
-    int convertedPath[256];
+    int convertedPath[ROUTE_MAX_LEN];
     int i = 0;
     int j = 0;
 
@@ -236,11 +236,11 @@ void convertDiagonal(void) {
     }
 
     // pathの残りをクリア
-    for (int l = j; l < 256; l++) {
+    for (int l = j; l < ROUTE_MAX_LEN; l++) {
         path[l] = 0;
     }
 
-    for (int i = 0; i < 256 && path[i] != 0; i++) {
+    for (int i = 0; i < ROUTE_MAX_LEN && path[i] != 0; i++) {
         printf("%d ", path[i]);
     }
     printf("\n");
@@ -364,11 +364,11 @@ void convertDiagonal(void) {
     }
 
     // pathの残りをクリア
-    for (int l = j; l < 256; l++) {
+    for (int l = j; l < ROUTE_MAX_LEN; l++) {
         path[l] = 0;
     }
 
-    for (int i = 0; i < 256 && path[i] != 0; i++) {
+    for (int i = 0; i < ROUTE_MAX_LEN && path[i] != 0; i++) {
         printf("%d ", path[i]);
     }
     printf("\n");
@@ -408,11 +408,11 @@ void convertDiagonal(void) {
     }
 
     // pathの残りをクリア
-    for (int l = j; l < 256; l++) {
+    for (int l = j; l < ROUTE_MAX_LEN; l++) {
         path[l] = 0;
     }
 
-    for (int i = 0; i < 256 && path[i] != 0; i++) {
+    for (int i = 0; i < ROUTE_MAX_LEN && path[i] != 0; i++) {
         printf("%d ", path[i]);
     }
     printf("\n");
@@ -443,11 +443,11 @@ void convertDiagonal(void) {
     }
 
     // pathの残りをクリア
-    for (int l = j; l < 256; l++) {
+    for (int l = j; l < ROUTE_MAX_LEN; l++) {
         path[l] = 0;
     }
 
-    for (int i = 0; i < 256 && path[i] != 0; i++) {
+    for (int i = 0; i < ROUTE_MAX_LEN && path[i] != 0; i++) {
         printf("%d ", path[i]);
     }
     printf("\n");
@@ -484,7 +484,7 @@ void convertDiagonal(void) {
     }
 
     // convertedPathをpathにコピー
-    for (int k = 0; k < 256; k++) {
+    for (int k = 0; k < ROUTE_MAX_LEN; k++) {
         path[k] = convertedPath[k];
     }
 
@@ -493,7 +493,7 @@ void convertDiagonal(void) {
         path[l] = 0;
     }
 
-    for (int i = 0; i < 256 && path[i] != 0; i++) {
+    for (int i = 0; i < ROUTE_MAX_LEN && path[i] != 0; i++) {
         printf("%d ", path[i]);
     }
     printf("\n");
@@ -524,11 +524,53 @@ void makePath(uint8_t path_type) {
     // 壁情報の矛盾を修正
     correctWallInconsistencies();
 
-    // 最短経路を見つける
-    Node start = {START_X, START_Y}; // スタート地点
-    Node goal = {GOAL_X, GOAL_Y};    // ゴール地点
+    // 最短経路を見つける（複数ゴール対応）
+    Node start = (Node){START_X, START_Y};
 
-    dijkstra(start, goal);
+    // 候補ゴール一覧（(0,0) は未使用として無視）
+    const uint8_t goals[9][2] = {
+        {GOAL1_X, GOAL1_Y}, {GOAL2_X, GOAL2_Y}, {GOAL3_X, GOAL3_Y},
+        {GOAL4_X, GOAL4_Y}, {GOAL5_X, GOAL5_Y}, {GOAL6_X, GOAL6_Y},
+        {GOAL7_X, GOAL7_Y}, {GOAL8_X, GOAL8_Y}, {GOAL9_X, GOAL9_Y},
+    };
+
+    Node bestGoal = (Node){GOAL_X, GOAL_Y};
+    int bestCost = INFINITY;
+    bool found = false;
+
+    // まず全候補でコストのみ評価
+    for (int i = 0; i < 9; i++) {
+        uint8_t gx = goals[i][0];
+        uint8_t gy = goals[i][1];
+        if (gx == 0 && gy == 0) continue; // 未使用
+        if (gx >= MAZE_SIZE || gy >= MAZE_SIZE) continue; // 範囲外は無視
+
+        // 経路配列は後で最良ゴールで再生成するため、ここではコストだけ使う
+        dijkstra(start, (Node){gx, gy});
+        if (last_dijkstra_cost != INFINITY && last_dijkstra_cost < bestCost) {
+            bestCost = last_dijkstra_cost;
+            bestGoal.x = gx;
+            bestGoal.y = gy;
+            found = true;
+        }
+    }
+
+    // 候補が1つも設定されていない場合は従来のGOAL_X/GOAL_Yを使う
+    if (!found) {
+        bestGoal = (Node){GOAL_X, GOAL_Y};
+    }
+
+    // 可視化用オーバレイと経路配列をクリアしてから最良ゴールで再計算
+    for (int y = 0; y < MAZE_SIZE; y++) {
+        for (int x = 0; x < MAZE_SIZE; x++) {
+            path_cell[y][x] = false;
+        }
+    }
+    for (int i = 0; i < ROUTE_MAX_LEN; i++) {
+        path[i] = 0;
+    }
+
+    dijkstra(start, bestGoal);
 
     simplifyPath();
 
@@ -536,7 +578,7 @@ void makePath(uint8_t path_type) {
         convertLTurn();
     }
 
-    for (int i = 0; i < 256 && path[i] != 0; i++) {
+    for (int i = 0; i < ROUTE_MAX_LEN && path[i] != 0; i++) {
         printf("%d ", path[i]);
     }
     printf("\n");
@@ -545,7 +587,7 @@ void makePath(uint8_t path_type) {
         convertDiagonal();
     }
 
-    for (int i = 0; i < 256 && path[i] != 0; i++) {
+    for (int i = 0; i < ROUTE_MAX_LEN && path[i] != 0; i++) {
         // printf("%d ", path[i]);
         if (path[i] < 300) {
             uint8_t str_sec;

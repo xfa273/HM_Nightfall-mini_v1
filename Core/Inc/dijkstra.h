@@ -72,6 +72,9 @@ void printMaze();
 // ダイクストラ法による最短経路を計算する関数
 void dijkstra(Node start, Node goal);
 
+// 直近の dijkstra() 実行での総コスト（到達不能時は INFINITY）
+extern int last_dijkstra_cost;
+
 void ConvertMapIntoWall();
 void PrintWallData();
 
