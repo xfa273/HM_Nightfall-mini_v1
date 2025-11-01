@@ -383,47 +383,47 @@ const ShortestRunModeParams_t shortestRunModeParams5 = {
     .dist_offset_out    = 29.0f,
     .val_offset_in      = 10.0f,
     .angle_turn_90      = 87.0f,
-    .dist_wall_end      = 1.0f,
+    .dist_wall_end      = 0.0f,
     // Large 90deg
-    .velocity_l_turn_90 = 1000.0f,
-    .alpha_l_turn_90    = 22000.0f,
-    .angle_l_turn_90    = 87.5f,
+    .velocity_l_turn_90 = 1200.0f,
+    .alpha_l_turn_90    = 39800.0f,
+    .angle_l_turn_90    = 83.5f,
     .dist_l_turn_in_90  = 5.0f,
-    .dist_l_turn_out_90 = 15.0f,
+    .dist_l_turn_out_90 = 37.0f,
     // Large 180deg
-    .velocity_l_turn_180= 1000.0f,
-    .alpha_l_turn_180   = 17800.0f,
-    .angle_l_turn_180   = 176.0f,
-    .dist_l_turn_in_180 = 0.0f,
-    .dist_l_turn_out_180= 40.0f,
-    .fan_power          = 800,
+    .velocity_l_turn_180= 1200.0f,
+    .alpha_l_turn_180   = 30900.0f,
+    .angle_l_turn_180   = 173.0f,
+    .dist_l_turn_in_180 = 12.0f,
+    .dist_l_turn_out_180= 85.0f,
+    .fan_power          = 1000,
     .makepath_type_case3 = 0,
     .makepath_type_case47= 1
 };
 
 const ShortestRunCaseParams_t shortestRunCaseParamsMode5[5] = {
     {
-        .acceleration_straight = 5555.6f, .acceleration_straight_dash = 13000.0f,
-        .velocity_straight = 3500.0f, .kp_wall = 0.13f,
+        .acceleration_straight = 16000.0f, .acceleration_straight_dash = 16000.0f,
+        .velocity_straight = 1200.0f, .kp_wall = 0.13f,
         .straight_weight = 0, .diagonal_weight = 0
     },
     {
-        .acceleration_straight = 5555.6f, .acceleration_straight_dash = 13000.0f,
-        .velocity_straight = 3500.0f, .kp_wall = 0.05f,
+        .acceleration_straight = 16000.0f, .acceleration_straight_dash = 16000.0f,
+        .velocity_straight = 1200.0f, .kp_wall = 0.05f,
         .straight_weight = 2, .diagonal_weight = 0
     },
     {
-        .acceleration_straight = 8000.0f,  .acceleration_straight_dash = 20000.0f,
+        .acceleration_straight = 16000.0f,  .acceleration_straight_dash = 20000.0f,
         .velocity_straight = 4000.0f, .kp_wall = 0.05f,
         .straight_weight = 2, .diagonal_weight = 0
     },
     {
-        .acceleration_straight = 8000.0f,  .acceleration_straight_dash = 23000.0f,
+        .acceleration_straight = 16000.0f,  .acceleration_straight_dash = 23000.0f,
         .velocity_straight = 4500.0f, .kp_wall = 0.05f,
         .straight_weight = 2, .diagonal_weight = 0
     },
     {
-        .acceleration_straight = 8000.0f,  .acceleration_straight_dash = 26000.0f,
+        .acceleration_straight = 16000.0f,  .acceleration_straight_dash = 26000.0f,
         .velocity_straight = 4800.0f, .kp_wall = 0.05f,
         .straight_weight = 2, .diagonal_weight = 0
     },
