@@ -15,8 +15,10 @@
     走行系
 ------------------------------------------------------------*/
 /*走行パラメータ*/
-#define D_TIRE            13.62F  // タイヤ直径[mm] 13.75F
-#define DIST_HALF_SEC     45     // 迷路の半区間距離[mm]
+#define D_TIRE            13.75F// タイヤ直径[mm] 13.75F
+#define DIST_HALF_SEC     45.3  // 迷路の半区間距離[mm] 0.94
+// 探索走行用の半区間距離[mm]（初期値は通常と同じ。探索専用に短くしたい場合に調整）
+#define DIST_HALF_SEC_SEARCH  45
 #define DIST_D_HALF_SEC   67.279 // 斜めの半区間距離[mm]
 #define DIST_FIRST_SEC    13     // 最初の区画の距離[mm]
 #define DIST_SET_POSITION 13     // 壁当て後の前進距離[mm]
@@ -29,12 +31,12 @@
 
 /*PIDパラメータ*/
 #define KP_DISTANCE 28.0F // 並進位置制御のP項  28.0F 30.0
-#define KI_DISTANCE 0.05 // 並進位置制御のI項  0.01F 0.04
-#define KD_DISTANCE 7.0F // 並進位置制御のD項  28.0F 150.0
+#define KI_DISTANCE 0.1F // 並進位置制御のI項  0.01F 0.04
+#define KD_DISTANCE 0.0F // 並進位置制御のD項  28.0F 150.0
 
-#define KP_VELOCITY 1.9F // 並進速度制御のP項  50.0F 10.0
-#define KI_VELOCITY 0.0F// 並進速度制御のI項  0.05F 0.04
-#define KD_VELOCITY 45.0F // 並進速度制御のD項  60.0F 100.0
+#define KP_VELOCITY 0.45F // 並進速度制御のP項  50.0F 10.0
+#define KI_VELOCITY 0.65F// 並進速度制御のI項  0.05F 0.04
+#define KD_VELOCITY 0.6F // 並進速度制御のD項  60.0F 100.0
 
 #define KP_ANGLE 0.0F // 角度制御のP項
 #define KI_ANGLE 0.0F // 角度制御のI項
@@ -65,37 +67,37 @@
     センサ系
 ------------------------------------------------------------*/
 /*壁判断閾値*/
-#define WALL_BASE_FR  330   // 前壁右センサ    //700
-#define WALL_BASE_FL  330   // 前壁左センサ    //700
-#define WALL_BASE_R   410   // 右壁センサ  //800
-#define WALL_BASE_L   410   // 左壁センサ  //800
+#define WALL_BASE_FR  360   // 前壁右センサ    //330
+#define WALL_BASE_FL  360   // 前壁左センサ    //330
+#define WALL_BASE_R   450   // 右壁センサ  //410
+#define WALL_BASE_L   450   // 左壁センサ  //410
 #define WALL_DIFF_THR 22   // 壁センサ値の変化量のしきい値
-#define K_SENSOR      0.97F // センサの補正値 0.94F
+#define K_SENSOR      0.96F // センサの補正値 0.94F
 
 // 壁切れ判定専用しきい値（高速走行向けに独立調整可能）
 // 既定値は探索用と同一。必要に応じて実機に合わせて変更してください。
 #ifndef WALL_END_THR_R
-#define WALL_END_THR_R  250
+#define WALL_END_THR_R  210
 #endif
 #ifndef WALL_END_THR_L
-#define WALL_END_THR_L  250
+#define WALL_END_THR_L  210
 #endif
 
 // 壁切れバッファ距離（ターン前に等速で走る距離）[mm]
 // 例: 20mm。小回り時は半区間(DIST_HALF_SEC)を追加で短縮・追従する実装のため、
 // この値は「基本バッファ」として機能します。
 #ifndef WALL_END_BUFFER_MM
-#define WALL_END_BUFFER_MM  40.0F
+#define WALL_END_BUFFER_MM  40.0F   
 #endif
 
 // 壁切れ未検知時の最大延長距離（本来の距離に追加して等速で探す上限）[mm]
 // 例: 20mm。未検知でも暴走しないよう上限を設けるための値です。
 #ifndef WALL_END_EXTEND_MAX_MM
-#define WALL_END_EXTEND_MAX_MM  20.0F
+#define WALL_END_EXTEND_MAX_MM  30.0F
 #endif
 
-#define WALL_CTRL_BASE_L 1941 // 壁制御の基準値（左） 2135
-#define WALL_CTRL_BASE_R 1989 // 壁制御の基準値（右） 2100
+#define WALL_CTRL_BASE_L 1510 // 壁制御の基準値（左） 2135
+#define WALL_CTRL_BASE_R 1940 // 壁制御の基準値（右） 2100
 // 小鷺田寮: L1941 R1989
 // 九州: L1861 R2060
 
@@ -120,8 +122,8 @@
 
 /* 前壁センサを用いた中央合わせ（非接触）用パラメータ */
 // 区画中央における前壁センサの目標値（実機で調整）
-#define F_ALIGN_TARGET_FR    3750
-#define F_ALIGN_TARGET_FL    3790
+#define F_ALIGN_TARGET_FR    3335   // 3750
+#define F_ALIGN_TARGET_FL    3410   // 3790
 // 小鷺田寮: FR3750 FL3790
 // 九州: FR3587 FL3587
 
@@ -160,7 +162,7 @@
 #endif
 
 #ifndef GOAL2_X
-#define GOAL2_X 7
+#define GOAL2_X 7   
 #define GOAL2_Y 8
 #endif
 

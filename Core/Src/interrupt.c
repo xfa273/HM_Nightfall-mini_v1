@@ -107,8 +107,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
             calculate_translation();
             calculate_rotation();
 
-            // 並進位置→並進速度のPID
-            distance_PID();
+            // 並進は速度フィードバックのみ（位置→速度のカスケードは廃止）
             velocity_PID();
 
             // 角度→角速度のPID

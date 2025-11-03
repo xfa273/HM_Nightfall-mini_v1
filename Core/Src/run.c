@@ -18,6 +18,9 @@ void run(void) {
 
     speed_now = 0;
     velocity_interrupt = 0;
+
+    // 最短走行中は探索走行フラグを明確にオフ
+    g_is_search_run = false;
     drive_variable_reset();
     drive_enable_motor();
     get_base();

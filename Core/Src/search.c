@@ -72,6 +72,7 @@ void search_init(void) {
     g_search_mode = SEARCH_MODE_FULL; // デフォルトは全面探索
     g_suppress_first_stop_save = false; // 初期状態では抑制しない
     g_goal_is_start = false; // 初期状態ではスタートをゴール扱いしない
+    g_is_search_run = false; // 探索走行フラグ初期化
 }
 
 //+++++++++++++++++++++++++++++++++++++++++++++++
@@ -181,6 +182,7 @@ void searchB(uint16_t fan_duty) {
 void adachi(void) {
 
     s_no_path_exit = false;
+    g_is_search_run = true; // 探索走行開始
 
     drive_start();
 
@@ -403,6 +405,7 @@ void adachi(void) {
             HAL_Delay(150);
         }
     }
+    g_is_search_run = false; // 探索走行終了
 }
 
 //+++++++++++++++++++++++++++++++++++++++++++++++

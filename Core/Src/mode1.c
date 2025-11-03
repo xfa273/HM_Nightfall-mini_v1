@@ -194,7 +194,7 @@ void mode1() {
             duty_setposition = 40;
 
             // 壁判断しきい値の係数
-            sensor_kx = 1.1;
+            sensor_kx = 1.2;
 
             MF.FLAG.WALL_ALIGN = 0;
 

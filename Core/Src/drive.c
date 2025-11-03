@@ -14,6 +14,12 @@
 #include "logging.h"
 #include <math.h>
 
+// 半区画距離を返すヘルパ
+// 探索走行中(g_is_search_run=true)は探索用の半区画長、その他は通常の半区画長を返す
+static inline float HALF_MM(void) {
+    return g_is_search_run ? (float)DIST_HALF_SEC_SEARCH : (float)DIST_HALF_SEC;
+}
+
 // ==== Motor control params (sign-magnitude) ====
 // 周波数は TIM 設定に従う（本実装では変更しない）
 // ARR はランタイムで読み出して使用する（__HAL_TIM_GET_AUTORELOAD）
@@ -71,7 +77,7 @@ void first_sectionA(void) {
     float speed_out;
 
     speed_out =
-        sqrt(speed_now * speed_now + 2 * acceleration_straight * DIST_HALF_SEC);
+        sqrt(speed_now * speed_now + 2 * acceleration_straight * HALF_MM());
 
     MF.FLAG.CTRL = 1;
     driveA(DIST_FIRST_SEC, speed_now, speed_out, 0);
@@ -93,15 +99,15 @@ void half_sectionA(uint16_t val) {
     } else {
         if (MF.FLAG.SCND && acceleration_straight_dash > 0 && !val) {
             speed_out = sqrt(speed_now * speed_now +
-                             2 * acceleration_straight_dash * DIST_HALF_SEC);
+                             2 * acceleration_straight_dash * HALF_MM());
         } else {
             speed_out = sqrt(speed_now * speed_now +
-                             2 * acceleration_straight * DIST_HALF_SEC);
+                             2 * acceleration_straight * HALF_MM());
         }
     }
 
     MF.FLAG.CTRL = 1;
-    driveA(DIST_HALF_SEC, speed_now, speed_out, 0);
+    driveA(HALF_MM(), speed_now, speed_out, 0);
     MF.FLAG.CTRL = 0;
     speed_now = speed_out;
 
@@ -161,7 +167,7 @@ void half_sectionD(uint16_t val) {
     } else {
         if (MF.FLAG.SCND && acceleration_straight_dash > 0 && val) {
             speed_out = sqrt(speed_now * speed_now -
-                             2 * acceleration_straight_dash * DIST_HALF_SEC);
+                             2 * acceleration_straight_dash * HALF_MM());
         } else {
             speed_out = 0;
         }
@@ -169,7 +175,7 @@ void half_sectionD(uint16_t val) {
 
     MF.FLAG.CTRL = 1;
 
-    driveA(DIST_HALF_SEC, speed_now, speed_out, 0);
+    driveA(HALF_MM(), speed_now, speed_out, 0);
 
     MF.FLAG.CTRL = 0;
     speed_now = speed_out;
@@ -225,15 +231,15 @@ void one_sectionA(void) {
     float speed_out;
     if (MF.FLAG.SCND || known_straight) {
         speed_out = sqrt(speed_now * speed_now +
-                         2 * acceleration_straight_dash * DIST_HALF_SEC * 2);
+                         2 * acceleration_straight_dash * HALF_MM() * 2);
     } else {
         speed_out = sqrt(speed_now * speed_now +
-                         2 * acceleration_straight * DIST_HALF_SEC * 2);
+                         2 * acceleration_straight * HALF_MM() * 2);
     }
 
     MF.FLAG.CTRL = 1;
     // kp_wall = kp_wall * 2;
-    driveA(DIST_HALF_SEC * 2, speed_now, speed_out, 0);
+    driveA(HALF_MM() * 2, speed_now, speed_out, 0);
     MF.FLAG.CTRL = 0;
     // kp_wall = kp_wall * 1 / 2;
     speed_now = speed_out;
@@ -252,7 +258,7 @@ void one_sectionD(void) {
     float v0 = speed_now;
     // 目標終端速度（従来式）
     float accel_lin = (MF.FLAG.SCND || acceled) ? acceleration_straight_dash : acceleration_straight; // [mm/s^2]
-    float speed_out = sqrtf(fmaxf(0.0f, v0 * v0 - 2.0f * accel_lin * (DIST_HALF_SEC * 2.0f)));
+    float speed_out = sqrtf(fmaxf(0.0f, v0 * v0 - 2.0f * accel_lin * (HALF_MM() * 2.0f)));
 
     MF.FLAG.CTRL = 1;
 
@@ -268,19 +274,19 @@ void one_sectionD(void) {
     MF.FLAG.SCND       = 1;
 
     // 全距離に対する一定減速度 a_const を算出（負）
-    const float total_mm = (DIST_HALF_SEC * 2.0f);
+    const float total_mm = (HALF_MM() * 2.0f);
     const float a_const = (speed_out * speed_out - v0 * v0) / (2.0f * total_mm); // 期待上は -accel_lin
 
     float remaining_blocks = 2.0f; // 1区画
-    const float step_blocks = (2.0f / DIST_HALF_SEC); // 2mm相当
-    const float step_mm = step_blocks * DIST_HALF_SEC;
+    const float step_blocks = (2.0f / HALF_MM()); // 2mm相当
+    const float step_mm = step_blocks * HALF_MM();
     bool triggered = false;
 
     while (remaining_blocks > 0.0f) {
         float step = (remaining_blocks < step_blocks) ? remaining_blocks : step_blocks;
         // 次ステップの目標速度（一定減速度）
         float v_in = speed_now; // run_straight が更新していく現在速度
-        float v2 = v_in * v_in + 2.0f * a_const * (step * DIST_HALF_SEC);
+        float v2 = v_in * v_in + 2.0f * a_const * (step * HALF_MM());
         if (v2 < 0.0f) v2 = 0.0f;
         float v_next = sqrtf(v2);
 
@@ -306,17 +312,17 @@ void one_sectionD(void) {
         float v_target = velocity_turn90;         // 探索の小回りターン入口速度
         if (v_target < 0.0f) v_target = 0.0f;     // 念のためクランプ
         if (v_target > v_init) v_target = v_init; // 減速のみ（加速はしない）
-        float follow_mm = (float)DIST_HALF_SEC + dist_wall_end;
+        float follow_mm = (float)HALF_MM() + dist_wall_end;
         if (follow_mm > 0.0f) {
             // 一定減速度 a_follow を算出（v_target^2 = v_init^2 + 2*a*follow_mm）
             float a_follow = (v_target * v_target - v_init * v_init) / (2.0f * follow_mm);
 
-            float remaining_follow_blocks = follow_mm / DIST_HALF_SEC;
-            const float step_blocks_f = (2.0f / DIST_HALF_SEC); // 2mm
+            float remaining_follow_blocks = follow_mm / HALF_MM();
+            const float step_blocks_f = (2.0f / HALF_MM()); // 2mm
 
             while (remaining_follow_blocks > 0.0f) {
                 float step_b = (remaining_follow_blocks < step_blocks_f) ? remaining_follow_blocks : step_blocks_f;
-                float step_mm_f = step_b * DIST_HALF_SEC;
+                float step_mm_f = step_b * HALF_MM();
                 float v_in = speed_now;
                 // v_out^2 = v_in^2 + 2*a*ds
                 float v2 = v_in * v_in + 2.0f * a_follow * step_mm_f;
@@ -335,7 +341,7 @@ void one_sectionD(void) {
         while (remaining_blocks > 0.0f) {
             float step = (remaining_blocks < step_blocks) ? remaining_blocks : step_blocks;
             float v_in = speed_now;
-            float v2 = v_in * v_in + 2.0f * a_const * (step * DIST_HALF_SEC);
+            float v2 = v_in * v_in + 2.0f * a_const * (step * HALF_MM());
             if (v2 < 0.0f) v2 = 0.0f;
             float v_next = sqrtf(v2);
             run_straight(step, v_next, 0);
@@ -380,7 +386,7 @@ void one_sectionU(uint8_t CTRL) {
 
     // 1区画 = 半区画2つ分 = blocksで2.0
     float remaining_blocks = 2.0f;
-    const float step_blocks = (2.0f / DIST_HALF_SEC); // 2mm相当で刻む
+    const float step_blocks = (2.0f / HALF_MM()); // 2mm相当で刻む
     bool triggered = false;
 
     while (remaining_blocks > 0.0f) {
@@ -402,9 +408,9 @@ void one_sectionU(uint8_t CTRL) {
 
     if (triggered) {
         // 検出後は「半区画 + dist_wall_end」を等速で追従
-        float follow_mm = (float)DIST_HALF_SEC + dist_wall_end;
+        float follow_mm = (float)HALF_MM() + dist_wall_end;
         if (follow_mm > 0.0f) {
-            float extra_blocks = follow_mm / DIST_HALF_SEC;
+            float extra_blocks = follow_mm / HALF_MM();
             run_straight(extra_blocks, v_const, 0);
         }
     } else {
@@ -428,7 +434,7 @@ void one_sectionU(uint8_t CTRL) {
 //+++++++++++++++++++++++++++++++++++++++++++++++
 void half_sectionU(void) {
     MF.FLAG.CTRL = 1;
-    driveA(DIST_HALF_SEC, speed_now, speed_now, 0);
+    driveA(HALF_MM(), speed_now, speed_now, 0);
     MF.FLAG.CTRL = 0;
     speed_now = speed_now;
 
@@ -445,7 +451,7 @@ void run_straight(float section, float spd_out, float dist_wallend) {
     (void)dist_wallend;
 
     MF.FLAG.CTRL = 1;
-    driveA(DIST_HALF_SEC * section, speed_now, spd_out, 0);
+    driveA(HALF_MM() * section, speed_now, spd_out, 0);
 
     MF.FLAG.CTRL = 0;
     speed_now = spd_out;
@@ -578,8 +584,8 @@ void l_turn_R90(void) {
 
         // 最大探索距離: 既定の出オフセット距離 + 追加上限
         float max_mm = dist_l_turn_out_90 + WALL_END_EXTEND_MAX_MM;
-        float remaining_blocks = max_mm / DIST_HALF_SEC;
-        const float step_blocks = (2.0f / DIST_HALF_SEC); // 2mm相当で刻む
+        float remaining_blocks = max_mm / HALF_MM();
+        const float step_blocks = (2.0f / HALF_MM()); // 2mm相当で刻む
         bool triggered = false;
 
         while (remaining_blocks > 0.0f) {
@@ -602,7 +608,7 @@ void l_turn_R90(void) {
         if (triggered) {
             float follow_mm = dist_wall_end;
             if (follow_mm > 0.0f) {
-                float extra_blocks = follow_mm / DIST_HALF_SEC;
+                float extra_blocks = follow_mm / HALF_MM();
                 run_straight(extra_blocks, v_const, 0);
             }
         }
@@ -643,8 +649,8 @@ void l_turn_L90(void) {
 
         // 最大探索距離: 既定の出オフセット距離 + 追加上限
         float max_mm = dist_l_turn_out_90 + WALL_END_EXTEND_MAX_MM;
-        float remaining_blocks = max_mm / DIST_HALF_SEC;
-        const float step_blocks = (2.0f / DIST_HALF_SEC); // 2mm相当で刻む
+        float remaining_blocks = max_mm / HALF_MM();
+        const float step_blocks = (2.0f / HALF_MM()); // 2mm相当で刻む
         bool triggered = false;
 
         while (remaining_blocks > 0.0f) {
@@ -667,7 +673,7 @@ void l_turn_L90(void) {
         if (triggered) {
             float follow_mm = dist_wall_end;
             if (follow_mm > 0.0f) {
-                float extra_blocks = follow_mm / DIST_HALF_SEC;
+                float extra_blocks = follow_mm / HALF_MM();
                 run_straight(extra_blocks, v_const, 0);
             }
         }
@@ -708,8 +714,8 @@ void l_turn_R180(uint8_t fwall) {
 
         // 最大探索距離: 既定の出オフセット距離 + 追加上限
         float max_mm = dist_l_turn_out_180 + WALL_END_EXTEND_MAX_MM;
-        float remaining_blocks = max_mm / DIST_HALF_SEC;
-        const float step_blocks = (2.0f / DIST_HALF_SEC); // 2mm相当で刻む
+        float remaining_blocks = max_mm / HALF_MM();
+        const float step_blocks = (2.0f / HALF_MM()); // 2mm相当で刻む
         bool triggered = false;
 
         while (remaining_blocks > 0.0f) {
@@ -732,7 +738,7 @@ void l_turn_R180(uint8_t fwall) {
         if (triggered) {
             float follow_mm = dist_wall_end;
             if (follow_mm > 0.0f) {
-                float extra_blocks = follow_mm / DIST_HALF_SEC;
+                float extra_blocks = follow_mm / HALF_MM();
                 run_straight(extra_blocks, v_const, 0);
             }
         }
@@ -773,8 +779,8 @@ void l_turn_L180(uint8_t fwall) {
 
         // 最大探索距離: 既定の出オフセット距離 + 追加上限
         float max_mm = dist_l_turn_out_180 + WALL_END_EXTEND_MAX_MM;
-        float remaining_blocks = max_mm / DIST_HALF_SEC;
-        const float step_blocks = (2.0f / DIST_HALF_SEC); // 2mm相当で刻む
+        float remaining_blocks = max_mm / HALF_MM();
+        const float step_blocks = (2.0f / HALF_MM()); // 2mm相当で刻む
         bool triggered = false;
 
         while (remaining_blocks > 0.0f) {
@@ -797,7 +803,7 @@ void l_turn_L180(uint8_t fwall) {
         if (triggered) {
             float follow_mm = dist_wall_end;
             if (follow_mm > 0.0f) {
-                float extra_blocks = follow_mm / DIST_HALF_SEC;
+                float extra_blocks = follow_mm / HALF_MM();
                 run_straight(extra_blocks, v_const, 0);
             }
         }
@@ -1085,13 +1091,12 @@ void match_position(uint16_t target_value) {
     drive_variable_reset();
     acceleration_interrupt = 0;
     alpha_interrupt = 0;
-    // 以降、target_distance は手動更新、omega_interrupt は直接指示
-    // （calculate_translation/calculate_rotation は 0 加速度なので増分は本関数で与える）
+    // 以降、並進は velocity_interrupt を直接更新して速度FBを用いる
+    // （calculate_translation は target_distance を更新するが、distance_PID は未使用）
     velocity_interrupt = 0;
     omega_interrupt = 0;
     drive_start();
 
-    const float dt = 0.002f; // 2ms刻み
     int stable_count = 0;
     uint32_t count = 0;
 
@@ -1114,11 +1119,11 @@ void match_position(uint16_t target_value) {
             break;
         }
 
-        // 並進は target_distance を微小更新して distance_PID を活用
+        // 並進は速度FBへ直接指示（velocity_interrupt を更新）
         float v_cmd = -MATCH_POS_KP_TRANS * e_pos; // [mm/s]
         if (v_cmd >  MATCH_POS_VEL_MAX) v_cmd =  MATCH_POS_VEL_MAX;
         if (v_cmd < -MATCH_POS_VEL_MAX) v_cmd = -MATCH_POS_VEL_MAX;
-        target_distance += v_cmd * dt; // 目標位置を増減
+        velocity_interrupt = v_cmd;
 
         // 角度は omega_interrupt を直接与えて omega_PID を活用
         float w_cmd = MATCH_POS_KP_ROT * e_ang; // [deg/s]
@@ -2059,6 +2064,17 @@ void test_run(void) {
             log_start(HAL_GetTick());
             
             half_sectionA(0);
+            one_sectionU(0);
+            one_sectionU(0);
+            one_sectionU(0);
+            one_sectionU(0);
+            one_sectionU(0);
+            one_sectionU(0);
+            one_sectionU(0);
+            one_sectionU(0);
+            one_sectionU(0);
+            one_sectionU(0);
+            one_sectionU(0);
             one_sectionU(0);
             one_sectionU(0);
             one_sectionU(0);

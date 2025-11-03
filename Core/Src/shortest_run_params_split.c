@@ -219,7 +219,7 @@ const ShortestRunCaseParams_t shortestRunCaseParamsMode3[9] = {
     // case6 (index 5)
     {
         .acceleration_straight = 4000.0f, .acceleration_straight_dash = 17000.0f,
-        .velocity_straight = 4000.0f, .kp_wall = 0.05f, .kp_diagonal = 0.05f,
+        .velocity_straight = 3500.0f, .kp_wall = 0.05f, .kp_diagonal = 0.05f,
         .straight_weight = 2, .diagonal_weight = 0,
         .acceleration_d_straight = 4000.0f, .acceleration_d_straight_dash = 8000.0f,
         .velocity_d_straight = 2500.0f
@@ -227,7 +227,7 @@ const ShortestRunCaseParams_t shortestRunCaseParamsMode3[9] = {
     // case7 (index 6)
     {
         .acceleration_straight = 4000.0f, .acceleration_straight_dash = 20000.0f,
-        .velocity_straight = 4000.0f, .kp_wall = 0.05f, .kp_diagonal = 0.05f,
+        .velocity_straight = 3500.0f, .kp_wall = 0.05f, .kp_diagonal = 0.05f,
         .straight_weight = 2, .diagonal_weight = 0,
         .acceleration_d_straight = 4000.0f, .acceleration_d_straight_dash = 8000.0f,
         .velocity_d_straight = 2500.0f
@@ -323,13 +323,13 @@ const ShortestRunCaseParams_t shortestRunCaseParamsMode4[9] = {
     },
     // case3 (index 2)
     {
-        .acceleration_straight = 5555.6f, .acceleration_straight_dash = 6000.0f,
-        .velocity_straight = 3000.0f, .kp_wall = 0.05f,
+        .acceleration_straight = 5555.6f, .acceleration_straight_dash = 10000.0f,
+        .velocity_straight = 2500.0f, .kp_wall = 0.05f,
         .straight_weight = 2, .diagonal_weight = 0
     },
     // case4 (index 3)
     {
-        .acceleration_straight = 5555.6f, .acceleration_straight_dash = 10000.0f,
+        .acceleration_straight = 5555.6f, .acceleration_straight_dash = 12000.0f,
         .velocity_straight = 3000.0f, .kp_wall = 0.05f,
         .straight_weight = 2, .diagonal_weight = 0
     },
@@ -342,7 +342,7 @@ const ShortestRunCaseParams_t shortestRunCaseParamsMode4[9] = {
     // case6 (index 5): 
     {
         .acceleration_straight = 5555.6f, .acceleration_straight_dash = 16000.0f,
-        .velocity_straight = 3500.0f, .kp_wall = 0.05f, .kp_diagonal = 0.05f,
+        .velocity_straight = 3000.0f, .kp_wall = 0.05f, .kp_diagonal = 0.05f,
         .straight_weight = 2, .diagonal_weight = 0,
         .acceleration_d_straight = 4000.0f, .acceleration_d_straight_dash = 8000.0f,
         .velocity_d_straight = 2000.0f
@@ -350,7 +350,7 @@ const ShortestRunCaseParams_t shortestRunCaseParamsMode4[9] = {
     // case7 (index 6): 
     {
         .acceleration_straight = 5555.6f, .acceleration_straight_dash = 18000.0f,
-        .velocity_straight = 3500.0f, .kp_wall = 0.05f, .kp_diagonal = 0.05f,
+        .velocity_straight = 3000.0f, .kp_wall = 0.05f, .kp_diagonal = 0.05f,
         .straight_weight = 2, .diagonal_weight = 0,
         .acceleration_d_straight = 4500.0f, .acceleration_d_straight_dash = 9000.0f,
         .velocity_d_straight = 2500.0f

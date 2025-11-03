@@ -94,6 +94,9 @@ float fwall_kx;
 /* 探索モード */
 search_mode_t g_search_mode;
 
+/* 探索走行中であることを示すフラグ（adachi実行中のみtrue） */
+bool g_is_search_run;
+
 /* ゴール探索→全面探索に切り替えた直後の「最初の停止でのFlash保存」を抑制するフラグ */
 bool g_suppress_first_stop_save;
 
@@ -135,6 +138,9 @@ extern float sensor_kx;
 
 /* 探索モード */
 extern search_mode_t g_search_mode;
+
+/* 探索走行フラグ（trueなら探索走行中） */
+extern bool g_is_search_run;
 
 /* フラッシュ保存抑制フラグ（trueなら次の停止時保存を1回だけスキップ） */
 extern bool g_suppress_first_stop_save;

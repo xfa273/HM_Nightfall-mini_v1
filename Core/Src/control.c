@@ -86,8 +86,10 @@ void calculate_rotation(void) {
 /*並進速度のPID制御*/
 void velocity_PID(void) {
 
-    // P項
-    velocity_error = target_velocity;
+    // 速度フィードバック: 目標速度(velocity_interrupt) - 実測速度(real_velocity)
+    // 距離PIDによるカスケードは廃止し、単純な速度FBのみで並進を制御する
+    target_velocity = velocity_interrupt;
+    velocity_error = target_velocity - real_velocity;
 
     if (velocity_error > 10000 || velocity_error < -10000) {
         MF.FLAG.FAILED = 1;
@@ -120,10 +122,8 @@ void distance_PID(void) {
     // D項
     distance_error_error = distance_error - previous_distance_error;
 
-    // 目標並進速度を計算
-    target_velocity = KP_DISTANCE * distance_error +
-                      KI_DISTANCE * distance_integral +
-                      KD_DISTANCE * distance_error_error;
+    // 位置→速度のカスケードは廃止。目標速度の更新は行わない（速度FB単独）。
+    // target_velocity は velocity_PID 内で velocity_interrupt を反映する。
 
     // 並進位置の偏差を保存
     previous_distance_error = distance_error;
