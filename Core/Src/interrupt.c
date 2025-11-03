@@ -9,93 +9,69 @@
 #include "interrupt.h"
 #include "logging.h"
 
+// 非同期ADC DMA制御用ステート
+// 8相スケジュール（250us刻み）でIR安定待ちを確保
+// 0:RL OFF set, 1:RL OFF capture, 2:RL ON set, 3:RL ON capture,
+// 4:FR/FL OFF set, 5:FR/FL OFF capture, 6:FR/FL ON set, 7:FR/FL ON capture
+static volatile uint8_t s_adc_phase = 0;
+static volatile uint8_t s_adc_inflight = 0;  // 0:idle, 1:converting (DMA中)
+
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
     if (htim->Instance == htim1.Instance) {
         // TIM1の割り込み処理
 
         // printf("TIM1 Interrupt\n");
     }
-
     if (htim->Instance == htim6.Instance) {
-        // TIM6の割り込み処理 4kHz（センサ専用、2相スケジュール）
-
-        // センサ値の取得（DMA一括スキャン, 9ランク: CH1,3,1,3,0,2,0,2,10）
-        if (ADC_task_counter == 0) {
-
-            // LED OFF (R/L) をサンプル
-            HAL_GPIO_WritePin(IR_R_GPIO_Port, IR_R_Pin, GPIO_PIN_RESET);
-            HAL_GPIO_WritePin(IR_L_GPIO_Port, IR_L_Pin, GPIO_PIN_RESET);
-            tim1_wait_us(IR_WAIT_US);
-            if (sensor_adc_dma_start(adc_dma_buf_off) == HAL_OK) {
-                (void)sensor_adc_dma_wait(1);
+        // TIM6: 4kHz センサスケジューラ（非同期DMA駆動）
+        // 1tick=250us間隔をIRの安定待ちに利用し、ISR内のbusy-waitを排除
+        if (!s_adc_inflight) {
+            HAL_StatusTypeDef st = HAL_OK;
+            uint8_t start_dma = 0;
+            switch (s_adc_phase & 0x07u) {
+                case 0: // RL OFF set
+                    HAL_GPIO_WritePin(IR_R_GPIO_Port, IR_R_Pin, GPIO_PIN_RESET);
+                    HAL_GPIO_WritePin(IR_L_GPIO_Port, IR_L_Pin, GPIO_PIN_RESET);
+                    break;
+                case 1: // RL OFF capture
+                    st = sensor_adc_dma_start(adc_dma_buf_off);
+                    start_dma = 1;
+                    break;
+                case 2: // RL ON set
+                    HAL_GPIO_WritePin(IR_R_GPIO_Port, IR_R_Pin, GPIO_PIN_SET);
+                    HAL_GPIO_WritePin(IR_L_GPIO_Port, IR_L_Pin, GPIO_PIN_SET);
+                    break;
+                case 3: // RL ON capture
+                    st = sensor_adc_dma_start(adc_dma_buf_on);
+                    start_dma = 1;
+                    break;
+                case 4: // FR/FL OFF set
+                    HAL_GPIO_WritePin(IR_FR_GPIO_Port, IR_FR_Pin, GPIO_PIN_RESET);
+                    HAL_GPIO_WritePin(IR_FL_GPIO_Port, IR_FL_Pin, GPIO_PIN_RESET);
+                    break;
+                case 5: // FR/FL OFF capture
+                    st = sensor_adc_dma_start(adc_dma_buf_off);
+                    start_dma = 1;
+                    break;
+                case 6: // FR/FL ON set
+                    HAL_GPIO_WritePin(IR_FR_GPIO_Port, IR_FR_Pin, GPIO_PIN_SET);
+                    HAL_GPIO_WritePin(IR_FL_GPIO_Port, IR_FL_Pin, GPIO_PIN_SET);
+                    break;
+                case 7: // FR/FL ON capture
+                    st = sensor_adc_dma_start(adc_dma_buf_on);
+                    start_dma = 1;
+                    break;
+                default:
+                    s_adc_phase = 0;
+                    break;
             }
-
-            // LED ON (R/L) をサンプル
-            HAL_GPIO_WritePin(IR_R_GPIO_Port, IR_R_Pin, GPIO_PIN_SET);
-            HAL_GPIO_WritePin(IR_L_GPIO_Port, IR_L_Pin, GPIO_PIN_SET);
-            tim1_wait_us(IR_WAIT_US);
-            if (sensor_adc_dma_start(adc_dma_buf_on) == HAL_OK) {
-                (void)sensor_adc_dma_wait(1);
+            if (start_dma && st == HAL_OK) {
+                s_adc_inflight = 1; // DMA進行中
+            } else if (!start_dma) {
+                // セット相はここで次相へ進める（キャプチャ相はDMA完了CBで進める）
+                s_adc_phase = (uint8_t)((s_adc_phase + 1u) & 0x07u);
             }
-
-            // 平均化（Rankマップ: 0,2=R; 1,3=L; 4,6=FR; 5,7=FL; 8=BAT）
-            uint16_t r_off = (uint16_t)(((uint32_t)adc_dma_buf_off[0] + (uint32_t)adc_dma_buf_off[2]) / 2u);
-            uint16_t l_off = (uint16_t)(((uint32_t)adc_dma_buf_off[1] + (uint32_t)adc_dma_buf_off[3]) / 2u);
-            uint16_t r_on  = (uint16_t)(((uint32_t)adc_dma_buf_on[0]  + (uint32_t)adc_dma_buf_on[2])  / 2u);
-            uint16_t l_on  = (uint16_t)(((uint32_t)adc_dma_buf_on[1]  + (uint32_t)adc_dma_buf_on[3])  / 2u);
-
-            ad_r_off = r_off;
-            ad_l_off = l_off;
-            ad_r_raw = r_on;
-            ad_l_raw = l_on;
-            ad_r = max((int)ad_r_raw - (int)ad_r_off - (int)wall_offset_r, 0);
-            ad_l = max((int)ad_l_raw - (int)ad_l_off - (int)wall_offset_l, 0);
-
-            // IRをOFFに戻す
-            HAL_GPIO_WritePin(IR_R_GPIO_Port, IR_R_Pin, GPIO_PIN_RESET);
-            HAL_GPIO_WritePin(IR_L_GPIO_Port, IR_L_Pin, GPIO_PIN_RESET);
-
-        } else /* ADC_task_counter == 1 */ {
-
-            // LED OFF (FR/FL) をサンプル
-            HAL_GPIO_WritePin(IR_FR_GPIO_Port, IR_FR_Pin, GPIO_PIN_RESET);
-            HAL_GPIO_WritePin(IR_FL_GPIO_Port, IR_FL_Pin, GPIO_PIN_RESET);
-            tim1_wait_us(IR_WAIT_US);
-            if (sensor_adc_dma_start(adc_dma_buf_off) == HAL_OK) {
-                (void)sensor_adc_dma_wait(1);
-            }
-
-            // LED ON (FR/FL) をサンプル
-            HAL_GPIO_WritePin(IR_FR_GPIO_Port, IR_FR_Pin, GPIO_PIN_SET);
-            HAL_GPIO_WritePin(IR_FL_GPIO_Port, IR_FL_Pin, GPIO_PIN_SET);
-            tim1_wait_us(IR_WAIT_US);
-            if (sensor_adc_dma_start(adc_dma_buf_on) == HAL_OK) {
-                (void)sensor_adc_dma_wait(1);
-            }
-
-            // 平均化（Rankマップ: 4,6=FR; 5,7=FL; 8=BAT）
-            uint16_t fr_off = (uint16_t)(((uint32_t)adc_dma_buf_off[4] + (uint32_t)adc_dma_buf_off[6]) / 2u);
-            uint16_t fl_off = (uint16_t)(((uint32_t)adc_dma_buf_off[5] + (uint32_t)adc_dma_buf_off[7]) / 2u);
-            uint16_t fr_on  = (uint16_t)(((uint32_t)adc_dma_buf_on[4]  + (uint32_t)adc_dma_buf_on[6])  / 2u);
-            uint16_t fl_on  = (uint16_t)(((uint32_t)adc_dma_buf_on[5]  + (uint32_t)adc_dma_buf_on[7])  / 2u);
-
-            ad_fr_off = fr_off;
-            ad_fl_off = fl_off;
-            ad_fr_raw = fr_on;
-            ad_fl_raw = fl_on;
-            ad_fr = max((int)ad_fr_raw - (int)ad_fr_off - (int)wall_offset_fr, 0);
-            ad_fl = max((int)ad_fl_raw - (int)ad_fl_off - (int)wall_offset_fl, 0);
-
-            // IRをOFFに戻す
-            HAL_GPIO_WritePin(IR_FR_GPIO_Port, IR_FR_Pin, GPIO_PIN_RESET);
-            HAL_GPIO_WritePin(IR_FL_GPIO_Port, IR_FL_Pin, GPIO_PIN_RESET);
-
-            // バッテリーも更新（どちらのバッファからでも可）
-            ad_bat = adc_dma_buf_off[8];
         }
-
-        // 2相トグル
-        ADC_task_counter ^= 1u;
     }
 
     if (htim->Instance == htim5.Instance) {
@@ -164,6 +140,69 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 
 
 } /* HAL_TIM_PeriodElapsedCallback */
+
+// ADC DMA 完了コールバック（DMA2_Stream0 IRQ内でHALにより呼ばれる）
+void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
+{
+    if (hadc->Instance != ADC1) {
+        return;
+    }
+
+    // Rankマップ: 0,2=R; 1,3=L; 4,6=FR; 5,7=FL; 8=BAT
+    switch (s_adc_phase & 0x07u) {
+        case 3: { // RL ON capture 完了 -> 差分算出
+            uint16_t r_off = (uint16_t)(((uint32_t)adc_dma_buf_off[0] + (uint32_t)adc_dma_buf_off[2]) / 2u);
+            uint16_t l_off = (uint16_t)(((uint32_t)adc_dma_buf_off[1] + (uint32_t)adc_dma_buf_off[3]) / 2u);
+            uint16_t r_on  = (uint16_t)(((uint32_t)adc_dma_buf_on[0]  + (uint32_t)adc_dma_buf_on[2])  / 2u);
+            uint16_t l_on  = (uint16_t)(((uint32_t)adc_dma_buf_on[1]  + (uint32_t)adc_dma_buf_on[3])  / 2u);
+
+            ad_r_off = r_off;
+            ad_l_off = l_off;
+            ad_r_raw = r_on;
+            ad_l_raw = l_on;
+            ad_r = max((int)ad_r_raw - (int)ad_r_off - (int)wall_offset_r, 0);
+            ad_l = max((int)ad_l_raw - (int)ad_l_off - (int)wall_offset_l, 0);
+
+            // LEDをOFFに戻す
+            HAL_GPIO_WritePin(IR_R_GPIO_Port, IR_R_Pin, GPIO_PIN_RESET);
+            HAL_GPIO_WritePin(IR_L_GPIO_Port, IR_L_Pin, GPIO_PIN_RESET);
+
+            // グループ識別（互換性: RL=0）
+            ADC_task_counter = 0;
+            break;
+        }
+        case 7: { // FR/FL ON capture 完了 -> 差分算出
+            uint16_t fr_off = (uint16_t)(((uint32_t)adc_dma_buf_off[4] + (uint32_t)adc_dma_buf_off[6]) / 2u);
+            uint16_t fl_off = (uint16_t)(((uint32_t)adc_dma_buf_off[5] + (uint32_t)adc_dma_buf_off[7]) / 2u);
+            uint16_t fr_on  = (uint16_t)(((uint32_t)adc_dma_buf_on[4]  + (uint32_t)adc_dma_buf_on[6])  / 2u);
+            uint16_t fl_on  = (uint16_t)(((uint32_t)adc_dma_buf_on[5]  + (uint32_t)adc_dma_buf_on[7])  / 2u);
+
+            ad_fr_off = fr_off;
+            ad_fl_off = fl_off;
+            ad_fr_raw = fr_on;
+            ad_fl_raw = fl_on;
+            ad_fr = max((int)ad_fr_raw - (int)ad_fr_off - (int)wall_offset_fr, 0);
+            ad_fl = max((int)ad_fl_raw - (int)ad_fl_off - (int)wall_offset_fl, 0);
+
+            // LEDをOFFに戻す
+            HAL_GPIO_WritePin(IR_FR_GPIO_Port, IR_FR_Pin, GPIO_PIN_RESET);
+            HAL_GPIO_WritePin(IR_FL_GPIO_Port, IR_FL_Pin, GPIO_PIN_RESET);
+
+            // バッテリー更新（OFF側の最新値）
+            ad_bat = adc_dma_buf_off[8];
+
+            // グループ識別（互換性: FR/FL=1）
+            ADC_task_counter = 1;
+            break;
+        }
+        default:
+            break;
+    }
+
+    // 次回に進める（capture相はCBで進める）
+    s_adc_inflight = 0;
+    s_adc_phase = (uint8_t)((s_adc_phase + 1u) & 0x07u);
+}
 
 //+++++++++++++++++++++++++++++++++++++++++++++++
 // tim1_wait_us
