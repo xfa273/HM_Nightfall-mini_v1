@@ -498,6 +498,9 @@ void ICM20689_DataUpdate(void) {
 }
 
 // センサオフセット値を起動時に複数回測定して平均化する
+// 定義: 壁無し・静止状態での LED 同期差分 (ad_on - ad_off) の平均値を
+//       LED 由来の漏れ/筐体内反射の定常成分として wall_offset_* に保存する。
+// これによりランタイムの ad = (ad_on - ad_off) - wall_offset_* が環境光に頑健になる。
 void get_sensor_offsets(void) {
     const int NUM_SAMPLES = 10;  // 測定回数
     int i;
@@ -510,8 +513,8 @@ void get_sensor_offsets(void) {
     
     // 起動時ログを抑制
     
-    // interrupt.cですでに実装されているADCの値取得を使用する
-    // interruption処理が複数回走るのを待つ
+    // interrupt.c ですでに実装されている ADC の LED ON/OFF 差分更新を使用する
+    // 割り込み処理が複数回走るのを待つ
     for (i = 0; i < NUM_SAMPLES; i++) {
         // ADCタスクカウンタが一周するのを待つ（センサ値が更新されるのを待つ）
         uint8_t current_counter = ADC_task_counter;
@@ -525,22 +528,27 @@ void get_sensor_offsets(void) {
             }
         }
 
-        // LEDが発光しているときのオフセット値（壁なしでも受光する光量）を加算
-        sum_r += ad_r_raw;  // LEDが発光しているときの受光量
-        sum_l += ad_l_raw;
-        sum_fr += ad_fr_raw;
-        sum_fl += ad_fl_raw;
+        // LED ON/OFF 差分（ad_on - ad_off）のみを加算（負値は0に丸め）
+        int32_t dr  = (int32_t)ad_r_raw  - (int32_t)ad_r_off;  if (dr  < 0) dr  = 0;
+        int32_t dl  = (int32_t)ad_l_raw  - (int32_t)ad_l_off;  if (dl  < 0) dl  = 0;
+        int32_t dfr = (int32_t)ad_fr_raw - (int32_t)ad_fr_off; if (dfr < 0) dfr = 0;
+        int32_t dfl = (int32_t)ad_fl_raw - (int32_t)ad_fl_off; if (dfl < 0) dfl = 0;
+
+        sum_r  += (uint32_t)dr;
+        sum_l  += (uint32_t)dl;
+        sum_fr += (uint32_t)dfr;
+        sum_fl += (uint32_t)dfl;
 
         HAL_Delay(10); // 少し待機して次のサンプルを取得
     }
     
     // 平均値を計算して設定
-    // LEDが発光しているときの基本受光量をオフセット値として設定
+    // LED 同期差分の基本成分をオフセット値として設定
     // 新しい変数にオフセット値を保存（割り込みで上書きされない）
-    wall_offset_r = sum_r / NUM_SAMPLES;
-    wall_offset_l = sum_l / NUM_SAMPLES;
-    wall_offset_fr = sum_fr / NUM_SAMPLES;
-    wall_offset_fl = sum_fl / NUM_SAMPLES;
+    wall_offset_r  = (uint16_t)(sum_r  / (uint32_t)NUM_SAMPLES);
+    wall_offset_l  = (uint16_t)(sum_l  / (uint32_t)NUM_SAMPLES);
+    wall_offset_fr = (uint16_t)(sum_fr / (uint32_t)NUM_SAMPLES);
+    wall_offset_fl = (uint16_t)(sum_fl / (uint32_t)NUM_SAMPLES);
     
     // 起動時ログを抑制
 }
