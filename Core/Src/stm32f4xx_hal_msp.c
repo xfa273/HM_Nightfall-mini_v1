@@ -116,7 +116,31 @@ void HAL_ADC_MspInit(ADC_HandleTypeDef* hadc)
     HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
     /* USER CODE BEGIN ADC1_MspInit 1 */
+    /* Enable DMA2 clock */
+    __HAL_RCC_DMA2_CLK_ENABLE();
 
+    /* Configure DMA2 Stream0 Channel0 for ADC1 Regular conversions */
+    hdma_adc1.Instance = DMA2_Stream0;
+    hdma_adc1.Init.Channel = DMA_CHANNEL_0;
+    hdma_adc1.Init.Direction = DMA_PERIPH_TO_MEMORY;
+    hdma_adc1.Init.PeriphInc = DMA_PINC_DISABLE;
+    hdma_adc1.Init.MemInc = DMA_MINC_ENABLE;
+    hdma_adc1.Init.PeriphDataAlignment = DMA_PDATAALIGN_HALFWORD;
+    hdma_adc1.Init.MemDataAlignment = DMA_MDATAALIGN_HALFWORD;
+    hdma_adc1.Init.Mode = DMA_NORMAL;
+    hdma_adc1.Init.Priority = DMA_PRIORITY_LOW;
+    hdma_adc1.Init.FIFOMode = DMA_FIFOMODE_DISABLE;
+    if (HAL_DMA_Init(&hdma_adc1) != HAL_OK)
+    {
+      Error_Handler();
+    }
+
+    /* Link DMA handle to ADC */
+    __HAL_LINKDMA(hadc, DMA_Handle, hdma_adc1);
+
+    /* DMA2 Stream0 interrupt init */
+    HAL_NVIC_SetPriority(DMA2_Stream0_IRQn, 1, 0);
+    HAL_NVIC_EnableIRQ(DMA2_Stream0_IRQn);
     /* USER CODE END ADC1_MspInit 1 */
 
   }
@@ -151,7 +175,10 @@ void HAL_ADC_MspDeInit(ADC_HandleTypeDef* hadc)
     HAL_GPIO_DeInit(GPIOA, SENSOR_FR_Pin|SENSOR_R_Pin|SENSOR_FL_Pin|SENSOR_L_Pin);
 
     /* USER CODE BEGIN ADC1_MspDeInit 1 */
-
+    /* De-Initialize DMA */
+    HAL_DMA_DeInit(hadc->DMA_Handle);
+    /* DMA2 Stream0 interrupt DeInit */
+    HAL_NVIC_DisableIRQ(DMA2_Stream0_IRQn);
     /* USER CODE END ADC1_MspDeInit 1 */
   }
 

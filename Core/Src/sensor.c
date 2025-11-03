@@ -20,6 +20,24 @@ static void print_wall_offsets(const char* label)
 }
 
 //+++++++++++++++++++++++++++++++++++++++++++++++
+// ADC DMA helpers
+//+++++++++++++++++++++++++++++++++++++++++++++++
+HAL_StatusTypeDef sensor_adc_dma_start(volatile uint16_t *dst)
+{
+    // Ensure previous DMA is stopped
+    (void)HAL_ADC_Stop_DMA(&hadc1);
+
+    // Start regular group conversion with DMA into provided buffer (9 ranks)
+    return HAL_ADC_Start_DMA(&hadc1, (uint32_t*)dst, 9);
+}
+
+HAL_StatusTypeDef sensor_adc_dma_wait(uint32_t timeout_ms)
+{
+    // Wait until full transfer complete
+    return HAL_DMA_PollForTransfer(&hdma_adc1, HAL_DMA_FULL_TRANSFER, timeout_ms);
+}
+
+//+++++++++++++++++++++++++++++++++++++++++++++++
 // sensor_init
 // センサ系の変数の初期化，ADコンバータの設定とセンサ値取得に使用するタイマの設定をする
 // 引数：なし
@@ -117,7 +135,7 @@ HAL_StatusTypeDef sensor_recalibrate_and_save(void)
 int get_adc_value(ADC_HandleTypeDef *hadc, uint32_t channel) {
     (void)channel;
     HAL_ADC_Start(hadc);                  // AD変換を開始する
-    HAL_ADC_PollForConversion(hadc, 150); // AD変換終了まで待機する
+    HAL_ADC_PollForConversion(hadc, 300); // AD変換終了まで待機する
     return (HAL_ADC_GetValue(hadc) * K_SENSOR); // AD変換結果を取得する
 }
 

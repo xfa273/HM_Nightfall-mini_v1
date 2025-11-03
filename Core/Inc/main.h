@@ -40,6 +40,9 @@ extern "C" {
 extern ADC_HandleTypeDef hadc1;
 extern ADC_HandleTypeDef hadc2;
 
+// DMA handle for ADC1 (used for DMA-based sensor acquisition)
+extern DMA_HandleTypeDef hdma_adc1;
+
 extern SPI_HandleTypeDef hspi1;
 extern SPI_HandleTypeDef hspi3;
 

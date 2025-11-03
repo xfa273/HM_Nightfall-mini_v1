@@ -395,8 +395,7 @@ void test_mode() {
 
             printf("Test Mode 8 .\n");
 
-            // 新ソルバで経路導出（mode=3, case=3 をデフォルト例として使用）
-            solver_run(3, 3);
+
 
             break;
 
