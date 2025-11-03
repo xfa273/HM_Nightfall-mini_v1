@@ -52,6 +52,7 @@ void sensor_init(void) {
 
     HAL_TIM_Base_Start_IT(&htim1);
     HAL_TIM_Base_Start_IT(&htim5);
+    HAL_TIM_Base_Start_IT(&htim6);
 
     // センサのオフセット値をフラッシュから読み込み（有効なら使用）
     // 失敗した場合のみ測定を実施

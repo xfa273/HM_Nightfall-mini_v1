@@ -16,8 +16,8 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
         // printf("TIM1 Interrupt\n");
     }
 
-    if (htim->Instance == htim5.Instance) {
-        // TIM5の割り込み処理 1kHz
+    if (htim->Instance == htim6.Instance) {
+        // TIM6の割り込み処理 4kHz（センサ専用、2相スケジュール）
 
         // センサ値の取得（DMA一括スキャン, 9ランク: CH1,3,1,3,0,2,0,2,10）
         if (ADC_task_counter == 0) {
@@ -55,9 +55,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
             HAL_GPIO_WritePin(IR_R_GPIO_Port, IR_R_Pin, GPIO_PIN_RESET);
             HAL_GPIO_WritePin(IR_L_GPIO_Port, IR_L_Pin, GPIO_PIN_RESET);
 
-            ADC_task_counter++;
-
-        } else if (ADC_task_counter == 1) {
+        } else /* ADC_task_counter == 1 */ {
 
             // LED OFF (FR/FL) をサンプル
             HAL_GPIO_WritePin(IR_FR_GPIO_Port, IR_FR_Pin, GPIO_PIN_RESET);
@@ -94,13 +92,14 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 
             // バッテリーも更新（どちらのバッファからでも可）
             ad_bat = adc_dma_buf_off[8];
-
-            ADC_task_counter++;
-
-        } else {
-            // タスクカウンタをリセット
-            ADC_task_counter = 0;
         }
+
+        // 2相トグル
+        ADC_task_counter ^= 1u;
+    }
+
+    if (htim->Instance == htim5.Instance) {
+        // TIM5の割り込み処理 1kHz（制御系・IMU・エンコーダ等、センサ読み取りはTIM6へ移設）
 
         // 前壁補正の判定
         if (ad_fr > WALL_BASE_FR * 1.1 && ad_fl > WALL_BASE_FL * 1.1) {
@@ -112,7 +111,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
         // エンコーダ値の取得
         read_encoder();
 
-        // IMU値の取得
+        // IMU値の取得（センサ処理と分離済み）
         read_IMU();
 
         // バッテリー電圧の監視
