@@ -67,12 +67,12 @@
     センサ系
 ------------------------------------------------------------*/
 /*壁判断閾値*/
-#define WALL_BASE_FR  360   // 前壁右センサ    //330
-#define WALL_BASE_FL  360   // 前壁左センサ    //330
-#define WALL_BASE_R   450   // 右壁センサ  //410
-#define WALL_BASE_L   450   // 左壁センサ  //410
+#define WALL_BASE_FR  330   // 前壁右センサ    //330
+#define WALL_BASE_FL  330   // 前壁左センサ    //330
+#define WALL_BASE_R   410   // 右壁センサ  //410
+#define WALL_BASE_L   410   // 左壁センサ  //410
 #define WALL_DIFF_THR 22   // 壁センサ値の変化量のしきい値
-#define K_SENSOR      0.96F // センサの補正値 0.94F
+#define K_SENSOR      1.0F // センサの補正値 0.94F
 
 // 壁切れ判定専用しきい値（高速走行向けに独立調整可能）
 // 既定値は探索用と同一。必要に応じて実機に合わせて変更してください。
@@ -122,8 +122,8 @@
 
 /* 前壁センサを用いた中央合わせ（非接触）用パラメータ */
 // 区画中央における前壁センサの目標値（実機で調整）
-#define F_ALIGN_TARGET_FR    3335   // 3750
-#define F_ALIGN_TARGET_FL    3410   // 3790
+#define F_ALIGN_TARGET_FR    3750   // 3750
+#define F_ALIGN_TARGET_FL    3790   // 3790
 // 小鷺田寮: FR3750 FL3790
 // 九州: FR3587 FL3587
 
@@ -131,7 +131,7 @@
 #define F_ALIGN_DETECT_THR   500
 
 // 閉ループ制御ゲイン（実機調整用）
-#define MATCH_POS_KP_TRANS   0.3F   // [mm/s] / [ADcount]
+#define MATCH_POS_KP_TRANS   0.6F   // [mm/s] / [ADcount]
 #define MATCH_POS_KP_ROT     0.2F   // [deg/s] / [ADcount]
 
 // 飽和・許容値・タイムアウト
