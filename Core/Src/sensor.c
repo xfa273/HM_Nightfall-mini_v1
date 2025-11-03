@@ -31,12 +31,6 @@ HAL_StatusTypeDef sensor_adc_dma_start(volatile uint16_t *dst)
     return HAL_ADC_Start_DMA(&hadc1, (uint32_t*)dst, 9);
 }
 
-HAL_StatusTypeDef sensor_adc_dma_wait(uint32_t timeout_ms)
-{
-    // Wait until full transfer complete
-    return HAL_DMA_PollForTransfer(&hdma_adc1, HAL_DMA_FULL_TRANSFER, timeout_ms);
-}
-
 //+++++++++++++++++++++++++++++++++++++++++++++++
 // sensor_init
 // センサ系の変数の初期化，ADコンバータの設定とセンサ値取得に使用するタイマの設定をする

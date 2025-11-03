@@ -37,10 +37,6 @@ typedef struct {
 } LogBuffer;
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim);
-void wait_ms(int time);
-void wait_ms_non_block(int time);
-int check_ms_passed(int time);
-void wait_us(int time);
 void tim1_wait_us(uint32_t us);
 
 #ifdef MAIN_C_ // main.cからこのファイルが呼ばれている場合

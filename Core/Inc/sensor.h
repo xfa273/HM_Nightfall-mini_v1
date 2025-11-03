@@ -117,8 +117,6 @@ extern volatile uint16_t adc_dma_buf_on[9];
 
 // ADC DMA ワンショットスキャンを開始（dst に 9サンプルを格納）
 HAL_StatusTypeDef sensor_adc_dma_start(volatile uint16_t *dst);
-// DMA転送完了をポーリング（ブロッキング）。タイムアウト[ms]を指定
-HAL_StatusTypeDef sensor_adc_dma_wait(uint32_t timeout_ms);
 
 // フラッシュ保存/読込API（迷路用領域とは別セクタに保存）
 // センサ基準値・オフセットなどを保存/読込する
