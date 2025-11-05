@@ -15,8 +15,8 @@
     走行系
 ------------------------------------------------------------*/
 /*走行パラメータ*/
-#define D_TIRE            13.75F// タイヤ直径[mm] 13.75F
-#define DIST_HALF_SEC     45.3  // 迷路の半区間距離[mm] 0.94
+#define D_TIRE            12.9F// タイヤ直径[mm] 13.75F
+#define DIST_HALF_SEC     45.0  // 迷路の半区間距離[mm] 0.94
 // 探索走行用の半区間距離[mm]（初期値は通常と同じ。探索専用に短くしたい場合に調整）
 #define DIST_HALF_SEC_SEARCH  45
 #define DIST_D_HALF_SEC   67.279 // 斜めの半区間距離[mm]

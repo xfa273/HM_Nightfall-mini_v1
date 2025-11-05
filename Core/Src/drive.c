@@ -372,11 +372,22 @@ void one_section(void) {}
 //+++++++++++++++++++++++++++++++++++++++++++++++
 void one_sectionU(uint8_t CTRL) {
     (void)CTRL;
-    // 壁制御ONのまま、1区画を2mm刻みで走行しながら壁切れ検知を監視する
+    // 壁制御ONのまま、TEST_MODE では壁切れ補正なしで固定距離を走行
     MF.FLAG.CTRL = 1;
 
     const float v_const = speed_now; // 等速維持
 
+    // テストモードでは距離の変化する補正（壁切れ検知・追従）を無効化
+    if (MF.FLAG.TEST_MODE) {
+        // 1区画 = blocksで2.0 をそのまま等速で走る
+        run_straight(2.0f, v_const, 0);
+        MF.FLAG.CTRL = 0;
+        speed_now = v_const;
+        get_wall_info();
+        return;
+    }
+
+    // 通常動作: 1区画を2mm刻みで走行しながら壁切れ検知を監視
     // 壁切れ検知のアーム（探索中でも検出できるようにSCNDを一時的に有効化）
     uint8_t prev_scnd = MF.FLAG.SCND;
     MF.FLAG.R_WALL_END = 0;
@@ -1166,6 +1177,11 @@ void driveA(float dist, float spd_in, float spd_out, float dist_wallend) {
     // 加速度を設定
     acceleration_interrupt = (spd_out * spd_out - spd_in * spd_in) / (2 * dist);
 
+    // 目標速度の積分距離で終了判定するため、ターゲット距離をゼロクリアし
+    // 目標速度（velocity_interrupt）を初期速度 spd_in に初期化する
+    target_distance = 0;
+    velocity_interrupt = spd_in;
+
     // printf("acceleration_interrupt: %.2f\n", acceleration_interrupt);
 
     // 回転角度カウントをリセット
@@ -1180,22 +1196,22 @@ void driveA(float dist, float spd_in, float spd_out, float dist_wallend) {
 
     drive_start();
 
-    // 実際の距離が目標距離になるまで走行
+    // 目標速度を積分した距離（target_distance）が目標距離に達するまで走行
     if (acceleration_interrupt > 0) {
 
-        while (real_distance < dist) {
+        while (target_distance < dist) {
             background_replan_tick();
         }
 
     } else if (acceleration_interrupt <= 0) {
 
         if (MF.FLAG.F_WALL_STOP) {
-            while (real_distance < dist && velocity_interrupt > 0 &&
+            while (target_distance < dist && velocity_interrupt > 0 &&
                    (ad_fl + ad_fr) < thr_f_wall) {
                 background_replan_tick();
             };
         } else {
-            while (real_distance < dist && velocity_interrupt > 0) {
+            while (target_distance < dist && velocity_interrupt > 0) {
                 background_replan_tick();
             };
         }
@@ -1461,11 +1477,11 @@ void driveFWall(float dist, float spd_in, float spd_out) {
 
     drive_start();
 
-    // 実際の距離が目標距離になるか前壁しきい値に達した時点で抜ける。
+    // 目標距離（target_distance）が目標値に達するか前壁しきい値に達した時点で抜ける。
     // 未検知の場合は、WALL_END_EXTEND_MAX_MM の範囲で距離を延長して検出を待つ。
     bool reached = false;
     if (MF.FLAG.SLALOM_R) {
-        while (real_distance < dist) {
+        while (target_distance < dist) {
             background_replan_tick();
             if (MF.FLAG.F_WALL && (ad_fr + ad_fl) >= val_offset_in) {
                 reached = true;
@@ -1473,7 +1489,7 @@ void driveFWall(float dist, float spd_in, float spd_out) {
             }
         }
     } else if (MF.FLAG.SLALOM_L) {
-        while (real_distance < dist) {
+        while (target_distance < dist) {
             background_replan_tick();
             if (MF.FLAG.F_WALL && (ad_fr + ad_fl) >= val_offset_in) {
                 reached = true;
@@ -1490,7 +1506,7 @@ void driveFWall(float dist, float spd_in, float spd_out) {
             // 延長区間は等速で追従
             acceleration_interrupt = 0;
             velocity_interrupt = spd_out;
-            while (real_distance < dist_end) {
+            while (target_distance < dist_end) {
                 background_replan_tick();
                 if (MF.FLAG.F_WALL && (ad_fr + ad_fl) >= val_offset_in) {
                     reached = true;
@@ -2064,17 +2080,6 @@ void test_run(void) {
             log_start(HAL_GetTick());
             
             half_sectionA(0);
-            one_sectionU(0);
-            one_sectionU(0);
-            one_sectionU(0);
-            one_sectionU(0);
-            one_sectionU(0);
-            one_sectionU(0);
-            one_sectionU(0);
-            one_sectionU(0);
-            one_sectionU(0);
-            one_sectionU(0);
-            one_sectionU(0);
             one_sectionU(0);
             one_sectionU(0);
             one_sectionU(0);

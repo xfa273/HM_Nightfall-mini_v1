@@ -17,6 +17,9 @@ void test_mode() {
 
     int mode = 0;
 
+    // テストモードのフラグを有効化（壁切れ補正など距離が変化する補正を無効化するためのゲートに使用）
+    MF.FLAG.TEST_MODE = 1;
+
     while (1) {
         mode = select_mode(mode);
 
@@ -395,7 +398,13 @@ void test_mode() {
 
             printf("Test Mode 8 .\n");
 
+            while (1) {
+                printf("R: %d, L: %d, FR: %d, FL: %d, BAT: %d\n", ad_r_raw, ad_l_raw,
+                       ad_fr_raw, ad_fl_raw, ad_bat);
 
+                HAL_Delay(300);
+            }
+            break;
 
             break;
 

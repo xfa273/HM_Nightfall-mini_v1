@@ -49,7 +49,7 @@ typedef union { // 共用体の宣言
         uint64_t WALL_END : 1;      // B20: 壁切れ探しフラグ
         uint64_t CTRL_DIAGONAL : 1; // B21: 斜め制御フラグ
         uint64_t WALL_ALIGN : 1;    // B22: 壁揃えフラグ
-        uint64_t SPARE_08 : 1;      // B23:
+        uint64_t TEST_MODE : 1;      // B23: テストモードフラグ（テスト時の補正無効化等に使用）
         uint64_t SPARE_09 : 1;      // B24:
         uint64_t SPARE_10 : 1;      // B25:
         uint64_t SPARE_11 : 1;      // B26:
