@@ -8,6 +8,7 @@
 #include "global.h"
 #include "interrupt.h"
 #include "logging.h"
+#include "params.h"
 
 // 非同期ADC DMA制御用ステート
 // 8相スケジュール（250us刻み）でIR安定待ちを確保
@@ -15,6 +16,22 @@
 // 4:FR/FL OFF set, 5:FR/FL OFF capture, 6:FR/FL ON set, 7:FR/FL ON capture
 static volatile uint8_t s_adc_phase = 0;
 static volatile uint8_t s_adc_inflight = 0;  // 0:idle, 1:converting (DMA中)
+
+// センサ差分後の移動平均（SENSOR_MA_TAPSで切替、1で無効）
+#if SENSOR_MA_TAPS < 1
+#undef SENSOR_MA_TAPS
+#define SENSOR_MA_TAPS 1
+#endif
+
+#if SENSOR_MA_TAPS > 1
+static uint16_t s_ma_buf_r[SENSOR_MA_TAPS];
+static uint16_t s_ma_buf_l[SENSOR_MA_TAPS];
+static uint16_t s_ma_buf_fr[SENSOR_MA_TAPS];
+static uint16_t s_ma_buf_fl[SENSOR_MA_TAPS];
+static uint32_t s_ma_sum_r = 0, s_ma_sum_l = 0, s_ma_sum_fr = 0, s_ma_sum_fl = 0;
+static uint8_t  s_ma_idx_rl = 0, s_ma_idx_frfl = 0;
+static uint8_t  s_ma_count_rl = 0, s_ma_count_frfl = 0; // 立ち上がり中は有効長を短く
+#endif
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
     if (htim->Instance == htim1.Instance) {
@@ -163,6 +180,25 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
             ad_r = max((int)ad_r_raw - (int)ad_r_off - (int)wall_offset_r, 0);
             ad_l = max((int)ad_l_raw - (int)ad_l_off - (int)wall_offset_l, 0);
 
+#if SENSOR_MA_TAPS > 1
+            // RLグループ移動平均
+            uint16_t v_r = (uint16_t)ad_r;
+            uint16_t v_l = (uint16_t)ad_l;
+            uint16_t old_r = s_ma_buf_r[s_ma_idx_rl];
+            uint16_t old_l = s_ma_buf_l[s_ma_idx_rl];
+            s_ma_sum_r += v_r - old_r;
+            s_ma_sum_l += v_l - old_l;
+            s_ma_buf_r[s_ma_idx_rl] = v_r;
+            s_ma_buf_l[s_ma_idx_rl] = v_l;
+            if (s_ma_count_rl < SENSOR_MA_TAPS) {
+                s_ma_count_rl++;
+            }
+            s_ma_idx_rl++;
+            if (s_ma_idx_rl >= SENSOR_MA_TAPS) s_ma_idx_rl = 0;
+            ad_r = (int)(s_ma_sum_r / s_ma_count_rl);
+            ad_l = (int)(s_ma_sum_l / s_ma_count_rl);
+#endif
+
             // LEDをOFFに戻す
             HAL_GPIO_WritePin(IR_R_GPIO_Port, IR_R_Pin, GPIO_PIN_RESET);
             HAL_GPIO_WritePin(IR_L_GPIO_Port, IR_L_Pin, GPIO_PIN_RESET);
@@ -183,6 +219,25 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
             ad_fl_raw = fl_on;
             ad_fr = max((int)ad_fr_raw - (int)ad_fr_off - (int)wall_offset_fr, 0);
             ad_fl = max((int)ad_fl_raw - (int)ad_fl_off - (int)wall_offset_fl, 0);
+
+#if SENSOR_MA_TAPS > 1
+            // FR/FLグループ移動平均
+            uint16_t v_fr = (uint16_t)ad_fr;
+            uint16_t v_fl = (uint16_t)ad_fl;
+            uint16_t old_fr = s_ma_buf_fr[s_ma_idx_frfl];
+            uint16_t old_fl = s_ma_buf_fl[s_ma_idx_frfl];
+            s_ma_sum_fr += v_fr - old_fr;
+            s_ma_sum_fl += v_fl - old_fl;
+            s_ma_buf_fr[s_ma_idx_frfl] = v_fr;
+            s_ma_buf_fl[s_ma_idx_frfl] = v_fl;
+            if (s_ma_count_frfl < SENSOR_MA_TAPS) {
+                s_ma_count_frfl++;
+            }
+            s_ma_idx_frfl++;
+            if (s_ma_idx_frfl >= SENSOR_MA_TAPS) s_ma_idx_frfl = 0;
+            ad_fr = (int)(s_ma_sum_fr / s_ma_count_frfl);
+            ad_fl = (int)(s_ma_sum_fl / s_ma_count_frfl);
+#endif
 
             // LEDをOFFに戻す
             HAL_GPIO_WritePin(IR_FR_GPIO_Port, IR_FR_Pin, GPIO_PIN_RESET);
