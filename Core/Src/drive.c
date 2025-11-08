@@ -2372,14 +2372,16 @@ void test_run(void) {
 
         case 8:
 
-            printf("Mode 4-8.\n");
+            printf("Mode 4-8 (rear set_position).\n");
 
-            // 前壁センサを使った非接触中央合わせ
+            // 尻当てによる中央合わせ（前壁がある想定で180度回して実施）
             led_flash(5);
             drive_variable_reset();
             IMU_GetOffset();
             drive_enable_motor();
-            match_position(0);
+            rotate_180();
+            set_position();
+            rotate_180();
             buzzer_beep(1200);
             drive_stop();
 

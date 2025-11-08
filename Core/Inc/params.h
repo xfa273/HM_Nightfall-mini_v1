@@ -116,7 +116,7 @@
 
 /* センサ差分後の移動平均フィルタ段数（1で無効） */
 #ifndef SENSOR_MA_TAPS
-#define SENSOR_MA_TAPS 3   // 推奨: 2~4。1で無効化。
+#define SENSOR_MA_TAPS 1   // 推奨: 2~4。1で無効化。
 #endif
 
 // 探索中の横壁ズレ検出しきい値（wall_PIDで算出するlatest_wall_error[ADcount]の絶対値）

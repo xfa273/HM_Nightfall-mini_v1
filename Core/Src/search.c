@@ -259,19 +259,22 @@ void adachi(void) {
                 one_sectionD();
                 acceled = false;
             } else if (!acceled && fabsf(latest_wall_error) > WALL_ALIGN_ERR_THR && MF.FLAG.WALL_ALIGN) {
+                // 壁に対する向きを“後ろ向き”にして尻当て(set_position)で中央合わせ
                 if (ad_r > WALL_BASE_R * 1.3) {
+                    // 右壁で合わせる場合: 北→西（L90）に向けて尻（東向き）を右壁に当てる
                     half_sectionD(0);
-                    rotate_R90();
-                    match_position(0);
                     rotate_L90();
+                    set_position();
+                    rotate_R90();
                     half_sectionA(1);
                 } else if (ad_l > WALL_BASE_L * 1.3) {
+                    // 左壁で合わせる場合: 北→東（R90）に向けて尻（西向き）を左壁に当てる
                     half_sectionD(0);
-                    rotate_L90();
-                    match_position(0);
                     rotate_R90();
+                    set_position();
+                    rotate_L90();
                     half_sectionA(1);
-                }else{
+                } else {
                     one_sectionU(1);
                 }
             } else {
@@ -323,15 +326,20 @@ void adachi(void) {
             }
 
             if (ad_fr > WALL_BASE_FR * 1.5 && ad_fl > WALL_BASE_FL * 1.5) {
-                match_position(0);
+                // 前壁での中央合わせを、後向きの尻当てに置換（向きが逆）
+                rotate_180();
+                set_position();
+                rotate_180();
                 if (r_wall) {
-                    rotate_R90();
-                    match_position(0);
-                    rotate_R90();
+                    // 右壁を使ってさらに合わせる: 北→西（L90）、尻を右壁へ→北へ戻す（+L90で合計180）
+                    rotate_L90();
+                    set_position();
+                    rotate_L90();
                 } else if (l_wall) {
-                    rotate_L90();
-                    match_position(0);
-                    rotate_L90();
+                    // 左壁を使ってさらに合わせる: 北→東（R90）、尻を左壁へ→北へ戻す（+R90で合計180）
+                    rotate_R90();
+                    set_position();
+                    rotate_R90();
                 } else {
                     rotate_180();
                 }
