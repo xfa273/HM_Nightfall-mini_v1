@@ -15,7 +15,7 @@
     走行系
 ------------------------------------------------------------*/
 /*走行パラメータ*/
-#define D_TIRE            12.9F// タイヤ直径[mm] 13.75F
+#define D_TIRE            12.5F// タイヤ直径[mm] 13.75F
 #define DIST_HALF_SEC     45.0  // 迷路の半区間距離[mm] 0.94
 // 探索走行用の半区間距離[mm]（初期値は通常と同じ。探索専用に短くしたい場合に調整）
 #define DIST_HALF_SEC_SEARCH  45
@@ -96,8 +96,8 @@
 #define WALL_END_EXTEND_MAX_MM  30.0F
 #endif
 
-#define WALL_CTRL_BASE_L 1510 // 壁制御の基準値（左） 2135
-#define WALL_CTRL_BASE_R 1940 // 壁制御の基準値（右） 2100
+#define WALL_CTRL_BASE_L 2000// 壁制御の基準値（左） 2135
+#define WALL_CTRL_BASE_R 2240 // 壁制御の基準値（右） 2100
 // 小鷺田寮: L1941 R1989
 // 九州: L1861 R2060
 
@@ -124,8 +124,8 @@
 
 /* 前壁センサを用いた中央合わせ（非接触）用パラメータ */
 // 区画中央における前壁センサの目標値（実機で調整）
-#define F_ALIGN_TARGET_FR    3750   // 3750
-#define F_ALIGN_TARGET_FL    3790   // 3790
+#define F_ALIGN_TARGET_FR    3500*0.85   // 3750
+#define F_ALIGN_TARGET_FL    3515*0.85   // 3790
 // 小鷺田寮: FR3750 FL3790
 // 九州: FR3587 FL3587
 

@@ -2010,7 +2010,7 @@ void test_run(void) {
             // 壁切れ後の距離
             dist_wall_end = 0;
             // 壁制御とケツ当て
-            kp_wall = 0.05;
+            kp_wall = 0.0;
             duty_setposition = 40;
 
             velocity_interrupt = 0;
@@ -2063,7 +2063,7 @@ void test_run(void) {
             // 壁切れ後の距離
             dist_wall_end = 0;
             // 壁制御とケツ当て
-            kp_wall = 0.05;
+            kp_wall = 0.0;
             duty_setposition = 40;
 
             velocity_interrupt = 0;
@@ -2080,7 +2080,6 @@ void test_run(void) {
             log_start(HAL_GetTick());
             
             half_sectionA(0);
-            one_sectionU(0);
             one_sectionU(0);
             one_sectionU(0);
             half_sectionD(0);
