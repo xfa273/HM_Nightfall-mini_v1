@@ -136,6 +136,11 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 
             drive_motor();
         }
+
+        // 新しいロギング機能の実装（1ms固定。TIM6等の高速タイマでは呼ばない）
+        if (MF.FLAG.GET_LOG_1) {
+            log_capture_tick();
+        }
     }
 
     if (wall_end_count > 1) {
@@ -149,12 +154,6 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
         HAL_TIM_PWM_Stop(&htim3, TIM_CHANNEL_2);
         buzzer_count = 0;
     }
-
-    // 新しいロギング機能の実装（プロファイル切替対応）
-    if (MF.FLAG.GET_LOG_1) {
-        log_capture_tick();
-    }
-
 
 } /* HAL_TIM_PeriodElapsedCallback */
 
