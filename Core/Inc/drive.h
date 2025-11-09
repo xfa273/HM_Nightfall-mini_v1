@@ -111,6 +111,14 @@ volatile float alpha_interrupt; // 割込み内の計算用の並進角加速度
 volatile float omega_interrupt; // 割込み内の計算用の角速度[deg/s]
 volatile float target_angle;    // 割込み内の計算用の角度[deg]
 
+/*sベース・プロファイルランナー用（並進）*/
+volatile uint8_t profile_active;     // 1: プロファイル駆動中
+volatile float   profile_s_end;      // 目標走行距離[mm]
+volatile float   profile_v_out;      // 終端速度[mm/s]
+volatile float   profile_v_max;      // 上限制限速度[mm/s]
+volatile float   profile_a_accel;    // 加速時の加速度[mm/s^2]
+volatile float   profile_a_decel;    // 減速時の加速度[mm/s^2]
+
 /*並進位置制御用*/
 volatile float real_distance;        // 実際の並進距離[mm]
 volatile float distance_error;       // 並進距離の偏差[mm]
@@ -146,14 +154,12 @@ volatile float out_rotate;           // 回転方向の出力
 /*エンコーダからの速度取得用*/
 volatile float encoder_count_r; // エンコーダのパルスカウント（右）
 volatile float encoder_count_l; // エンコーダのパルスカウント（左）
-volatile float
-    previous_encoder_count_r; // 1ループ前のエンコーダのパルスカウント（右）
-volatile float
-    previous_encoder_count_l; // 1ループ前のエンコーダのパルスカウント（左）
-volatile float encoder_speed_r; // エンコーダから取得した速度（右）
-volatile float encoder_speed_l; // エンコーダから取得した速度（左）
-volatile float encoder_distance_r; // エンコーダから取得した距離（右）
-volatile float encoder_distance_l; // エンコーダから取得した距離（左）
+volatile float previous_encoder_count_r; // 1ループ前のエンコーダのパルスカウント（右）
+volatile float previous_encoder_count_l; // 1ループ前のエンコーダのパルスカウント（左）
+volatile float encoder_speed_r; // エンコーダから取得した速度（右）[mm/s]
+volatile float encoder_speed_l; // エンコーダから取得した速度（左）[mm/s]
+volatile float encoder_distance_r; // エンコーダから取得した距離（右）[mm]
+volatile float encoder_distance_l; // エンコーダから取得した距離（左）[mm]
 
 /*IMUからの角度取得用*/
 volatile float IMU_angle; // IMUから取得した角度[deg]
@@ -187,12 +193,10 @@ volatile uint16_t wall_end_count;
 //  並進用
 extern volatile float velocity_straight;     // 直線の速度[mm/s]
 extern volatile float acceleration_straight; // 直線の加速度[mm/s^2]
-extern volatile float
-    acceleration_straight_dash; // 直線の半区画当たりの加速量[mm/s]
+extern volatile float acceleration_straight_dash; // 直線の半区画当たりの加速量[mm/s]
 extern volatile float velocity_d_straight;     // 斜め直線の速度[mm/s]
 extern volatile float acceleration_d_straight; // 斜め直線の加速度[mm/s^2]
-extern volatile float
-    acceleration_d_straight_dash; // 斜めs直線の半区画当たりの加速量[mm/s]
+extern volatile float acceleration_d_straight_dash; // 斜めs直線の半区画当たりの加速量[mm/s]
 extern volatile float acceleration_turn; //  ターンの減速度[mm/s^2]
 extern volatile float thr_f_wall; // 探索中に停止するための前壁閾値
 extern volatile float duty_setposition; // 壁当てのDuty[%]
@@ -215,15 +219,12 @@ extern volatile float velocity_l_turn_90; // 90°大回りターンの速度[mm/
 extern volatile float alpha_l_turn_90; // 90°大回りターンの角加速度[deg/sec^2]
 extern volatile float angle_l_turn_90; // 90°大回りターンの旋回角度[deg]
 extern volatile float dist_l_turn_in_90;  // 90°大回りターンの入オフセット距離[mm]
-extern volatile float
-    dist_l_turn_out_90; // 90°大回りターンの出オフセット距離[mm]
+extern volatile float dist_l_turn_out_90; // 90°大回りターンの出オフセット距離[mm]
 extern volatile float velocity_l_turn_180; // 180°大回りターンの速度[mm/s]
 extern volatile float alpha_l_turn_180; // 180°大回りターンの角加速度[deg/sec^2]
 extern volatile float angle_l_turn_180; // 180°大回りターンの旋回角度[deg]
-extern volatile float
-    dist_l_turn_in_180; // 180°大回りターンの入オフセット距離[mm]
-extern volatile float
-    dist_l_turn_out_180; // 180°大回りターンの出オフセット距離[mm]
+extern volatile float dist_l_turn_in_180;  // 180°大回りターンの入オフセット距離[mm]
+extern volatile float dist_l_turn_out_180; // 180°大回りターンの出オフセット距離[mm]
 
 // 斜め45度用
 extern volatile float velocity_turn45in; // 45°ターン入りの速度[mm/s]
@@ -248,15 +249,12 @@ extern volatile float dist_turnV90_out; // V90°ターンの出オフセット�
 extern volatile float velocity_turn135in; // 135°ターン入りの速度[mm/s]
 extern volatile float alpha_turn135in; // 135°ターン入りの角加速度[deg/sec^2]
 extern volatile float angle_turn135in; // 135°ターン入りの旋回角度[deg]
-extern volatile float
-    dist_turn135in_in; // 135°ターン入りの入りオフセット距離[mm]
-extern volatile float
-    dist_turn135in_out; // 135°ターン入りの出オフセット距離[mm]
+extern volatile float dist_turn135in_in; // 135°ターン入りの入りオフセット距離[mm]
+extern volatile float dist_turn135in_out; // 135°ターン入りの出オフセット距離[mm]
 extern volatile float velocity_turn135out; // 135°ターン出の速度[mm/s]
 extern volatile float alpha_turn135out; // 135°ターン出の角加速度[deg/sec^2]
 extern volatile float angle_turn135out; // 135°ターン出の旋回角度[deg]
-extern volatile float
-    dist_turn135out_in; // 135°ターン出の入りオフセット距離[mm]
+extern volatile float dist_turn135out_in; // 135°ターン出の入りオフセット距離[mm]
 extern volatile float dist_turn135out_out; // 135°ターン出の出オフセット距離[mm]
 
 /*現在の値を保持する用*/
@@ -271,16 +269,22 @@ extern volatile float out_l;
 extern volatile float velocity_next_turn; // 次のターンの並進速度[mm/s]
 
 /*目標位置生成用*/
-extern volatile float
-    acceleration_interrupt; // 割込み内の計算用の並進加速度[mm/s^2]
+extern volatile float acceleration_interrupt; // 割込み内の計算用の並進加速度[mm/s^2]
 extern volatile float velocity_interrupt; // 割込み内の計算用の並進速度[mm/s]
 extern volatile float target_distance; // 割込み内の計算用の並進位置[mm]
 
 /*目標角度生成用*/
-extern volatile float
-    alpha_interrupt; // 割込み内の計算用の並進角加速度[deg/s^2]
+extern volatile float alpha_interrupt; // 割込み内の計算用の並進角加速度[deg/s^2]
 extern volatile float omega_interrupt; // 割込み内の計算用の角速度[deg/s]
 extern volatile float target_angle; // 割込み内の計算用の角度[deg]
+
+/*sベース・プロファイルランナー用（並進）*/
+extern volatile uint8_t profile_active;     // 1: プロファイル駆動中
+extern volatile float   profile_s_end;      // 目標走行距離[mm]
+extern volatile float   profile_v_out;      // 終端速度[mm/s]
+extern volatile float   profile_v_max;      // 上限制限速度[mm/s]
+extern volatile float   profile_a_accel;    // 加速時の加速度[mm/s^2]
+extern volatile float   profile_a_decel;    // 減速時の加速度[mm/s^2]
 
 /*並進位置制御用*/
 extern volatile float real_distance;        // 実際の並進距離[mm]

@@ -1193,6 +1193,17 @@ void driveA(float dist, float spd_in, float spd_out, float dist_wallend) {
     encoder_distance_r = 0;
     encoder_distance_l = 0;
 
+    // sベース台形プロファイルを有効化
+    {
+        float a_base = (MF.FLAG.SCND || known_straight) ? acceleration_straight_dash : acceleration_straight;
+        profile_active  = 1;
+        profile_s_end   = dist;
+        profile_v_out   = spd_out;
+        profile_v_max   = fmaxf(velocity_straight, fmaxf(spd_in, spd_out));
+        profile_a_accel = fabsf(a_base);
+        profile_a_decel = fabsf(a_base);
+    }
+
     drive_start();
 
     // 実距離（real_distance）が目標距離に達するまで走行
@@ -1222,6 +1233,9 @@ void driveA(float dist, float spd_in, float spd_out, float dist_wallend) {
     real_distance = 0;
     encoder_distance_r = 0;
     encoder_distance_l = 0;
+
+    // プロファイル無効化（保険）
+    profile_active = 0;
 }
 
 //+++++++++++++++++++++++++++++++++++++++++++++++
@@ -1573,6 +1587,14 @@ void drive_variable_reset(void) {
     alpha_interrupt = 0;
     omega_interrupt = 0;
     target_angle = 0;
+
+    // プロファイル
+    profile_active = 0;
+    profile_s_end = 0.0f;
+    profile_v_out = 0.0f;
+    profile_v_max = 0.0f;
+    profile_a_accel = 0.0f;
+    profile_a_decel = 0.0f;
 
     // PIDの積算項（距離）
     distance_error = 0;

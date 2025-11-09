@@ -60,11 +60,45 @@ void read_IMU(void) {
 
 /*並進の積算計算*/
 void calculate_translation(void) {
-    // 設定された加速度から並進速度を計算
-    velocity_interrupt += acceleration_interrupt * 0.001;
+    const float dt = 0.001f; // 1kHz
 
-    // 並進速度から目標位置を計算
-    target_distance += velocity_interrupt * 0.001;
+    if (profile_active) {
+        // sベース台形プロファイル
+        float d_rem = profile_s_end - real_distance; // 実距離に対する残距離
+        if (d_rem < 0.0f) d_rem = 0.0f;
+
+        // 減速側から導出される上限速度（この距離で v_out まで確実に減速できる上限）
+        float v_cap = 0.0f;
+        float term = profile_v_out * profile_v_out + 2.0f * profile_a_decel * d_rem;
+        if (term > 0.0f) v_cap = sqrtf(term);
+
+        // 上限（最大速度・減速上限）
+        float v_lim = profile_v_max;
+        if (v_cap < v_lim) v_lim = v_cap;
+        if (v_lim < 0.0f) v_lim = 0.0f;
+
+        // 目標速度の次ステップ
+        float v = velocity_interrupt;
+        float v_next;
+        if (v < v_lim) {
+            v_next = v + profile_a_accel * dt;
+            if (v_next > v_lim) v_next = v_lim;
+        } else {
+            v_next = v - profile_a_decel * dt;
+            if (v_next < v_lim) v_next = v_lim;
+        }
+
+        // 加速度（interrupt側）を逆算して一貫性を保つ
+        acceleration_interrupt = (v_next - v) / dt;
+        velocity_interrupt = v_next;
+
+        // 目標距離の積分（ロギング・互換用途）
+        target_distance += velocity_interrupt * dt;
+    } else {
+        // 従来の積分（プロファイル未使用時）
+        velocity_interrupt += acceleration_interrupt * dt;
+        target_distance += velocity_interrupt * dt;
+    }
 }
 
 /*回転の積算計算*/
