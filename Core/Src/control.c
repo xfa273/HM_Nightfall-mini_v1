@@ -129,16 +129,29 @@ void velocity_PID(void) {
         MF.FLAG.FAILED = 1;
     }
 
-    // I項
+    // I項（先に積分→クランプ）
     velocity_integral += velocity_error;
+    // 速度I項クランプ（KI=0回避のため微小値で割る）
+    {
+        const float ki = (KI_VELOCITY != 0.0f) ? KI_VELOCITY : 1e-6f;
+        const float limit_int = VEL_I_LIMIT / ki; // 積分の生値に対する上限
+        if (velocity_integral >  limit_int) velocity_integral =  limit_int;
+        if (velocity_integral < -limit_int) velocity_integral = -limit_int;
+    }
 
     // D項
     velocity_error_error = velocity_error - previous_velocity_error;
 
-    // モータ制御量を計算
-    out_translation = KP_VELOCITY * velocity_error +
-                      KI_VELOCITY * velocity_integral +
-                      KD_VELOCITY * velocity_error_error;
+    // フィードフォワード（粘性・加速度・クーロン）
+    float ff = KFF_VELOCITY * target_velocity
+             + KFF_ACCEL    * acceleration_interrupt
+             + KFF_COULOMB  * ((target_velocity >= 0.0f) ? 1.0f : -1.0f);
+
+    // モータ制御量を計算（FF + PID）
+    out_translation = ff
+                    + KP_VELOCITY * velocity_error
+                    + KI_VELOCITY * velocity_integral
+                    + KD_VELOCITY * velocity_error_error;
 
     // 並進速度の偏差を保存
     previous_velocity_error = velocity_error;

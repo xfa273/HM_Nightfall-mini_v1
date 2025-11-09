@@ -8,6 +8,7 @@
 #include "global.h"
 #include "../Inc/shortest_run_params.h"
 #include "../Inc/run.h"
+#include "../Inc/logging.h"
 
 // Helper loaders: apply case/mode parameters to runtime globals (mode4)
 static void apply_case_params_mode4_idx(int idx) {
@@ -314,6 +315,96 @@ void mode4() {
                 run_diagonal(1,velocity_turn135out);
                 turn_L135_Out();
                 run_diagonal(1,0);
+
+                led_flash(5);
+                drive_fan(0);
+                drive_stop();
+                break;
+            case 8: // Straight test using case1 params (index0)
+                // 直進テスト: mode4 の case1 で使用されるパラメータを参照
+                apply_case_params_mode4_idx(0); // case1 -> index 0
+                printf("Loaded params: straight test (mode4, case8 -> case1 params).\n");
+
+                velocity_interrupt = 0;
+
+                led_flash(10);
+
+                drive_variable_reset();
+                IMU_GetOffset();
+                drive_enable_motor();
+
+                led_flash(5);
+                drive_fan(shortestRunModeParams4.fan_power);
+                led_flash(5);
+
+                // ログ開始（速度プロファイル）
+                log_init();
+                log_set_profile(LOG_PROFILE_VELOCITY);
+                log_start(HAL_GetTick());
+
+                // 加速→等速×2→減速
+                half_sectionA((uint16_t)velocity_straight);
+                one_sectionU(0);
+                one_sectionU(0);
+                half_sectionD(0);
+
+                // ログ停止
+                log_stop();
+
+                // センサEnter待ちでログ出力
+                printf("[mode4-case8] Press sensor ENTER (FR>1500 & FL<600) to print logs...\n");
+                while (1) {
+                    if (ad_fr > 1500 && ad_fl < 600) {
+                        break;
+                    }
+                    HAL_Delay(50);
+                }
+                log_print_all();
+
+                led_flash(5);
+                drive_fan(0);
+                drive_stop();
+                break;
+            case 9: // Straight test using case7 params (index6)
+                // 直進テスト: mode4 の case7 で使用されるパラメータを参照
+                apply_case_params_mode4_idx(6); // case7 -> index 6
+                printf("Loaded params: straight test (mode4, case9 -> case7 params).\n");
+
+                velocity_interrupt = 0;
+
+                led_flash(10);
+
+                drive_variable_reset();
+                IMU_GetOffset();
+                drive_enable_motor();
+
+                led_flash(5);
+                drive_fan(shortestRunModeParams4.fan_power);
+                led_flash(5);
+
+                // ログ開始（速度プロファイル）
+                log_init();
+                log_set_profile(LOG_PROFILE_VELOCITY);
+                log_start(HAL_GetTick());
+
+                // 加速→等速×2→減速
+                half_sectionA((uint16_t)velocity_straight);
+                one_sectionU(0);
+                one_sectionU(0);
+                half_sectionD(0);
+
+                // ログ停止
+                log_stop();
+
+                // センサEnter待ちでログ出力
+                printf("[mode4-case9] Press sensor ENTER (FR>1500 & FL<600) to print logs...\n");
+                while (1) {
+                    if (ad_fr > 1500 && ad_fl < 600) {
+                        break;
+                    }
+                    HAL_Delay(50);
+                }
+                log_print_all();
 
                 led_flash(5);
                 drive_fan(0);

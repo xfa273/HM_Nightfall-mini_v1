@@ -38,6 +38,20 @@
 #define KI_VELOCITY 0.65F// 並進速度制御のI項  0.05F 0.04
 #define KD_VELOCITY 0.6F // 並進速度制御のD項  60.0F 100.0
 
+// 並進速度制御 フィードフォワードと積分クランプ
+#ifndef KFF_VELOCITY
+#define KFF_VELOCITY 0.0F   // 速度FF [PWMcount/(mm/s)]
+#endif
+#ifndef KFF_ACCEL
+#define KFF_ACCEL    0.0F   // 加速度FF [PWMcount/(mm/s^2)]
+#endif
+#ifndef KFF_COULOMB
+#define KFF_COULOMB  0.0F   // クーロン摩擦補償 [PWMcount]
+#endif
+#ifndef VEL_I_LIMIT
+#define VEL_I_LIMIT  15000.0F // 速度I項クランプ
+#endif
+
 #define KP_ANGLE 0.0F // 角度制御のP項
 #define KI_ANGLE 0.0F // 角度制御のI項
 #define KD_ANGLE 0.0F // 角度制御のD項
