@@ -473,6 +473,77 @@ void run_straight(float section, float spd_out, float dist_wallend) {
 }
 
 //+++++++++++++++++++++++++++++++++++++++++++++++
+// run_trapezoid_distance_mm
+// 台形（または三角）加減速プロファイルで直線 total_mm を走行する
+// 加速は acceleration_straight_dash、最高速度は v_max（上限 velocity_straight）
+// 終端速度は 0[mm/s]
+//+++++++++++++++++++++++++++++++++++++++++++++++
+void run_trapezoid_distance_mm(float total_mm, float v_max) {
+    if (total_mm <= 0.0f) return;
+
+    // 使用パラメータ
+    float a_cfg = (acceleration_straight_dash > 0.0f) ? acceleration_straight_dash : acceleration_straight;
+    if (a_cfg <= 0.0f) {
+        // フォールバック（安全）
+        a_cfg = 1000.0f;
+    }
+    float v_limit = (v_max > 0.0f) ? v_max : velocity_straight;
+    if (v_limit > velocity_straight) v_limit = velocity_straight;
+    if (v_limit < 0.0f) v_limit = 0.0f;
+
+    // 開始速度（通常0）
+    float v0 = speed_now;
+    if (v0 < 0.0f) v0 = 0.0f;
+    if (v0 > v_limit) v0 = v_limit;
+
+    // 対称プロファイル（終端速度0）を想定
+    // v0→v_peak まで加速、v_peak→0 まで減速。
+    // 加速距離 d_acc は a_cfg, v0, v_peak から派生。まず v_peak=v_limit を仮置きしてチェック。
+    float v_peak = v_limit;
+
+    // 加速距離: d = (v^2 - v0^2)/(2a)
+    float d_acc = (v_peak * v_peak - v0 * v0) / (2.0f * a_cfg);
+    if (d_acc < 0.0f) d_acc = 0.0f;
+    // 減速距離: d = (v_peak^2 - 0)/(2a) （同じ加速度量で対称）
+    float d_dec = (v_peak * v_peak) / (2.0f * a_cfg);
+    float d_total = d_acc + d_dec;
+
+    if (d_total > total_mm) {
+        // 最高速度に達しない三角形プロファイル
+        // total_mm = d_acc + d_dec、対称なら各半分
+        float d_half = total_mm * 0.5f;
+        // v_peak を再計算（v^2 = v0^2 + 2 a d_acc）
+        float v2 = v0 * v0 + 2.0f * a_cfg * d_half;
+        if (v2 < 0.0f) v2 = 0.0f;
+        v_peak = sqrtf(v2);
+        d_acc = d_half;
+        d_dec = d_half;
+    } else {
+        // 台形：等速距離
+        float d_const = total_mm - d_total;
+        // 実行（加速→等速→減速）
+        if (d_acc > 0.0f) {
+            run_straight(d_acc / HALF_MM(), v_peak, 0);
+        }
+        if (d_const > 0.0f) {
+            run_straight(d_const / HALF_MM(), v_peak, 0);
+        }
+        if (d_dec > 0.0f) {
+            run_straight(d_dec / HALF_MM(), 0.0f, 0);
+        }
+        return;
+    }
+
+    // 三角形：加速→減速のみ
+    if (d_acc > 0.0f) {
+        run_straight(d_acc / HALF_MM(), v_peak, 0);
+    }
+    if (d_dec > 0.0f) {
+        run_straight(d_dec / HALF_MM(), 0.0f, 0);
+    }
+}
+
+//+++++++++++++++++++++++++++++++++++++++++++++++
 // rotate_R90
 // 右に90度回転する
 // 引数：なし

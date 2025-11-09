@@ -342,11 +342,8 @@ void mode3() {
                 log_set_profile(LOG_PROFILE_VELOCITY);
                 log_start(HAL_GetTick());
 
-                // 加速→等速×2→減速
-                half_sectionA((uint16_t)velocity_straight);
-                one_sectionU(0);
-                one_sectionU(0);
-                half_sectionD(0);
+                // 台形加減速: 3区画=270mm を最短走行同様に実行
+                run_trapezoid_distance_mm(6.0f * DIST_HALF_SEC, velocity_straight);
 
                 // ログ停止
                 log_stop();
@@ -387,11 +384,8 @@ void mode3() {
                 log_set_profile(LOG_PROFILE_VELOCITY);
                 log_start(HAL_GetTick());
 
-                // 加速→等速×2→減速
-                half_sectionA((uint16_t)velocity_straight);
-                one_sectionU(0);
-                one_sectionU(0);
-                half_sectionD(0);
+                // 台形加減速: 3区画=270mm を最短走行同様に実行
+                run_trapezoid_distance_mm(6.0f * DIST_HALF_SEC, velocity_straight);
 
                 // ログ停止
                 log_stop();

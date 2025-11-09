@@ -429,4 +429,9 @@ void match_position(uint16_t);
 void test_run(void);     // テスト走行
 void reset_failed(void); // フェイルセーフ時のリセット
 
+// 台形加減速で指定距離[mm]を走る（最短走行と同様の直線プロファイル）
+// 加速: acceleration_straight_dash を使用。最高速度 velocity_straight に達すれば等速→減速。
+// 終端速度は 0[mm/s] 固定。
+void run_trapezoid_distance_mm(float total_mm, float v_max);
+
 #endif /* INC_DRIVE_H_ */

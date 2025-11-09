@@ -316,14 +316,13 @@ void mode2() {
                 log_set_profile(LOG_PROFILE_VELOCITY);
                 log_start(HAL_GetTick());
 
-                // 加速→等速×2→減速
-                half_sectionA((uint16_t)velocity_straight);
-                one_sectionU(0);
-                one_sectionU(0);
-                half_sectionD(0);
+                // 台形加減速: 3区画=270mm を最短走行同様に実行
+                run_trapezoid_distance_mm(6.0f * DIST_HALF_SEC, velocity_straight);
 
                 // ログ停止
                 log_stop();
+
+                drive_stop();
 
                 // センサEnter待ちでログ出力
                 printf("[mode2-case8] Press sensor ENTER (FR>1500 & FL<600) to print logs...\n");
@@ -336,7 +335,7 @@ void mode2() {
                 log_print_all();
 
                 led_flash(5);
-                drive_stop();
+
                 break;
             case 9: // Straight test using case7 params (index6)
                 // 直進テスト: mode2 の case7 で使用されるパラメータを参照
@@ -358,14 +357,13 @@ void mode2() {
                 log_set_profile(LOG_PROFILE_VELOCITY);
                 log_start(HAL_GetTick());
 
-                // 加速→等速×2→減速
-                half_sectionA((uint16_t)velocity_straight);
-                one_sectionU(0);
-                one_sectionU(0);
-                half_sectionD(0);
+                // 台形加減速: 3区画=270mm を最短走行同様に実行
+                run_trapezoid_distance_mm(6.0f * DIST_HALF_SEC, velocity_straight);
 
                 // ログ停止
                 log_stop();
+
+                drive_stop();
 
                 // センサEnter待ちでログ出力
                 printf("[mode2-case9] Press sensor ENTER (FR>1500 & FL<600) to print logs...\n");
@@ -378,7 +376,7 @@ void mode2() {
                 log_print_all();
 
                 led_flash(5);
-                drive_stop();
+
                 break;
             default:
                 printf("No sub-mode selected.\n");
