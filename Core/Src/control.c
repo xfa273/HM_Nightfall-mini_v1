@@ -143,9 +143,13 @@ void velocity_PID(void) {
     velocity_error_error = velocity_error - previous_velocity_error;
 
     // フィードフォワード（粘性・加速度・クーロン）
-    float ff = KFF_VELOCITY * target_velocity
-             + KFF_ACCEL    * acceleration_interrupt
-             + KFF_COULOMB  * ((target_velocity >= 0.0f) ? 1.0f : -1.0f);
+    // ファンON/OFFでFFゲインを切替える（ON: *_FAN_ON, OFF: *_FAN_OFF）
+    float kv = MF.FLAG.SUCTION ? KFF_VELOCITY_FAN_ON : KFF_VELOCITY_FAN_OFF;
+    float ka = MF.FLAG.SUCTION ? KFF_ACCEL_FAN_ON    : KFF_ACCEL_FAN_OFF;
+    float kc = MF.FLAG.SUCTION ? KFF_COULOMB_FAN_ON  : KFF_COULOMB_FAN_OFF;
+    float ff = kv * target_velocity
+             + ka * acceleration_interrupt
+             + kc * ((target_velocity >= 0.0f) ? 1.0f : -1.0f);
 
     // モータ制御量を計算（FF + PID）
     out_translation = ff

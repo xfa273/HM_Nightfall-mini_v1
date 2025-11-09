@@ -7,6 +7,8 @@
 
 #include "global.h"
 #include "solver.h"
+#include "logging.h"
+#include "main.h"
 
 // drive.c と同じ条件でPWM反転するための定義（DIR==Lowで反転が既定）
 #ifndef PWM_INVERT_DIR_LEVEL
@@ -292,105 +294,106 @@ void test_mode() {
 
         case 7:
 
-            printf("Test Mode 7 Circuit.\n");
+            printf("Test Mode 7 Translation FF Identification.\n");
+            printf("Select sub-mode with buttons: 0:200, 1:400, 2:600, 3:800, 4:1000, 9:ALL\n");
 
-            // 直線
-            acceleration_straight = 10888.9;
-            acceleration_straight_dash = 28000;
-            velocity_straight = 5000;
-            // 90°大回りターン
-            velocity_l_turn_90 = 2200;
-            alpha_l_turn_90 = 28500;
-            angle_l_turn_90 = 85.0;
-            dist_l_turn_out_90 = 101;
-            // 壁制御とケツ当て
-            kp_wall = 0.3;
-            duty_setposition = 40;
+            // サブモード選択（0..4=単独速度, 9=ALL）
+            int sub = 0;
+            sub = select_mode(sub);
 
+            // 安全初期化
             velocity_interrupt = 0;
-
             led_flash(10);
-
             drive_variable_reset();
             IMU_GetOffset();
             drive_enable_motor();
             led_flash(5);
-            get_base();
-            drive_fan(800);
-            led_flash(5);
 
-            first_sectionA();
+            // 壁制御の影響を排除（ゲイン0）
+            kp_wall = 0.0f;
+            MF.FLAG.CTRL = 0;
+            MF.FLAG.CTRL_DIAGONAL = 0;
 
-            // 1回目の直線
-            run_straight(12, velocity_straight, 0);
-            run_straight(4, velocity_straight, 0);
-            run_straight(12, velocity_l_turn_90, 0);
+            // 走行パラメータ（控えめの加速度）
+            acceleration_straight = 15000.0f;
+            acceleration_straight_dash = 15000.0f;
+            velocity_straight = 3000.0f; // 本テストの上限速度
 
-            // 1回目のターン
-            l_turn_R90();
+            // テストする等速速度[mm/s]
+            const float speeds_all[] = { 1000.0f, 1500.0f, 2000.0f, 2500.0f, 3000.0f };
+            const int NS_ALL = (int)(sizeof(speeds_all)/sizeof(speeds_all[0]));
 
-            // 2回目の直線
-            run_straight(12, velocity_straight, 0);
-            run_straight(2, velocity_straight, 0);
-            run_straight(12, velocity_l_turn_90, 0);
+            // 実行対象配列を決定
+            float speeds[5];
+            int NS = 0;
+            if (sub >= 0 && sub <= 4) {
+                speeds[0] = speeds_all[sub];
+                NS = 1;
+                printf("[ID1] Single speed mode: v=%.0f mm/s. Ensure ~0.6m straight space.\n", speeds[0]);
+            } else {
+                for (int i=0;i<NS_ALL;i++) speeds[i]=speeds_all[i];
+                NS = NS_ALL;
+                printf("[ID1] ALL speeds mode (long track).\n");
+            }
 
-            // 2回目のターン
-            l_turn_R90();
+            const float HALF_MM_CONST = (float)DIST_HALF_SEC; // 半区画長[mm]
 
-            // 3回目の直線
-            run_straight(12, velocity_straight, 0);
-            run_straight(2, velocity_straight, 0);
-            run_straight(12, velocity_l_turn_90, 0);
+            for (int i = 0; i < NS; ++i) {
+                float v = speeds[i];
+                if (v > velocity_straight) v = velocity_straight;
 
-            // 3回目のターン
-            l_turn_R90();
+                printf("[ID1] step %d/%d: v=%.0f mm/s\n", i+1, NS, v);
 
-            // 4回目の直線
-            run_straight(12, velocity_straight, 0);
-            run_straight(2, velocity_straight, 0);
-            run_straight(12, velocity_l_turn_90, 0);
+                drive_fan(1000);
 
-            // 4回目のターン
-            l_turn_R90();
+                // ロギング開始（速度プロファイルを使用）
+                log_init();
+                log_set_profile(LOG_PROFILE_VELOCITY);
+                log_start(HAL_GetTick());
 
-            // 5回目の直線
-            run_straight(12, velocity_straight, 0);
-            run_straight(2, velocity_straight, 0);
-            run_straight(12, velocity_l_turn_90, 0);
+                // まず1区画分（2.0 blocks）で目標速度 v まで加速（上限もvに固定）
+                run_straight_const(2.0f, v);
 
-            // 5回目のターン
-            l_turn_R90();
+                // 等速保持時間 ≈ 0.4s 分を blocks に換算
+                const float hold_time_s = 0.1f;
+                float hold_blocks = (v * hold_time_s) / HALF_MM_CONST;
+                // 最小でも2mm相当は確保
+                const float min_blocks = (2.0f / HALF_MM_CONST);
+                if (hold_blocks < min_blocks) hold_blocks = min_blocks;
 
-            // 6回目の直線
-            run_straight(12, velocity_straight, 0);
-            run_straight(2, velocity_straight, 0);
-            run_straight(12, velocity_l_turn_90, 0);
+                // 等速保持（上限もvに固定）
+                run_straight_const(hold_blocks, v);
 
-            // 6回目のターン
-            l_turn_R90();
+                // ログ停止（まず記録を止める）
+                log_stop();
 
-            // 7回目の直線
-            run_straight(12, velocity_straight, 0);
-            run_straight(2, velocity_straight, 0);
-            run_straight(12, velocity_l_turn_90, 0);
+                // 減速して停止（1区画で0まで）
+                run_straight(2.0f, 0.0f, 0);
 
-            // 7回目のターン
-            l_turn_R90();
+                drive_fan(0);
 
-            // 8回目の直線
-            run_straight(12, velocity_straight, 0);
-            run_straight(2, velocity_straight, 0);
-            run_straight(12, velocity_l_turn_90, 0);
+                // 安全停止を維持しながら、右前センサで確認待ち（走行後に出力）
+                velocity_interrupt = 0;
+                omega_interrupt = 0;
+                drive_variable_reset();
+                drive_stop();
+                printf("[ID1] Show FR sensor to confirm (FR>1500 && FL<600) for v=%.0f mm/s...\n", v);
+                while (!(ad_fr > 1500 && ad_fl < 600)) {
+                    HAL_Delay(10);
+                }
+                buzzer_enter(900);
 
-            // 8回目のターン
-            l_turn_R90();
+                // CSV出力（並進制御値）
+                log_print_translation_csv();
 
-            half_sectionD(0);
-
-            drive_fan(0);
+                HAL_Delay(200);
+            }
 
             led_flash(5);
             drive_stop();
+
+            // 次の試行のための案内
+            printf("[ID1] Completed. Reposition the robot at the start.\n");
 
             break;
 

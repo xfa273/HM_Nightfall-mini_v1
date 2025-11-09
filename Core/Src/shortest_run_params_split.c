@@ -311,7 +311,7 @@ const ShortestRunModeParams_t shortestRunModeParams4 = {
 const ShortestRunCaseParams_t shortestRunCaseParamsMode4[9] = {
     // case1 (index 0)
     {
-        .acceleration_straight = 5555.6f, .acceleration_straight_dash = 6000.0f,
+        .acceleration_straight = 5555.6f, .acceleration_straight_dash = 10000.0f,
         .velocity_straight = 1200.0f, .kp_wall = 0.05f,
         .straight_weight = 0, .diagonal_weight = 0
     },

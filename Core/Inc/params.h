@@ -15,7 +15,7 @@
     走行系
 ------------------------------------------------------------*/
 /*走行パラメータ*/
-#define D_TIRE            13.0F// タイヤ直径[mm] 13.75F
+#define D_TIRE            13.85F// タイヤ直径[mm] 13.75F
 #define DIST_HALF_SEC     45.0  // 迷路の半区間距離[mm] 0.94
 // 探索走行用の半区間距離[mm]（初期値は通常と同じ。探索専用に短くしたい場合に調整）
 #define DIST_HALF_SEC_SEARCH  45
@@ -34,22 +34,45 @@
 #define KI_DISTANCE 0.1F // 並進位置制御のI項  0.01F 0.04
 #define KD_DISTANCE 0.0F // 並進位置制御のD項  28.0F 150.0
 
-#define KP_VELOCITY 0.45F // 並進速度制御のP項  50.0F 10.0
-#define KI_VELOCITY 0.65F// 並進速度制御のI項  0.05F 0.04
-#define KD_VELOCITY 0.6F // 並進速度制御のD項  60.0F 100.0
+#define KP_VELOCITY 0.45F // 並進速度制御のP項  0.45F
+#define KI_VELOCITY 0.65F// 並進速度制御のI項  0.65F
+#define KD_VELOCITY 0.0F // 並進速度制御のD項  0.6F
 
 // 並進速度制御 フィードフォワードと積分クランプ
 #ifndef KFF_VELOCITY
-#define KFF_VELOCITY 0.0F   // 速度FF [PWMcount/(mm/s)]
+#define KFF_VELOCITY 0.18F   // 速度FF [PWMcount/(mm/s)] 0.079632F
 #endif
 #ifndef KFF_ACCEL
-#define KFF_ACCEL    0.0F   // 加速度FF [PWMcount/(mm/s^2)]
+#define KFF_ACCEL    0.002F   // 加速度FF [PWMcount/(mm/s^2)] 0.0020F
 #endif
 #ifndef KFF_COULOMB
-#define KFF_COULOMB  0.0F   // クーロン摩擦補償 [PWMcount]
+#define KFF_COULOMB  22.0F   // クーロン摩擦補償 [PWMcount] 22.0F
 #endif
 #ifndef VEL_I_LIMIT
 #define VEL_I_LIMIT  15000.0F // 速度I項クランプ
+#endif
+
+// ---- Fan ON/OFF specific FF gains ----
+// Fan ON: use current values
+#ifndef KFF_VELOCITY_FAN_ON
+#define KFF_VELOCITY_FAN_ON  KFF_VELOCITY
+#endif
+#ifndef KFF_ACCEL_FAN_ON
+#define KFF_ACCEL_FAN_ON     KFF_ACCEL
+#endif
+#ifndef KFF_COULOMB_FAN_ON
+#define KFF_COULOMB_FAN_ON   KFF_COULOMB
+#endif
+
+// Fan OFF: use commented-out values noted above
+#ifndef KFF_VELOCITY_FAN_OFF
+#define KFF_VELOCITY_FAN_OFF 0.079632F
+#endif
+#ifndef KFF_ACCEL_FAN_OFF
+#define KFF_ACCEL_FAN_OFF    0.0020F
+#endif
+#ifndef KFF_COULOMB_FAN_OFF
+#define KFF_COULOMB_FAN_OFF  22.0F
 #endif
 
 #define KP_ANGLE 0.0F // 角度制御のP項
@@ -164,7 +187,7 @@
 ------------------------------------------------------------*/
 //----ゴール座標----
 #define GOAL_X    0 // 7
-#define GOAL_Y    6 // 7
+#define GOAL_Y    7 // 7
 #define MAZE_SIZE 16
 #define START_X   0
 #define START_Y   0
