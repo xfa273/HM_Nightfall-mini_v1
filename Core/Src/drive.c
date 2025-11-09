@@ -1177,8 +1177,7 @@ void driveA(float dist, float spd_in, float spd_out, float dist_wallend) {
     // 加速度を設定
     acceleration_interrupt = (spd_out * spd_out - spd_in * spd_in) / (2 * dist);
 
-    // 目標速度の積分距離で終了判定するため、ターゲット距離をゼロクリアし
-    // 目標速度（velocity_interrupt）を初期速度 spd_in に初期化する
+    // 実距離で終了判定するため、参照値をクリアし速度を初期化する
     target_distance = 0;
     velocity_interrupt = spd_in;
 
@@ -1196,22 +1195,22 @@ void driveA(float dist, float spd_in, float spd_out, float dist_wallend) {
 
     drive_start();
 
-    // 目標速度を積分した距離（target_distance）が目標距離に達するまで走行
+    // 実距離（real_distance）が目標距離に達するまで走行
     if (acceleration_interrupt > 0) {
 
-        while (target_distance < dist) {
+        while (real_distance < dist) {
             background_replan_tick();
         }
 
     } else if (acceleration_interrupt <= 0) {
 
         if (MF.FLAG.F_WALL_STOP) {
-            while (target_distance < dist && velocity_interrupt > 0 &&
+            while (real_distance < dist && velocity_interrupt > 0 &&
                    (ad_fl + ad_fr) < thr_f_wall) {
                 background_replan_tick();
             };
         } else {
-            while (target_distance < dist && velocity_interrupt > 0) {
+            while (real_distance < dist && velocity_interrupt > 0) {
                 background_replan_tick();
             };
         }
@@ -1477,11 +1476,11 @@ void driveFWall(float dist, float spd_in, float spd_out) {
 
     drive_start();
 
-    // 目標距離（target_distance）が目標値に達するか前壁しきい値に達した時点で抜ける。
+    // 実距離（real_distance）が目標値に達するか前壁しきい値に達した時点で抜ける。
     // 未検知の場合は、WALL_END_EXTEND_MAX_MM の範囲で距離を延長して検出を待つ。
     bool reached = false;
     if (MF.FLAG.SLALOM_R) {
-        while (target_distance < dist) {
+        while (real_distance < dist) {
             background_replan_tick();
             if (MF.FLAG.F_WALL && (ad_fr + ad_fl) >= val_offset_in) {
                 reached = true;
@@ -1489,7 +1488,7 @@ void driveFWall(float dist, float spd_in, float spd_out) {
             }
         }
     } else if (MF.FLAG.SLALOM_L) {
-        while (target_distance < dist) {
+        while (real_distance < dist) {
             background_replan_tick();
             if (MF.FLAG.F_WALL && (ad_fr + ad_fl) >= val_offset_in) {
                 reached = true;
@@ -1506,7 +1505,7 @@ void driveFWall(float dist, float spd_in, float spd_out) {
             // 延長区間は等速で追従
             acceleration_interrupt = 0;
             velocity_interrupt = spd_out;
-            while (target_distance < dist_end) {
+            while (real_distance < dist_end) {
                 background_replan_tick();
                 if (MF.FLAG.F_WALL && (ad_fr + ad_fl) >= val_offset_in) {
                     reached = true;
