@@ -15,7 +15,7 @@
     走行系
 ------------------------------------------------------------*/
 /*走行パラメータ*/
-#define D_TIRE            12.5F// タイヤ直径[mm] 13.75F
+#define D_TIRE            13.0F// タイヤ直径[mm] 13.75F
 #define DIST_HALF_SEC     45.0  // 迷路の半区間距離[mm] 0.94
 // 探索走行用の半区間距離[mm]（初期値は通常と同じ。探索専用に短くしたい場合に調整）
 #define DIST_HALF_SEC_SEARCH  45
@@ -149,8 +149,8 @@
     探索系
 ------------------------------------------------------------*/
 //----ゴール座標----
-#define GOAL_X    7 // 7
-#define GOAL_Y    7 // 7
+#define GOAL_X    0 // 7
+#define GOAL_Y    6 // 7
 #define MAZE_SIZE 16
 #define START_X   0
 #define START_Y   0
@@ -164,18 +164,18 @@
 #endif
 
 #ifndef GOAL2_X
-#define GOAL2_X 7   
-#define GOAL2_Y 8
+#define GOAL2_X 0
+#define GOAL2_Y 0
 #endif
 
 #ifndef GOAL3_X
-#define GOAL3_X 8
-#define GOAL3_Y 7
+#define GOAL3_X 0
+#define GOAL3_Y 0
 #endif
 
 #ifndef GOAL4_X
-#define GOAL4_X 8
-#define GOAL4_Y 8
+#define GOAL4_X 0
+#define GOAL4_Y 0
 #endif
 
 #ifndef GOAL5_X
