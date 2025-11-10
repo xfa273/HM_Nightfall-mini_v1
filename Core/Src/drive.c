@@ -473,6 +473,65 @@ void run_straight(float section, float spd_out, float dist_wallend) {
 }
 
 //+++++++++++++++++++++++++++++++++++++++++++++++
+// run_straight_const
+// 上限速度を v_const に固定して指定区画を走る（等速保持用）
+// 引数：section …… 半区画単位の距離（2.0=1区画）
+//       v_const …… 目標等速[mm/s]
+// 戻り値：なし
+//+++++++++++++++++++++++++++++++++++++++++++++++
+void run_straight_const(float section, float v_const) {
+    // クランプ（安全）
+    if (v_const < 0.0f) v_const = 0.0f;
+    if (v_const > velocity_straight) v_const = velocity_straight;
+
+    const float dist = HALF_MM() * section; // [mm]
+
+    // 参照リセット＋現在速度を初期値として開始
+    target_distance = 0.0f;
+    // velocity_interrupt は calculate_translation 側で更新する
+
+    // 角度側は本区間中は使わないためゼロ化（互換）
+    real_angle = 0;
+    IMU_angle = 0;
+    target_angle = 0;
+
+    // 実距離カウンタをゼロ化
+    real_distance = 0.0f;
+    encoder_distance_r = 0.0f;
+    encoder_distance_l = 0.0f;
+
+    // sベースプロファイル（上限＝v_const、終端＝v_const）
+    {
+        float a_base = (MF.FLAG.SCND || known_straight) ? acceleration_straight_dash : acceleration_straight;
+        if (a_base < 0.0f) a_base = -a_base;
+        profile_active  = 1;
+        profile_s_end   = dist;
+        profile_v_out   = v_const;
+        profile_v_max   = v_const; // ここがポイント：保持中に上限を超えない
+        profile_a_accel = a_base;
+        profile_a_decel = a_base;
+    }
+
+    MF.FLAG.CTRL = 1;
+    drive_start();
+
+    // 実距離が規定値に達するまで制御ISRを回す
+    while (real_distance < dist) {
+        background_replan_tick();
+    }
+
+    // 終了処理（プロファイル/参照のリセット）
+    drive_variable_reset();
+    real_distance = 0.0f;
+    encoder_distance_r = 0.0f;
+    encoder_distance_l = 0.0f;
+    profile_active = 0;
+
+    MF.FLAG.CTRL = 0;
+    speed_now = v_const;
+}
+
+//+++++++++++++++++++++++++++++++++++++++++++++++
 // run_trapezoid_distance_mm
 // 台形（または三角）加減速プロファイルで直線 total_mm を走行する
 // 加速は acceleration_straight_dash、最高速度は v_max（上限 velocity_straight）
@@ -1125,6 +1184,7 @@ void set_position(void) {
     encoder_distance_r = 0;
     encoder_distance_l = 0;
 
+
     // 設定距離だけ後進
     velocity_interrupt = -130;
     drive_start();
@@ -1486,9 +1546,6 @@ void driveSR(float angle_turn, float alpha_turn) {
 //+++++++++++++++++++++++++++++++++++++++++++++++
 void driveSL(float angle_turn, float alpha_turn) {
 
-    // printf("%f\n", alpha_interrupt);
-    // printf("%f\n", alpha_interrupt);
-
     // 走行距離カウントをリセット
     real_distance = 0;
     encoder_distance_r = 0;
@@ -1679,6 +1736,11 @@ void drive_variable_reset(void) {
     velocity_error_error = 0;
     velocity_integral = 0;
 
+    // 位置→速度補正（外側PI）
+    pos2vel_integral = 0;
+    pos2vel_prev_error = 0;
+    pos2vel_correction = 0;
+
     // PIDの積算項（角度）
     angle_error = 0;
     previous_angle_error = 0;
@@ -1704,6 +1766,61 @@ void drive_enable_motor(void) {
     if (s_motor_enabled) {
         s_outputs_locked = 0;
         return;
+    }
+
+    // プリスタート・リセット
+    // 機体設置時にタイヤが動いてしまった場合でも、初回動作で不要なFBが乗らないよう
+    // 走行系の参照・積分・実距離/速度・エンコーダカウンタをクリアする
+    {
+        // FB系の積分・履歴のみクリア（コマンド値は維持する）
+        distance_error = 0.0f;
+        previous_distance_error = 0.0f;
+        distance_error_error = 0.0f;
+        distance_integral = 0.0f;
+
+        velocity_error = 0.0f;
+        previous_velocity_error = 0.0f;
+        velocity_error_error = 0.0f;
+        velocity_integral = 0.0f;
+
+        angle_error = 0.0f;
+        previous_angle_error = 0.0f;
+        angle_error_error = 0.0f;
+        angle_integral = 0.0f;
+
+        omega_error = 0.0f;
+        previous_omega_error = 0.0f;
+        omega_error_error = 0.0f;
+        omega_integral = 0.0f;
+
+        // 位置→速度補正の内部状態
+        pos2vel_integral = 0.0f;
+        pos2vel_prev_error = 0.0f;
+        pos2vel_correction = 0.0f;
+
+        // 参照距離（pos2velの原点）
+        target_distance = 0.0f;
+
+        // 実距離・エンコーダ距離/速度のクリア
+        real_distance = 0.0f;
+        encoder_distance_r = 0.0f;
+        encoder_distance_l = 0.0f;
+        real_velocity = 0.0f;
+        encoder_speed_r = 0.0f;
+        encoder_speed_l = 0.0f;
+
+        // エンコーダハードウェアカウンタを基準値へ初期化
+        TIM8->CNT = 30000;
+        TIM4->CNT = 30000;
+        encoder_count_r = 30000;
+        encoder_count_l = 30000;
+        previous_encoder_count_r = 30000;
+        previous_encoder_count_l = 30000;
+
+        // 角度系も初期化（初動の不要な角度FBを防止）
+        real_angle = 0.0f;
+        IMU_angle = 0.0f;
+        target_angle = 0.0f;
     }
 
     // 現在のDIRピンレベルを取得

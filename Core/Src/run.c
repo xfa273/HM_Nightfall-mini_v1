@@ -11,7 +11,7 @@
 #include "../Inc/path.h"
 #include "../Inc/solver.h"
 
-void run(void) {
+void run_with_path(const uint16_t *path) {
 
 
     drive_start();
@@ -64,12 +64,7 @@ void run(void) {
                 v_next = 0.0f; // 次なし（終端）
             }
 
-            // ゴール停止時（次コード=0）は、最後に half_sectionD(0) で確実に止めるため
-            // 直前直進の終端速度をわずかに残す（0にしてしまうと half_sectionD が走らない）
-            if (next_code == 0) {
-                const float GOAL_ENTRY_SPEED = 120.0f; // [mm/s] 実機で微調整可
-                v_next = GOAL_ENTRY_SPEED;
-            }
+            // 終端(次コード=0)時も例外を設けず、v_next は 0 のままとする
 
             // 次が「実際のターン」かを明示的に判定（直進や終端は含めない）
             bool next_is_turn =
@@ -504,6 +499,11 @@ void run(void) {
     // ゴール演出（LED/Buzzer）は run_shortest() 側で必要に応じて実施する。
     // ここでは直後にファン停止やLED消灯を行うため、一時的な再点灯/再起動を避ける目的で呼ばない。
     drive_stop();
+}
+
+void run(void) {
+    // 既存のグローバル path[] を用いる薄いラッパ
+    run_with_path(path);
 }
 
 void run_shortest(uint8_t mode, uint8_t case_index) {

@@ -120,9 +120,58 @@ void calculate_rotation(void) {
 /*並進速度のPID制御*/
 void velocity_PID(void) {
 
-    // 速度フィードバック: 目標速度(velocity_interrupt) - 実測速度(real_velocity)
-    // 距離PIDによるカスケードは廃止し、単純な速度FBのみで並進を制御する
-    target_velocity = velocity_interrupt;
+    // 位置→速度補正（外側PI）: target_distance - real_distance を速度指令に変換
+    // 最小改変: distance_PID は呼ばず、ここで直接距離誤差を使用
+    float v_profile = velocity_interrupt;
+    float v_corr = 0.0f;
+
+#if POS2VEL_ENABLE
+    // 回転中やスラローム中は位置→速度補正を無効化（直線のみ有効）
+    bool allow_pos2vel = true;
+    if (fabsf(omega_interrupt) > 1.0f || fabsf(real_omega) > 5.0f || MF.FLAG.SLALOM_L || MF.FLAG.SLALOM_R) {
+        allow_pos2vel = false;
+    }
+
+    if (allow_pos2vel) {
+        // 距離誤差 [mm]
+        float e_s = target_distance - real_distance;
+        // デッドバンド
+        if (e_s > -POS2VEL_DEAD_BAND_MM && e_s < POS2VEL_DEAD_BAND_MM) {
+            e_s = 0.0f;
+        }
+
+        // 積分（アンチワインドアップ: 生積分に上限）
+        pos2vel_integral += e_s;
+        {
+            const float ki = (KPOS2VEL_I != 0.0f) ? KPOS2VEL_I : 1e-6f;
+            const float lim = POS2VEL_I_LIMIT / ki;
+            if (pos2vel_integral >  lim) pos2vel_integral =  lim;
+            if (pos2vel_integral < -lim) pos2vel_integral = -lim;
+        }
+
+        // D（原則0。非0設定時のみ有効）
+        float d_es = e_s - pos2vel_prev_error;
+        pos2vel_prev_error = e_s;
+
+        float v_corr_raw = (KPOS2VEL_P * e_s)
+                         + (KPOS2VEL_I * pos2vel_integral)
+                         + (KPOS2VEL_D * d_es);
+
+        // 速度補正量のクランプ
+        if (v_corr_raw >  V_POS2VEL_MAX) v_corr =  V_POS2VEL_MAX;
+        else if (v_corr_raw < -V_POS2VEL_MAX) v_corr = -V_POS2VEL_MAX;
+        else v_corr = v_corr_raw;
+
+        // モニタ用
+        pos2vel_correction = v_corr;
+    } else {
+        // 回転・スラローム中は補正無効
+        v_corr = 0.0f;
+    }
+#endif
+
+    // 速度フィードバック: 目標速度(プロファイル+位置補正) - 実測速度
+    target_velocity = v_profile + v_corr;
     velocity_error = target_velocity - real_velocity;
 
     if (velocity_error > 10000 || velocity_error < -10000) {

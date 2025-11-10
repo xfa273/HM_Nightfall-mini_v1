@@ -54,6 +54,16 @@ void log_add_entry(uint16_t index, float target_omega, float actual_omega,
 void log_print_all(void);
 
 /**
+ * @brief 速度ログ（log_buffer）をCSV出力
+ */
+void log_print_velocity_all(void);
+
+/**
+ * @brief 距離ログ（log_buffer2）をCSV出力
+ */
+void log_print_distance_all(void);
+
+/**
  * @brief ログデータを純粋なCSV形式で出力する（可視化ツール貼り付け用）
  */
 void log_print_csv_only(void);
@@ -62,5 +72,12 @@ void log_print_csv_only(void);
  * @brief 現在のプロファイルに基づいて1サンプル分のログを記録（割り込みから呼ぶ）
  */
 void log_capture_tick(void);
+
+/**
+ * @brief 並進制御値の簡易CSVを出力する
+ * フォーマット: timestamp,target_velocity,real_velocity,out_translation_est
+ * 備考: out_translation_est は (motor_out_r + motor_out_l)/2 から推定
+ */
+void log_print_translation_csv(void);
 
 #endif /* INC_LOGGING_H_ */

@@ -1,6 +1,0 @@
-../Core/Src/eeprom.c:17:19:eeprom_enable_write	2
-../Core/Src/eeprom.c:38:19:eeprom_disable_write	1
-../Core/Src/eeprom.c:47:19:eeprom_write_halfword	1
-../Core/Src/eeprom.c:61:19:eeprom_write_word	1
-../Core/Src/eeprom.c:75:10:eeprom_read_halfword	1
-../Core/Src/eeprom.c:89:10:eeprom_read_word	1

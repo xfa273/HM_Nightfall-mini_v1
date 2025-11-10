@@ -1,4 +1,0 @@
-../Core/Src/path.c:10:6:simplifyPath	8
-../Core/Src/path.c:58:6:convertLTurn	29
-../Core/Src/path.c:163:6:convertDiagonal	69
-../Core/Src/path.c:477:6:makePath	27

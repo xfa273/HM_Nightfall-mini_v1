@@ -41,11 +41,17 @@ void tim1_wait_us(uint32_t us);
 
 #ifdef MAIN_C_ // main.cからこのファイルが呼ばれている場合
 volatile uint8_t ADC_task_counter; // ADCの振り分け用カウンタ
+// 速度ログ用のリングバッファ（従来の log_buffer を流用）
 volatile LogBuffer log_buffer;
+// 距離ログ用のリングバッファ
+volatile LogBuffer log_buffer2;
 
 #else // main.c以外からこのファイルが呼ばれている場合
 extern volatile uint8_t ADC_task_counter; // ADCの振り分け用カウンタ
+// 速度ログ用のリングバッファ
 extern volatile LogBuffer log_buffer;
+// 距離ログ用のリングバッファ
+extern volatile LogBuffer log_buffer2;
 
 #endif
 

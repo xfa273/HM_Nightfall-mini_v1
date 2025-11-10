@@ -310,29 +310,43 @@ void mode2() {
                 drive_enable_motor();
 
                 led_flash(5);
+                // ファン操作（現状は0で開始）
+                drive_fan(0);
 
                 // ログ開始（速度プロファイル）
                 log_init();
-                log_set_profile(LOG_PROFILE_VELOCITY);
+                // log_set_profile(LOG_PROFILE_VELOCITY);
+                log_set_profile(LOG_PROFILE_DISTANCE);
                 log_start(HAL_GetTick());
 
-                // 台形加減速: 3区画=270mm を最短走行同様に実行
-                run_trapezoid_distance_mm(6.0f * DIST_HALF_SEC, velocity_straight);
+                // 最短走行ランタイム(run)と同一ロジックで任意パスを実行
+                // 3区画直進: 6半区画 -> コード 200+6 = 206
+                const uint16_t test_path_case8[] = { 206, 0 };
+                uint8_t prev_scnd8 = MF.FLAG.SCND;
+                MF.FLAG.SCND = 1; // 最短走行と同様、二次（ダッシュ）相当として走行
+                run_with_path(test_path_case8);
+                MF.FLAG.SCND = prev_scnd8;
 
                 // ログ停止
                 log_stop();
 
+                // 走行終了後すぐにファン停止（ログ出力待ちの前）
+                drive_fan(0);
+
                 drive_stop();
 
-                // センサEnter待ちでログ出力
-                printf("[mode2-case8] Press sensor ENTER (FR>1500 & FL<600) to print logs...\n");
+                // センサEnter待ち（右前:速度, 左前:距離）
+                printf("[mode2-case8] Press RIGHT FRONT for VELOCITY (FR>1500), LEFT FRONT for DISTANCE (FL>1500) ...\n");
                 while (1) {
-                    if (ad_fr > 1500 && ad_fl < 600) {
+                    if (ad_fr > 1500) {
+                        log_print_velocity_all();
+                        break;
+                    } else if (ad_fl > 1500) {
+                        log_print_distance_all();
                         break;
                     }
                     HAL_Delay(50);
                 }
-                log_print_all();
 
                 led_flash(5);
 
@@ -351,29 +365,40 @@ void mode2() {
                 drive_enable_motor();
 
                 led_flash(5);
+                // ファン操作（現状は0で開始）
+                drive_fan(0);
 
                 // ログ開始（速度プロファイル）
                 log_init();
                 log_set_profile(LOG_PROFILE_VELOCITY);
                 log_start(HAL_GetTick());
 
-                // 台形加減速: 3区画=270mm を最短走行同様に実行
-                run_trapezoid_distance_mm(6.0f * DIST_HALF_SEC, velocity_straight);
+                // 最短走行ランタイム(run)と同一ロジックで任意パスを実行
+                const uint16_t test_path_case9[] = { 206, 0 }; // 3区画直進
+                uint8_t prev_scnd9 = MF.FLAG.SCND;
+                MF.FLAG.SCND = 1; // ダッシュ相当
+                run_with_path(test_path_case9);
+                MF.FLAG.SCND = prev_scnd9;
 
                 // ログ停止
                 log_stop();
+                // 走行終了後すぐにファン停止（ログ出力待ちの前）
+                drive_fan(0);
 
                 drive_stop();
 
-                // センサEnter待ちでログ出力
-                printf("[mode2-case9] Press sensor ENTER (FR>1500 & FL<600) to print logs...\n");
+                // センサEnter待ち（右前:速度, 左前:距離）
+                printf("[mode2-case9] Press RIGHT FRONT for VELOCITY (FR>1500), LEFT FRONT for DISTANCE (FL>1500) ...\n");
                 while (1) {
-                    if (ad_fr > 1500 && ad_fl < 600) {
+                    if (ad_fr > 1500) {
+                        log_print_velocity_all();
+                        break;
+                    } else if (ad_fl > 1500) {
+                        log_print_distance_all();
                         break;
                     }
                     HAL_Delay(50);
                 }
-                log_print_all();
 
                 led_flash(5);
 

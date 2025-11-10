@@ -125,6 +125,9 @@ volatile float distance_error;       // 並進距離の偏差[mm]
 volatile float distance_error_error; // 並進距離の偏差の偏差[mm]
 volatile float previous_distance_error; // 1ループ前の並進距離の偏差[mm]
 volatile float distance_integral;       // 並進距離の積分項
+volatile float pos2vel_integral;      // 位置→速度補正のI項（生積分）
+volatile float pos2vel_prev_error;    // 位置→速度補正の前回距離誤差[mm]
+volatile float pos2vel_correction;    // 位置→速度の補正速度[mm/s]（モニタ用）
 
 /*並進速度制御用*/
 volatile float target_velocity;      // 目標並進速度[mm/s]
@@ -292,6 +295,9 @@ extern volatile float distance_error;       // 並進距離の偏差[mm]
 extern volatile float distance_error_error; // 並進距離の偏差の偏差[mm]
 extern volatile float previous_distance_error; // 1ループ前の並進距離の偏差[mm]
 extern volatile float distance_integral; // 並進距離の積分項
+extern volatile float pos2vel_integral;   // 位置→速度補正のI項（生積分）
+extern volatile float pos2vel_prev_error; // 位置→速度補正の前回距離誤差[mm]
+extern volatile float pos2vel_correction; // 位置→速度の補正速度[mm/s]（モニタ用）
 
 /*並進速度制御用*/
 extern volatile float target_velocity;      // 目標並進速度[mm/s]
@@ -402,6 +408,7 @@ void one_sectionU(uint8_t); // 等速一区画
 void one_sectionA(void);
 void one_sectionD(void);
 void run_straight(float, float, float); // 指定区画を指定速度で走行
+void run_straight_const(float, float);   // 上限速度を固定して走行（等速保持）
 void rotate_R90(void);                  // 右90回転
 void rotate_L90(void);                  // 左90回転
 void rotate_180(void);                  // 180度回転

@@ -1,5 +1,0 @@
-../Core/Src/turn_time_calculator.c:19:7:calculate_turn_time	72	static
-../Core/Src/turn_time_calculator.c:54:6:print_turn_times	32	static
-../Core/Src/turn_time_calculator.c:96:7:calculate_straight_time	64	static
-../Core/Src/turn_time_calculator.c:141:7:calculate_total_run_time	48	static
-../Core/Src/turn_time_calculator.c:227:6:print_path_times	112	static
