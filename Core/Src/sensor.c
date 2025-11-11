@@ -20,6 +20,60 @@ static void print_wall_offsets(const char* label)
 }
 
 //+++++++++++++++++++++++++++++++++++++++++++++++
+// sensor_calibrate_wall_ctrl_base_and_save
+// 壁制御の基準値（base_l/base_r/base_f）を一定時間平均して測定し、Flashへ保存
+// 引数: duration_ms 測定時間[ms] （例: 1500）
+// 前提: 通路の中央に停止し、左右に壁がある状態で実行
+// 戻り: HAL_StatusTypeDef（保存の成否。測定自体は常に実施）
+//+++++++++++++++++++++++++++++++++++++++++++++++
+HAL_StatusTypeDef sensor_calibrate_wall_ctrl_base_and_save(uint32_t duration_ms)
+{
+    if (duration_ms < 200) duration_ms = 200; // 最低200ms
+
+    printf("[CAL] Place robot centered with side walls. Waiting for both walls...\r\n");
+    // 両側壁の存在を待つ（しきい値はWALL_BASE_*）
+    while (!(ad_r > WALL_BASE_R && ad_l > WALL_BASE_L)) {
+        HAL_Delay(10);
+    }
+    buzzer_beep(1200);
+    printf("[CAL] Detected both walls. Measuring for %lu ms...\r\n", (unsigned long)duration_ms);
+
+    uint32_t t0 = HAL_GetTick();
+    uint32_t sum_l = 0, sum_r = 0, sum_f = 0;
+    uint32_t n = 0;
+
+    while ((HAL_GetTick() - t0) < duration_ms) {
+        // ad_* は割り込みで更新済みの差分値（オフセット補正・移動平均後）
+        sum_l += (uint32_t)ad_l;
+        sum_r += (uint32_t)ad_r;
+        sum_f += (uint32_t)(ad_fl + ad_fr);
+        n++;
+        HAL_Delay(5);
+    }
+
+    if (n == 0) n = 1; // ゼロ除算保護
+
+    // 平均値を適用
+    base_l = (uint16_t)(sum_l / n);
+    base_r = (uint16_t)(sum_r / n);
+    base_f = (uint16_t)(sum_f / n);
+
+    printf("[CAL] base_l=%u, base_r=%u, base_f=%u (n=%lu)\r\n",
+           (unsigned)base_l, (unsigned)base_r, (unsigned)base_f, (unsigned long)n);
+
+    // 保存
+    HAL_StatusTypeDef st = sensor_params_save_to_flash();
+    if (st == HAL_OK) {
+        printf("[CAL] Saved to Flash successfully.\r\n");
+        buzzer_beep(1000);
+    } else {
+        printf("[CAL] Flash save failed. HAL=%d\r\n", st);
+        buzzer_beep(3000);
+    }
+    return st;
+}
+
+//+++++++++++++++++++++++++++++++++++++++++++++++
 // ADC DMA helpers
 //+++++++++++++++++++++++++++++++++++++++++++++++
 HAL_StatusTypeDef sensor_adc_dma_start(volatile uint16_t *dst)
@@ -184,10 +238,15 @@ uint8_t get_base() {
     uint8_t res = 1; // 理想的な値を取得できたか
 
     //----制御用の基準を取得----
-    // base_l = ad_l; // 現在の左側のセンサ値で決定
-    // base_r = ad_r; // 現在の右側のセンサ値で決定
-    base_l = WALL_CTRL_BASE_L;
-    base_r = WALL_CTRL_BASE_R;
+    // 既にフラッシュから読み込まれている（もしくは校正モードで測定済みの）
+    // base_l/base_r を優先使用する。未設定(0)の場合は params.h の既定値を利用。
+    if (base_l == 0) {
+        base_l = WALL_CTRL_BASE_L;
+    }
+    if (base_r == 0) {
+        base_r = WALL_CTRL_BASE_R;
+    }
+    // 前壁の基準は都度、現在のFR+FLの合計を用いる（主に探索用の参照）
     base_f = ad_fl + ad_fr;
 
     // printf("base: %d,%d\n", base_l, base_r);

@@ -125,4 +125,8 @@ bool sensor_params_load_from_flash(void);
 HAL_StatusTypeDef sensor_params_save_to_flash(void);
 HAL_StatusTypeDef sensor_recalibrate_and_save(void);
 
+// 壁制御の基準値（base_l/base_r/base_f）を一定時間平均して測定し、Flashに保存する
+// duration_ms: 測定に用いる時間[ms]
+HAL_StatusTypeDef sensor_calibrate_wall_ctrl_base_and_save(uint32_t duration_ms);
+
 #endif /* INC_SENSOR_H_ */

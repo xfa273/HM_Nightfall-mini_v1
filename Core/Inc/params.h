@@ -68,7 +68,7 @@
 #endif
 
 #ifndef V_POS2VEL_MAX
-#define V_POS2VEL_MAX 150.0F  // 位置補正で付加する速度の上限[mm/s]
+#define V_POS2VEL_MAX 1000.0F  // 位置補正で付加する速度の上限[mm/s]
 #endif
 #ifndef POS2VEL_I_LIMIT
 #define POS2VEL_I_LIMIT 15000.0F // 位置→速度補正のI項クランプ（生積分に対して）
@@ -94,13 +94,13 @@
 
 // Fan OFF: use commented-out values noted above
 #ifndef KFF_VELOCITY_FAN_OFF
-#define KFF_VELOCITY_FAN_OFF 0.079632F
+#define KFF_VELOCITY_FAN_OFF 0.0F
 #endif
 #ifndef KFF_ACCEL_FAN_OFF
-#define KFF_ACCEL_FAN_OFF    0.0020F
+#define KFF_ACCEL_FAN_OFF    0.0F
 #endif
 #ifndef KFF_COULOMB_FAN_OFF
-#define KFF_COULOMB_FAN_OFF  22.0F
+#define KFF_COULOMB_FAN_OFF  0.0F
 #endif
 
 #define KP_ANGLE 0.0F // 角度制御のP項
@@ -158,7 +158,7 @@
 // 壁切れ未検知時の最大延長距離（本来の距離に追加して等速で探す上限）[mm]
 // 例: 20mm。未検知でも暴走しないよう上限を設けるための値です。
 #ifndef WALL_END_EXTEND_MAX_MM
-#define WALL_END_EXTEND_MAX_MM  30.0F
+#define WALL_END_EXTEND_MAX_MM  40.0F
 #endif
 
 #define WALL_CTRL_BASE_L 2000// 壁制御の基準値（左） 2135
@@ -214,7 +214,7 @@
     探索系
 ------------------------------------------------------------*/
 //----ゴール座標----
-#define GOAL_X    0 // 7
+#define GOAL_X    7 // 7
 #define GOAL_Y    7 // 7
 #define MAZE_SIZE 16
 #define START_X   0
@@ -229,18 +229,18 @@
 #endif
 
 #ifndef GOAL2_X
-#define GOAL2_X 0
-#define GOAL2_Y 0
+#define GOAL2_X 7
+#define GOAL2_Y 8
 #endif
 
 #ifndef GOAL3_X
-#define GOAL3_X 0
-#define GOAL3_Y 0
+#define GOAL3_X 8
+#define GOAL3_Y 7
 #endif
 
 #ifndef GOAL4_X
-#define GOAL4_X 0
-#define GOAL4_Y 0
+#define GOAL4_X 8
+#define GOAL4_Y 8
 #endif
 
 #ifndef GOAL5_X

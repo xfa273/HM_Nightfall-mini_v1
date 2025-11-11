@@ -291,7 +291,7 @@ void adachi(void) {
             led_write(0, 1);
 
             // スラローム右90°
-            turn_R90(1);
+            turn_R90(0);
 
             turn_dir(DIR_TURN_R90); // 内部位置情報でも右回転処理
 
@@ -325,25 +325,11 @@ void adachi(void) {
                 }
             }
 
-            if (ad_fr > WALL_BASE_FR * 1.5 && ad_fl > WALL_BASE_FL * 1.5) {
-                // 前壁での中央合わせを、後向きの尻当てに置換（向きが逆）
+            if (ad_fr > WALL_BASE_FR * 1.3 && ad_fl > WALL_BASE_FL * 1.3) {
                 rotate_180();
-                set_position();
-                rotate_180();
-                if (r_wall) {
-                    // 右壁を使ってさらに合わせる: 北→西（L90）、尻を右壁へ→北へ戻す（+L90で合計180）
-                    rotate_L90();
-                    set_position();
-                    rotate_L90();
-                } else if (l_wall) {
-                    // 左壁を使ってさらに合わせる: 北→東（R90）、尻を左壁へ→北へ戻す（+R90で合計180）
-                    rotate_R90();
-                    set_position();
-                    rotate_R90();
-                } else {
-                    rotate_180();
-                }
                 drive_wait();
+                set_position();
+                // drive_wait();
             } else {
                 rotate_180();
                 drive_wait();
@@ -360,7 +346,7 @@ void adachi(void) {
             led_write(1, 0);
 
             // スラローム左90°
-            turn_L90(1);
+            turn_L90(0);
 
             turn_dir(DIR_TURN_L90); // 内部位置情報でも左回転処理
 

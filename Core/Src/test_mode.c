@@ -399,15 +399,38 @@ void test_mode() {
 
         case 8:
 
-            printf("Test Mode 8 .\n");
+            printf("Test Mode 8: Wall control baseline calibration.\n");
 
-            while (1) {
-                printf("R: %d, L: %d, FR: %d, FL: %d, BAT: %d\n", ad_r_raw, ad_l_raw,
-                       ad_fr_raw, ad_fl_raw, ad_bat);
+            // 安全停止と制御の無効化
+            velocity_interrupt = 0;
+            omega_interrupt = 0;
+            drive_variable_reset();
+            drive_stop();
+            MF.FLAG.CTRL = 0;            // 壁制御を無効化
+            MF.FLAG.CTRL_DIAGONAL = 0;   // 斜め制御を無効化
 
-                HAL_Delay(300);
+            // 案内
+            printf("[CAL] Place the robot centered in the corridor with both side walls present.\n");
+            printf("[CAL] Press ENTER key on serial to start, or wait until both side walls are detected.\n");
+
+            // 自動開始: 両側壁の存在を待つ
+            while (!(ad_r > WALL_BASE_R && ad_l > WALL_BASE_L)) {
+                HAL_Delay(10);
             }
-            break;
+            buzzer_enter(1000);
+
+            // 測定・保存（約1.5秒）
+            {
+                HAL_StatusTypeDef st = sensor_calibrate_wall_ctrl_base_and_save(1500);
+                if (st == HAL_OK) {
+                    printf("[CAL] Done. base_l=%u, base_r=%u, base_f=%u saved to Flash.\n",
+                           (unsigned)base_l, (unsigned)base_r, (unsigned)base_f);
+                    led_flash(3);
+                } else {
+                    printf("[CAL] Failed to save to Flash. HAL=%d\n", st);
+                    led_flash(1);
+                }
+            }
 
             break;
 
