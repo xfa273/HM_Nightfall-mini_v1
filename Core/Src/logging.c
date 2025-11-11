@@ -8,6 +8,62 @@ static volatile LogProfile s_log_profile = LOG_PROFILE_OMEGA;
 
 void log_set_profile(LogProfile profile) { s_log_profile = profile; }
 
+// 角速度ログ（log_buffer）をCSV出力
+void log_print_omega_all(void) {
+    printf("=== Micromouse Log Data (CSV Format, OMEGA) ===\n");
+    printf("Total entries: %d\n", log_buffer.count);
+    printf("CSV Format: timestamp,target_omega,actual_omega,p_term_omega,i_term_omega,d_term_omega,motor_out_r,motor_out_l\n");
+    printf("--- CSV Data Start ---\n");
+
+    uint16_t count = log_buffer.count > MAX_LOG_ENTRIES ? MAX_LOG_ENTRIES : log_buffer.count;
+    uint16_t start = log_buffer.count > MAX_LOG_ENTRIES ? log_buffer.head : 0;
+
+    for (uint16_t i = 0; i < count; i++) {
+        uint16_t idx = (start + i) % MAX_LOG_ENTRIES;
+        volatile LogEntry *entry = &log_buffer.entries[idx];
+        printf("%lu,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f\n",
+               entry->timestamp - log_buffer.start_time,
+               entry->target_omega,
+               entry->actual_omega,
+               entry->p_term_omega,
+               entry->i_term_omega,
+               entry->d_term_omega,
+               entry->motor_out_r,
+               entry->motor_out_l);
+    }
+
+    printf("--- CSV Data End ---\n");
+    printf("=== End of Log ===\n");
+}
+
+// 角度ログ（log_buffer2）をCSV出力
+void log_print_angle_all(void) {
+    printf("=== Micromouse Log Data (CSV Format, ANGLE) ===\n");
+    printf("Total entries: %d\n", log_buffer2.count);
+    printf("CSV Format: timestamp,target_angle,actual_angle,p_term,i_term,d_term,motor_out_r,motor_out_l\n");
+    printf("--- CSV Data Start ---\n");
+
+    uint16_t count = log_buffer2.count > MAX_LOG_ENTRIES ? MAX_LOG_ENTRIES : log_buffer2.count;
+    uint16_t start = log_buffer2.count > MAX_LOG_ENTRIES ? log_buffer2.head : 0;
+
+    for (uint16_t i = 0; i < count; i++) {
+        uint16_t idx = (start + i) % MAX_LOG_ENTRIES;
+        volatile LogEntry *entry = &log_buffer2.entries[idx];
+        printf("%lu,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f\n",
+               entry->timestamp - log_buffer2.start_time,
+               entry->target_omega,
+               entry->actual_omega,
+               entry->p_term_omega,
+               entry->i_term_omega,
+               entry->d_term_omega,
+               entry->motor_out_r,
+               entry->motor_out_l);
+    }
+
+    printf("--- CSV Data End ---\n");
+    printf("=== End of Log ===\n");
+}
+
 /**
  * @brief 並進制御ログを8列CSVで出力する（ツール互換）
  * フォーマット（8列）:
@@ -72,38 +128,119 @@ void log_capture_tick(void) {
         return;
     }
 
+    static float s_angle_i = 0.0f;       // 角度ログ用の仮想I項（制御とは独立）
+    static float s_angle_prev_e = 0.0f;  // 角度ログ用の仮想D項
+
     uint32_t current_time = HAL_GetTick();
 
-    // 速度ログ（log_buffer）
-    if (log_buffer.logging_active && log_buffer.count < MAX_LOG_ENTRIES) {
-        uint16_t pos = log_buffer.head;
-        log_buffer.entries[pos].count = (uint16_t)log_buffer.count;
-        log_buffer.entries[pos].target_omega = velocity_interrupt; // 目標速度
-        log_buffer.entries[pos].actual_omega = real_velocity;      // 実速度
-        log_buffer.entries[pos].p_term_omega = KP_VELOCITY * velocity_error;
-        log_buffer.entries[pos].i_term_omega = KI_VELOCITY * velocity_integral;
-        log_buffer.entries[pos].d_term_omega = KD_VELOCITY * velocity_error_error;
-        log_buffer.entries[pos].motor_out_r = (float)out_r;
-        log_buffer.entries[pos].motor_out_l = (float)out_l;
-        log_buffer.entries[pos].timestamp = current_time;
-        log_buffer.head = (pos + 1) % MAX_LOG_ENTRIES;
-        log_buffer.count++;
-    }
+    switch (s_log_profile) {
+    case LOG_PROFILE_VELOCITY: {
+        // 速度ログ（log_buffer）
+        if (log_buffer.logging_active && log_buffer.count < MAX_LOG_ENTRIES) {
+            uint16_t pos = log_buffer.head;
+            log_buffer.entries[pos].count = (uint16_t)log_buffer.count;
+            log_buffer.entries[pos].target_omega = velocity_interrupt; // 目標速度
+            log_buffer.entries[pos].actual_omega = real_velocity;      // 実速度
+            log_buffer.entries[pos].p_term_omega = KP_VELOCITY * velocity_error;
+            log_buffer.entries[pos].i_term_omega = KI_VELOCITY * velocity_integral;
+            log_buffer.entries[pos].d_term_omega = KD_VELOCITY * velocity_error_error;
+            log_buffer.entries[pos].motor_out_r = (float)out_r;
+            log_buffer.entries[pos].motor_out_l = (float)out_l;
+            log_buffer.entries[pos].timestamp = current_time;
+            log_buffer.head = (pos + 1) % MAX_LOG_ENTRIES;
+            log_buffer.count++;
+        }
 
-    // 距離ログ（log_buffer2）
-    if (log_buffer2.logging_active && log_buffer2.count < MAX_LOG_ENTRIES) {
-        uint16_t pos2 = log_buffer2.head;
-        log_buffer2.entries[pos2].count = (uint16_t)log_buffer2.count;
-        log_buffer2.entries[pos2].target_omega = target_distance; // 目標距離
-        log_buffer2.entries[pos2].actual_omega = real_distance;   // 実距離
-        log_buffer2.entries[pos2].p_term_omega = KP_DISTANCE * distance_error;
-        log_buffer2.entries[pos2].i_term_omega = KI_DISTANCE * distance_integral;
-        log_buffer2.entries[pos2].d_term_omega = KD_DISTANCE * distance_error_error;
-        log_buffer2.entries[pos2].motor_out_r = (float)out_r;
-        log_buffer2.entries[pos2].motor_out_l = (float)out_l;
-        log_buffer2.entries[pos2].timestamp = current_time;
-        log_buffer2.head = (pos2 + 1) % MAX_LOG_ENTRIES;
-        log_buffer2.count++;
+        // 距離ログ（log_buffer2）
+        if (log_buffer2.logging_active && log_buffer2.count < MAX_LOG_ENTRIES) {
+            uint16_t pos2 = log_buffer2.head;
+            log_buffer2.entries[pos2].count = (uint16_t)log_buffer2.count;
+            log_buffer2.entries[pos2].target_omega = target_distance; // 目標距離
+            log_buffer2.entries[pos2].actual_omega = real_distance;   // 実距離
+            log_buffer2.entries[pos2].p_term_omega = KP_DISTANCE * distance_error;
+            log_buffer2.entries[pos2].i_term_omega = KI_DISTANCE * distance_integral;
+            log_buffer2.entries[pos2].d_term_omega = KD_DISTANCE * distance_error_error;
+            log_buffer2.entries[pos2].motor_out_r = (float)out_r;
+            log_buffer2.entries[pos2].motor_out_l = (float)out_l;
+            log_buffer2.entries[pos2].timestamp = current_time;
+            log_buffer2.head = (pos2 + 1) % MAX_LOG_ENTRIES;
+            log_buffer2.count++;
+        }
+        break;
+    }
+    case LOG_PROFILE_OMEGA: {
+        // 角速度ログ（log_buffer）
+        if (log_buffer.logging_active && log_buffer.count < MAX_LOG_ENTRIES) {
+            uint16_t pos = log_buffer.head;
+            log_buffer.entries[pos].count = (uint16_t)log_buffer.count;
+            log_buffer.entries[pos].target_omega = omega_interrupt; // 目標角速度
+            log_buffer.entries[pos].actual_omega = real_omega;      // 実角速度
+            // 制御の内部状態をそのまま参照（PID各項の推定）
+            log_buffer.entries[pos].p_term_omega = KP_OMEGA * omega_error;
+            log_buffer.entries[pos].i_term_omega = KI_OMEGA * omega_integral;
+            log_buffer.entries[pos].d_term_omega = KD_OMEGA * omega_error_error;
+            log_buffer.entries[pos].motor_out_r = (float)out_r;
+            log_buffer.entries[pos].motor_out_l = (float)out_l;
+            log_buffer.entries[pos].timestamp = current_time;
+            log_buffer.head = (pos + 1) % MAX_LOG_ENTRIES;
+            log_buffer.count++;
+        }
+
+        // 角度ログ（log_buffer2）: target_angle vs real_angle（独立PI-D推定）
+        if (log_buffer2.logging_active && log_buffer2.count < MAX_LOG_ENTRIES) {
+            float e_ang = target_angle - real_angle;
+            s_angle_i += e_ang;
+            float d_ang = e_ang - s_angle_prev_e;
+            s_angle_prev_e = e_ang;
+
+            uint16_t pos2 = log_buffer2.head;
+            log_buffer2.entries[pos2].count = (uint16_t)log_buffer2.count;
+            log_buffer2.entries[pos2].target_omega = target_angle; // 目標角度
+            log_buffer2.entries[pos2].actual_omega = real_angle;   // 実角度
+            log_buffer2.entries[pos2].p_term_omega = KP_ANGLE * e_ang;
+            log_buffer2.entries[pos2].i_term_omega = KI_ANGLE * s_angle_i;
+            log_buffer2.entries[pos2].d_term_omega = KD_ANGLE * d_ang;
+            log_buffer2.entries[pos2].motor_out_r = (float)out_r;
+            log_buffer2.entries[pos2].motor_out_l = (float)out_l;
+            log_buffer2.entries[pos2].timestamp = current_time;
+            log_buffer2.head = (pos2 + 1) % MAX_LOG_ENTRIES;
+            log_buffer2.count++;
+        }
+        break;
+    }
+    default: {
+        // 既定は速度/距離と同様に扱う
+        if (log_buffer.logging_active && log_buffer.count < MAX_LOG_ENTRIES) {
+            uint16_t pos = log_buffer.head;
+            log_buffer.entries[pos].count = (uint16_t)log_buffer.count;
+            log_buffer.entries[pos].target_omega = velocity_interrupt;
+            log_buffer.entries[pos].actual_omega = real_velocity;
+            log_buffer.entries[pos].p_term_omega = KP_VELOCITY * velocity_error;
+            log_buffer.entries[pos].i_term_omega = KI_VELOCITY * velocity_integral;
+            log_buffer.entries[pos].d_term_omega = KD_VELOCITY * velocity_error_error;
+            log_buffer.entries[pos].motor_out_r = (float)out_r;
+            log_buffer.entries[pos].motor_out_l = (float)out_l;
+            log_buffer.entries[pos].timestamp = current_time;
+            log_buffer.head = (pos + 1) % MAX_LOG_ENTRIES;
+            log_buffer.count++;
+        }
+
+        if (log_buffer2.logging_active && log_buffer2.count < MAX_LOG_ENTRIES) {
+            uint16_t pos2 = log_buffer2.head;
+            log_buffer2.entries[pos2].count = (uint16_t)log_buffer2.count;
+            log_buffer2.entries[pos2].target_omega = target_distance;
+            log_buffer2.entries[pos2].actual_omega = real_distance;
+            log_buffer2.entries[pos2].p_term_omega = KP_DISTANCE * distance_error;
+            log_buffer2.entries[pos2].i_term_omega = KI_DISTANCE * distance_integral;
+            log_buffer2.entries[pos2].d_term_omega = KD_DISTANCE * distance_error_error;
+            log_buffer2.entries[pos2].motor_out_r = (float)out_r;
+            log_buffer2.entries[pos2].motor_out_l = (float)out_l;
+            log_buffer2.entries[pos2].timestamp = current_time;
+            log_buffer2.head = (pos2 + 1) % MAX_LOG_ENTRIES;
+            log_buffer2.count++;
+        }
+        break;
+    }
     }
 }
 

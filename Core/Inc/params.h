@@ -61,7 +61,7 @@
 #define KPOS2VEL_P 0.65F      // [ (mm/s) / mm ]  まずはP主体
 #endif
 #ifndef KPOS2VEL_I
-#define KPOS2VEL_I 0.010F     // [ (mm/s) / mm / tick ] 1kHz積分前提で小さめ
+#define KPOS2VEL_I 0.0F     // [ (mm/s) / mm / tick ] 1kHz積分前提で小さめ
 #endif
 #ifndef KPOS2VEL_D
 #define KPOS2VEL_D 0.0F       // 原則0（内側速度PIDと役割重複のため）
@@ -107,9 +107,9 @@
 #define KI_ANGLE 0.0F // 角度制御のI項
 #define KD_ANGLE 0.0F // 角度制御のD項
 
-#define KP_OMEGA 1.4F  // 角速度制御のP項 1.84F
-#define KI_OMEGA 0.02F // 角速度制御のI項 0.075F
-#define KD_OMEGA 0.2F  // 角速度制御のD項 0.16F
+#define KP_OMEGA 1.0F  // 角速度制御のP項 1.84F
+#define KI_OMEGA 0.01F // 角速度制御のI項 0.075F
+#define KD_OMEGA 0.15F  // 角速度制御のD項 0.16F
 #define FF_OMEGA 0.0F // 角速度制御のFF項 0.043F
 
 #define KP_IMU 1.0F // IMUの角速度の補正係数

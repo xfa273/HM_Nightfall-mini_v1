@@ -137,13 +137,31 @@ void mode4() {
                 drive_fan(shortestRunModeParams4.fan_power);
                 led_flash(5);
 
+                log_init();
+                log_set_profile(LOG_PROFILE_OMEGA);
+                log_start(HAL_GetTick());
+
                 half_sectionA(velocity_turn90);
                 turn_R90(0);
                 half_sectionD(0);
 
+                log_stop();
+
                 led_flash(5);
                 drive_fan(0);
                 drive_stop();
+
+                // センサEnter待ち（右前:角速度ログ, 左前:角度ログ）
+                while (1) {
+                    if (ad_fr > 1500) {
+                        log_print_omega_all();
+                        break;
+                    } else if (ad_fl > 1500) {
+                        log_print_angle_all();
+                        break;
+                    }
+                    HAL_Delay(50);
+                }
                 break;
             case 1: // 90deg大回り
                 apply_case_params_mode4_idx(idx_normal);
@@ -162,13 +180,31 @@ void mode4() {
                 drive_fan(shortestRunModeParams4.fan_power);
                 led_flash(5);
 
+                log_init();
+                log_set_profile(LOG_PROFILE_OMEGA);
+                log_start(HAL_GetTick());
+
                 half_sectionA(velocity_l_turn_90);
                 l_turn_R90();
                 half_sectionD(0);
 
+                log_stop();
+
                 led_flash(5);
                 drive_fan(0);
                 drive_stop();
+
+                // センサEnter待ち（右前:角速度ログ, 左前:角度ログ）
+                while (1) {
+                    if (ad_fr > 1500) {
+                        log_print_omega_all();
+                        break;
+                    } else if (ad_fl > 1500) {
+                        log_print_angle_all();
+                        break;
+                    }
+                    HAL_Delay(50);
+                }
                 break;
             case 2: // 180deg大回り
                 apply_case_params_mode4_idx(idx_normal);
@@ -187,13 +223,31 @@ void mode4() {
                 drive_fan(shortestRunModeParams4.fan_power);
                 led_flash(5);
 
+                log_init();
+                log_set_profile(LOG_PROFILE_OMEGA);
+                log_start(HAL_GetTick());
+
                 half_sectionA(velocity_l_turn_180);
                 l_turn_R180(0);
                 half_sectionD(0);
 
+                log_stop();
+
                 led_flash(5);
                 drive_fan(0);
                 drive_stop();
+
+                // センサEnter待ち（右前:角速度ログ, 左前:角度ログ）
+                while (1) {
+                    if (ad_fr > 1500) {
+                        log_print_omega_all();
+                        break;
+                    } else if (ad_fl > 1500) {
+                        log_print_angle_all();
+                        break;
+                    }
+                    HAL_Delay(50);
+                }
                 break;
             case 3: // 45deg 入り
                 apply_case_params_mode4_idx(idx_diag);

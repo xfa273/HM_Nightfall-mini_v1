@@ -64,6 +64,16 @@ void log_print_velocity_all(void);
 void log_print_distance_all(void);
 
 /**
+ * @brief 角速度ログ（log_buffer）をCSV出力
+ */
+void log_print_omega_all(void);
+
+/**
+ * @brief 角度ログ（log_buffer2）をCSV出力
+ */
+void log_print_angle_all(void);
+
+/**
  * @brief ログデータを純粋なCSV形式で出力する（可視化ツール貼り付け用）
  */
 void log_print_csv_only(void);
