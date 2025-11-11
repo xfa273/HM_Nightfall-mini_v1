@@ -184,9 +184,10 @@ void mode4() {
                 log_set_profile(LOG_PROFILE_OMEGA);
                 log_start(HAL_GetTick());
 
-                half_sectionA(velocity_l_turn_90);
+                // half_sectionA(velocity_l_turn_90);
+                run_straight(2, velocity_l_turn_90, 0);
                 l_turn_R90();
-                half_sectionD(0);
+                run_straight(1, 0, 0);
 
                 log_stop();
 

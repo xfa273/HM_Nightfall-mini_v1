@@ -36,17 +36,17 @@
 
 #define KP_VELOCITY 0.45F // 並進速度制御のP項  0.45F
 #define KI_VELOCITY 0.65F// 並進速度制御のI項  0.65F
-#define KD_VELOCITY 0.0F // 並進速度制御のD項  0.6F
+#define KD_VELOCITY 0.8F // 並進速度制御のD項  0.6F
 
 // 並進速度制御 フィードフォワードと積分クランプ
 #ifndef KFF_VELOCITY
-#define KFF_VELOCITY 0.18F   // 速度FF [PWMcount/(mm/s)] 0.079632F
+#define KFF_VELOCITY 0.0F   // 速度FF [PWMcount/(mm/s)] 0.18F
 #endif
 #ifndef KFF_ACCEL
-#define KFF_ACCEL    0.002F   // 加速度FF [PWMcount/(mm/s^2)] 0.0020F
+#define KFF_ACCEL    0.0F   // 加速度FF [PWMcount/(mm/s^2)] 0.0020F
 #endif
 #ifndef KFF_COULOMB
-#define KFF_COULOMB  22.0F   // クーロン摩擦補償 [PWMcount] 22.0F
+#define KFF_COULOMB  0.0F   // クーロン摩擦補償 [PWMcount] 22.0F
 #endif
 #ifndef VEL_I_LIMIT
 #define VEL_I_LIMIT  15000.0F // 速度I項クランプ
@@ -58,7 +58,7 @@
 #endif
 
 #ifndef KPOS2VEL_P
-#define KPOS2VEL_P 0.65F      // [ (mm/s) / mm ]  まずはP主体
+#define KPOS2VEL_P 0.5F      // [ (mm/s) / mm ]  まずはP主体
 #endif
 #ifndef KPOS2VEL_I
 #define KPOS2VEL_I 0.0F     // [ (mm/s) / mm / tick ] 1kHz積分前提で小さめ
