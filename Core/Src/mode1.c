@@ -86,6 +86,8 @@ void mode1() {
             case 1: // 通常ターン 90deg（探索用共通パラメータ）
                 // 探索用の共通パラメータを適用
                 apply_search_run_params();
+                // 調整モードでは壁制御を無効化
+                kp_wall = 0.0f;
 
                 velocity_interrupt = 0;
 
@@ -225,12 +227,85 @@ void mode1() {
 
             break;
 
-        case 3:
-            printf("Mode 1-3: (empty)\n");
+        case 3: // 探索: ゴール到達後に全面探索へ切り替え
+
+            printf("Mode 1-3 (Explore: Goal -> Full Explore).\n");
+
+            // ===== 走行パラメータ（探索共通パラメータを適用） =====
+            apply_search_run_params();
+            duty_setposition = 40;
+
+            // 壁判断しきい値の係数
+            sensor_kx = 1.0;
+
+            MF.FLAG.WALL_ALIGN = 0;
+
+            velocity_interrupt = 0;
+
+            // ===== 事前準備 =====
+            led_flash(10);
+
+            drive_variable_reset();
+            IMU_GetOffset();
+            drive_enable_motor();
+
+            led_flash(2);
+
+            // ===== 第1フェーズ: ゴール到達で終了 =====
+            get_base();
+            drive_start();
+            set_search_mode(SEARCH_MODE_GOAL);
+            search_end = false;
+            adachi();
+
+            // ===== 第2フェーズ: 全面探索 =====
+            led_flash(2);
+            get_base();
+            drive_start();
+            set_search_mode(SEARCH_MODE_FULL);
+            g_suppress_first_stop_save = true; // 切替直後の最初の停止保存を1回スキップ
+            search_end = false;
+            adachi();
+
+            led_wait();
+
             break;
 
-        case 4:
-            printf("Mode 1-4: (empty)\n");
+        case 4: // 探索: 最初から全面探索
+
+            printf("Mode 1-4 (Explore: Full).\n");
+
+            // 探索用の共通パラメータを適用
+            apply_search_run_params();
+            duty_setposition = 40;
+
+            // 壁判断しきい値の係数
+            sensor_kx = 1.0;
+
+            MF.FLAG.WALL_ALIGN = 0;
+
+            velocity_interrupt = 0;
+
+            // 準備
+            led_flash(10);
+            drive_variable_reset();
+            IMU_GetOffset();
+            drive_enable_motor();
+
+            led_flash(2);
+
+            get_base();
+
+            drive_start();
+
+            // 全面探索モード
+            set_search_mode(SEARCH_MODE_FULL);
+            search_end = false;
+
+            adachi();
+
+            led_wait();
+
             break;
 
         case 5:

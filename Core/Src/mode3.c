@@ -123,6 +123,8 @@ void mode3() {
             case 0: // 通常ターン
                 apply_case_params_mode3_idx(idx_normal);
                 apply_turn_normal_mode3();
+                // 調整モードでは壁制御を無効化
+                kp_wall = 0.0f;
                 printf("Loaded params: normal turn (mode3).\n");
 
                 velocity_interrupt = 0;
@@ -148,6 +150,8 @@ void mode3() {
             case 1: // 最短(case1)
                 apply_case_params_mode3_idx(idx_normal);
                 apply_turn_large90_mode3();
+                // 調整モードでは壁制御を無効化
+                kp_wall = 0.0f;
                 printf("Loaded params: large 90deg (mode3).\n");
 
                 velocity_interrupt = 0;
@@ -173,6 +177,8 @@ void mode3() {
             case 2: // 最短(case2)
                 apply_case_params_mode3_idx(idx_normal);
                 apply_turn_large180_mode3();
+                // 調整モードでは壁制御を無効化
+                kp_wall = 0.0f;
                 printf("Loaded params: large 180deg (mode3).\n");
 
                 velocity_interrupt = 0;
@@ -198,6 +204,8 @@ void mode3() {
             case 3: // 45deg 入り
                 apply_case_params_mode3_idx(idx_diag);
                 apply_turn_d45in_mode3();
+                // 調整モードでは壁制御を無効化
+                kp_wall = 0.0f;
                 printf("Loaded params: diag 45-in (mode3).\n");
 
                 velocity_interrupt = 0;
@@ -223,6 +231,8 @@ void mode3() {
             case 4: // 45deg 出
                 apply_case_params_mode3_idx(idx_diag);
                 apply_turn_d45out_mode3();
+                // 調整モードでは壁制御を無効化
+                kp_wall = 0.0f;
                 printf("Loaded params: diag 45-out (mode3).\n");
 
                 velocity_interrupt = 0;
@@ -248,6 +258,8 @@ void mode3() {
             case 5: // V90
                 apply_case_params_mode3_idx(idx_diag);
                 apply_turn_v90_mode3();
+                // 調整モードでは壁制御を無効化
+                kp_wall = 0.0f;
                 printf("Loaded params: diag V90 (mode3).\n");
 
                 velocity_interrupt = 0;
@@ -273,6 +285,8 @@ void mode3() {
             case 6: // 135deg 入り
                 apply_case_params_mode3_idx(idx_diag);
                 apply_turn_d135in_mode3();
+                // 調整モードでは壁制御を無効化
+                kp_wall = 0.0f;
                 printf("Loaded params: diag 135-in (mode3).\n");
 
                 velocity_interrupt = 0;
@@ -298,6 +312,8 @@ void mode3() {
             case 7: // 135deg 出
                 apply_case_params_mode3_idx(idx_diag);
                 apply_turn_d135out_mode3();
+                // 調整モードでは壁制御を無効化
+                kp_wall = 0.0f;
                 printf("Loaded params: diag 135-out (mode3).\n");
 
                 velocity_interrupt = 0;
@@ -323,6 +339,8 @@ void mode3() {
             case 8: // Straight test using case1 params (index0)
                 // 直進テスト: mode3 の case1 で使用されるパラメータを参照
                 apply_case_params_mode3_idx(0); // case1 -> index 0
+                // 調整モードでは壁制御を無効化
+                kp_wall = 0.0f;
                 printf("Loaded params: straight test (mode3, case8 -> case1 params).\n");
 
                 velocity_interrupt = 0;
@@ -374,6 +392,8 @@ void mode3() {
             case 9: // Straight test using case7 params (index6)
                 // 直進テスト: mode3 の case7 で使用されるパラメータを参照
                 apply_case_params_mode3_idx(6); // case7 -> index 6
+                // 調整モードでは壁制御を無効化
+                kp_wall = 0.0f;
                 printf("Loaded params: straight test (mode3, case9 -> case7 params).\n");
 
                 velocity_interrupt = 0;
