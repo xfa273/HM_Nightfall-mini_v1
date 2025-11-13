@@ -7,6 +7,19 @@
 
 #include "global.h"
 #include "../Inc/search_run_params.h"
+#include <math.h>
+
+// 探索パラメータの簡易調整用オーバーライド（未設定は NaN）
+static float s_override_velocity_straight = NAN;
+static float s_override_accel_straight = NAN;
+static float s_override_kp_wall = NAN;
+static float s_override_dist_wall_end = NAN;
+
+static void print_search_params_current(void) {
+    printf("[Search Params] vel=%.1f, acc=%.1f/%.1f, kp_wall=%.3f, off_in=%.1f, off_out=%.1f, val_in=%.0f, ang=%.1f, wall_end=%.1f\n",
+           velocity_straight, acceleration_straight, acceleration_straight_dash, kp_wall,
+           dist_offset_in, dist_offset_out, val_offset_in, angle_turn_90, dist_wall_end);
+}
 
 // Helper loader: apply exploration common params
 static void apply_search_run_params(void) {
@@ -27,6 +40,28 @@ static void apply_search_run_params(void) {
     angle_turn_90 = p->angle_turn_90;
     // 壁切れ後追従
     dist_wall_end = p->dist_wall_end;
+
+    // オーバーライドを適用
+    if (!isnan(s_override_velocity_straight)) {
+        if (s_override_velocity_straight < 100.0f) s_override_velocity_straight = 100.0f;
+        if (s_override_velocity_straight > 3000.0f) s_override_velocity_straight = 3000.0f;
+        velocity_straight = s_override_velocity_straight;
+    }
+    if (!isnan(s_override_accel_straight)) {
+        if (s_override_accel_straight < 200.0f) s_override_accel_straight = 200.0f;
+        if (s_override_accel_straight > 20000.0f) s_override_accel_straight = 20000.0f;
+        acceleration_straight = s_override_accel_straight;
+    }
+    if (!isnan(s_override_kp_wall)) {
+        if (s_override_kp_wall < 0.0f) s_override_kp_wall = 0.0f;
+        if (s_override_kp_wall > 0.5f) s_override_kp_wall = 0.5f;
+        kp_wall = s_override_kp_wall;
+    }
+    if (!isnan(s_override_dist_wall_end)) {
+        if (s_override_dist_wall_end < 0.0f) s_override_dist_wall_end = 0.0f;
+        if (s_override_dist_wall_end > 60.0f) s_override_dist_wall_end = 60.0f;
+        dist_wall_end = s_override_dist_wall_end;
+    }
 }
 
 void mode1() {
@@ -37,11 +72,85 @@ void mode1() {
         mode = select_mode(mode);
 
         switch (mode) {
-        case 0: // LED全部点灯
+        case 0: { // 探索パラメータ調整モード
 
-            printf("Mode 1-0.\n");
+            printf("Mode 1-0 Search Tuning (sub menu).\n");
+            printf(" 0: 現在値表示\n 1:+VEL +100\n 2:-VEL -100\n 3:+ACC +200\n 4:-ACC -200\n 5:+KP +0.005\n 6:-KP -0.005\n 7:+WALL_END +5mm\n 8:-WALL_END -5mm\n 9:リセット\n");
+
+            int sub = 0;
+            sub = select_mode(sub);
+
+            // ベース適用してから表示/調整
+            apply_search_run_params();
+
+            switch (sub) {
+            case 0:
+                print_search_params_current();
+                break;
+            case 1:
+                s_override_velocity_straight = isnan(s_override_velocity_straight) ? velocity_straight : s_override_velocity_straight;
+                s_override_velocity_straight += 100.0f;
+                apply_search_run_params();
+                print_search_params_current();
+                break;
+            case 2:
+                s_override_velocity_straight = isnan(s_override_velocity_straight) ? velocity_straight : s_override_velocity_straight;
+                s_override_velocity_straight -= 100.0f;
+                apply_search_run_params();
+                print_search_params_current();
+                break;
+            case 3:
+                s_override_accel_straight = isnan(s_override_accel_straight) ? acceleration_straight : s_override_accel_straight;
+                s_override_accel_straight += 200.0f;
+                apply_search_run_params();
+                print_search_params_current();
+                break;
+            case 4:
+                s_override_accel_straight = isnan(s_override_accel_straight) ? acceleration_straight : s_override_accel_straight;
+                s_override_accel_straight -= 200.0f;
+                apply_search_run_params();
+                print_search_params_current();
+                break;
+            case 5:
+                s_override_kp_wall = isnan(s_override_kp_wall) ? kp_wall : s_override_kp_wall;
+                s_override_kp_wall += 0.005f;
+                apply_search_run_params();
+                print_search_params_current();
+                break;
+            case 6:
+                s_override_kp_wall = isnan(s_override_kp_wall) ? kp_wall : s_override_kp_wall;
+                s_override_kp_wall -= 0.005f;
+                apply_search_run_params();
+                print_search_params_current();
+                break;
+            case 7:
+                s_override_dist_wall_end = isnan(s_override_dist_wall_end) ? dist_wall_end : s_override_dist_wall_end;
+                s_override_dist_wall_end += 5.0f;
+                apply_search_run_params();
+                print_search_params_current();
+                break;
+            case 8:
+                s_override_dist_wall_end = isnan(s_override_dist_wall_end) ? dist_wall_end : s_override_dist_wall_end;
+                s_override_dist_wall_end -= 5.0f;
+                apply_search_run_params();
+                print_search_params_current();
+                break;
+            case 9:
+                s_override_velocity_straight = NAN;
+                s_override_accel_straight = NAN;
+                s_override_kp_wall = NAN;
+                s_override_dist_wall_end = NAN;
+                apply_search_run_params();
+                printf("Overrides cleared.\n");
+                print_search_params_current();
+                break;
+            default:
+                printf("No sub selected.\n");
+                break;
+            }
 
             break;
+        }
 
         case 8: // 足立法 ゴール到達で終了（探索共通パラメータ適用）
 
