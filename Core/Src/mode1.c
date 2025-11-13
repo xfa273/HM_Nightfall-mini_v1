@@ -6,30 +6,27 @@
  */
 
 #include "global.h"
-#include "../Inc/shortest_run_params.h"
+#include "../Inc/search_run_params.h"
 
-// Helper loaders: apply case/mode parameters to runtime globals (mode1 uses Mode2 list)
-static void apply_case_params_mode1_idx(int idx) {
-    const ShortestRunCaseParams_t *c = &shortestRunCaseParamsMode2[idx];
-    acceleration_straight = c->acceleration_straight;
-    acceleration_straight_dash = c->acceleration_straight_dash;
-    velocity_straight = c->velocity_straight;
-    kp_wall = c->kp_wall;
-    // mode1 では対角直線・kp_diagonal は使用しないため適用しない
-}
-
-static void apply_turn_params_mode1(void) {
-    const ShortestRunModeParams_t *m = &shortestRunModeParams2;
-    // 小回り90度関連
-    velocity_turn90 = m->velocity_turn90;
-    alpha_turn90 = m->alpha_turn90;
-    acceleration_turn = m->acceleration_turn;
-    dist_offset_in = m->dist_offset_in;
-    dist_offset_out = m->dist_offset_out;
-    val_offset_in = m->val_offset_in;
-    angle_turn_90 = m->angle_turn_90;
-    // 壁切れ後の距離
-    dist_wall_end = m->dist_wall_end;
+// Helper loader: apply exploration common params
+static void apply_search_run_params(void) {
+    const SearchRunParams_t *p = &searchRunParams;
+    // 直線
+    acceleration_straight = p->acceleration_straight;
+    acceleration_straight_dash = p->acceleration_straight_dash;
+    velocity_straight = p->velocity_straight;
+    // 壁制御
+    kp_wall = p->kp_wall;
+    // ターン・オフセット・角度
+    velocity_turn90 = p->velocity_turn90;
+    alpha_turn90 = p->alpha_turn90;
+    acceleration_turn = p->acceleration_turn;
+    dist_offset_in = p->dist_offset_in;
+    dist_offset_out = p->dist_offset_out;
+    val_offset_in = p->val_offset_in;
+    angle_turn_90 = p->angle_turn_90;
+    // 壁切れ後追従
+    dist_wall_end = p->dist_wall_end;
 }
 
 void mode1() {
@@ -46,13 +43,12 @@ void mode1() {
 
             break;
 
-        case 8: // 足立法 ゴール到達で終了（パラメータ: Mode2/case1 基準）
+        case 8: // 足立法 ゴール到達で終了（探索共通パラメータ適用）
 
             printf("Mode 1-8 (Goal Stop).\n");
 
-            // 最短走行と同様のパラメータリスト適用（Mode2 の case1 を基準）
-            apply_case_params_mode1_idx(0);
-            apply_turn_params_mode1();
+            // 探索用の共通パラメータを適用
+            apply_search_run_params();
             duty_setposition = 40;
 
             // 壁判断しきい値の係数
@@ -83,13 +79,12 @@ void mode1() {
 
             break;
 
-        case 1: // 足立法全面探索（パラメータ: Mode2/case1 基準）
+        case 1: // 足立法全面探索（探索共通パラメータ適用）
 
             printf("Mode 1-1.\n");
 
-            // 最短走行のパラメータリストから適用（Mode2/case1）
-            apply_case_params_mode1_idx(0);
-            apply_turn_params_mode1();
+            // 探索用の共通パラメータを適用
+            apply_search_run_params();
             duty_setposition = 40;
 
             // 壁判断しきい値の係数
@@ -117,13 +112,12 @@ void mode1() {
 
             break;
 
-        case 2: // 足立法全面探索（パラメータ: Mode2/case1 基準）
+        case 2: // 足立法全面探索（探索共通パラメータ適用）
 
             printf("Mode 1-2.\n");
 
-            // 最短走行のパラメータリストから適用（Mode2/case1）
-            apply_case_params_mode1_idx(0);
-            apply_turn_params_mode1();
+            // 探索用の共通パラメータを適用
+            apply_search_run_params();
             duty_setposition = 40;
 
             // 壁判断しきい値の係数
@@ -151,13 +145,12 @@ void mode1() {
 
             break;
 
-        case 3: // 足立法全面探索（しきい値高め, Mode2/case1 基準）
+        case 3: // 足立法全面探索（しきい値高め、探索共通パラメータ適用）
 
             printf("Mode 1-3.\n");
 
-            // 最短走行のパラメータリストから適用（Mode2/case1）
-            apply_case_params_mode1_idx(0);
-            apply_turn_params_mode1();
+            // 探索用の共通パラメータを適用
+            apply_search_run_params();
             duty_setposition = 40;
 
             // 壁判断しきい値の係数
@@ -185,12 +178,11 @@ void mode1() {
 
             break;
 
-        case 4: // 足立法全面探索（しきい値低め, Mode2/case1 基準）
+        case 4: // 足立法全面探索（しきい値低め、探索共通パラメータ適用）
             printf("Mode 1-4.\n");
 
-            // 最短走行のパラメータリストから適用（Mode2/case1）
-            apply_case_params_mode1_idx(0);
-            apply_turn_params_mode1();
+            // 探索用の共通パラメータを適用
+            apply_search_run_params();
             duty_setposition = 40;
 
             // 壁判断しきい値の係数
@@ -218,15 +210,14 @@ void mode1() {
 
             break;
 
-        case 5: // 吸引探索（パラメータ: Mode2/case1 基準 + ファンON）
+        case 5: // 吸引探索（探索共通パラメータ適用 + ファンON）
 
             printf("Mode 1-5.\n");
 
             MF.FLAG.RUNNING = 1;
 
-            // 最短走行と同様のパラメータリスト適用（Mode2 の case1 を基準）
-            apply_case_params_mode1_idx(0);
-            apply_turn_params_mode1();
+            // 探索用の共通パラメータを適用
+            apply_search_run_params();
             duty_setposition = 40;
 
             // 壁判断しきい値の係数
@@ -259,13 +250,12 @@ void mode1() {
 
             break;
 
-        case 6: // まずゴール探索→保存→全面探索（Mode2/case1 基準）
+        case 6: // まずゴール探索→保存→全面探索（探索共通パラメータ適用）
 
             printf("Mode 1-6 (Goal->Save->Full Explore).\n");
 
-            // ===== 走行パラメータ（最短: Mode2 の case1 を適用） =====
-            apply_case_params_mode1_idx(0);
-            apply_turn_params_mode1();
+            // ===== 走行パラメータ（探索共通パラメータを適用） =====
+            apply_search_run_params();
             duty_setposition = 40;
 
             // 壁判断しきい値の係数
@@ -308,13 +298,12 @@ void mode1() {
 
             break;
 
-        case 7: // ゴール探索→保存→スタートへ復帰（Mode2/case1 基準）
+        case 7: // ゴール探索→保存→スタートへ復帰（探索共通パラメータ適用）
 
             printf("Mode 1-7 (Goal->Save->Return to Start).\n");
 
-            // ===== 走行パラメータ（最短: Mode2 の case1 を適用） =====
-            apply_case_params_mode1_idx(0);
-            apply_turn_params_mode1();
+            // ===== 走行パラメータ（探索共通パラメータを適用） =====
+            apply_search_run_params();
             duty_setposition = 40;
 
             // 壁判断しきい値の係数
