@@ -184,21 +184,12 @@ int main(void)
         {
             case 0:
 
-            /*
-                printf("Mode 0: Recalibrate sensors and save to Flash.\n");
-
-                led_flash(5);
-                
-                HAL_StatusTypeDef st = sensor_recalibrate_and_save();
-                if (st == HAL_OK) {
-                        printf("Sensor parameters saved to Flash successfully.\n");
-                        buzzer_beep(1200);
-                    } else {
-                        printf("Failed to save sensor parameters. HAL status=%d\n", st);
-                        buzzer_beep(3000);
-                    }
-                */
-                
+                while (1) {
+                  HAL_GPIO_WritePin(LED_1_GPIO_Port, LED_1_Pin, GPIO_PIN_SET);
+                  HAL_GPIO_WritePin(LED_2_GPIO_Port, LED_2_Pin, GPIO_PIN_SET);
+                  HAL_GPIO_WritePin(LED_3_GPIO_Port, LED_3_Pin, GPIO_PIN_SET);
+                }
+          
                 break;
 
             case 1:

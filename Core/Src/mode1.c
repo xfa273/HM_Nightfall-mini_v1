@@ -6,6 +6,31 @@
  */
 
 #include "global.h"
+#include "../Inc/shortest_run_params.h"
+
+// Helper loaders: apply case/mode parameters to runtime globals (mode1 uses Mode2 list)
+static void apply_case_params_mode1_idx(int idx) {
+    const ShortestRunCaseParams_t *c = &shortestRunCaseParamsMode2[idx];
+    acceleration_straight = c->acceleration_straight;
+    acceleration_straight_dash = c->acceleration_straight_dash;
+    velocity_straight = c->velocity_straight;
+    kp_wall = c->kp_wall;
+    // mode1 では対角直線・kp_diagonal は使用しないため適用しない
+}
+
+static void apply_turn_params_mode1(void) {
+    const ShortestRunModeParams_t *m = &shortestRunModeParams2;
+    // 小回り90度関連
+    velocity_turn90 = m->velocity_turn90;
+    alpha_turn90 = m->alpha_turn90;
+    acceleration_turn = m->acceleration_turn;
+    dist_offset_in = m->dist_offset_in;
+    dist_offset_out = m->dist_offset_out;
+    val_offset_in = m->val_offset_in;
+    angle_turn_90 = m->angle_turn_90;
+    // 壁切れ後の距離
+    dist_wall_end = m->dist_wall_end;
+}
 
 void mode1() {
 
@@ -19,34 +44,15 @@ void mode1() {
 
             printf("Mode 1-0.\n");
 
-            while (1) {
-                HAL_GPIO_WritePin(LED_1_GPIO_Port, LED_1_Pin, GPIO_PIN_SET);
-                HAL_GPIO_WritePin(LED_2_GPIO_Port, LED_2_Pin, GPIO_PIN_SET);
-                HAL_GPIO_WritePin(LED_3_GPIO_Port, LED_3_Pin, GPIO_PIN_SET);
-            }
-
             break;
 
-        case 8: // 足立法 ゴール到達で終了 300mm/s
+        case 8: // 足立法 ゴール到達で終了（パラメータ: Mode2/case1 基準）
 
             printf("Mode 1-8 (Goal Stop).\n");
 
-            // 直線
-            acceleration_straight = 1000;
-            acceleration_straight_dash = 0; // 5000
-            // ターン
-            velocity_turn90 = 300;
-            alpha_turn90 = 8850;
-            acceleration_turn = 0;
-            dist_offset_in = 10;   // 8
-            dist_offset_out = 16.5; // 15.5
-            val_offset_in = 1750;
-            angle_turn_90 = 89.5;
-            // 壁切れ後の距離
-            dist_wall_end = 0;
-
-            // 壁制御とケツ当て
-            kp_wall = 0.015;
+            // 最短走行と同様のパラメータリスト適用（Mode2 の case1 を基準）
+            apply_case_params_mode1_idx(0);
+            apply_turn_params_mode1();
             duty_setposition = 40;
 
             // 壁判断しきい値の係数
@@ -77,26 +83,13 @@ void mode1() {
 
             break;
 
-        case 1: // 足立法全面探索 300mm/s
+        case 1: // 足立法全面探索（パラメータ: Mode2/case1 基準）
 
             printf("Mode 1-1.\n");
 
-            // 直線
-            acceleration_straight = 1000;
-            acceleration_straight_dash = 0; // 5000
-            // ターン
-            velocity_turn90 = 300;
-            alpha_turn90 = 8850;
-            acceleration_turn = 0;
-            dist_offset_in = 10;   // 8
-            dist_offset_out = 16.5; // 15.5
-            val_offset_in = 1750;
-            angle_turn_90 = 89.5;
-            // 壁切れ後の距離
-            dist_wall_end = 0;
-
-            // 壁制御とケツ当て
-            kp_wall = 0.015;
+            // 最短走行のパラメータリストから適用（Mode2/case1）
+            apply_case_params_mode1_idx(0);
+            apply_turn_params_mode1();
             duty_setposition = 40;
 
             // 壁判断しきい値の係数
@@ -124,26 +117,13 @@ void mode1() {
 
             break;
 
-        case 2: // 足立法全面探索 300mm/s
+        case 2: // 足立法全面探索（パラメータ: Mode2/case1 基準）
 
             printf("Mode 1-2.\n");
 
-            // 直線
-            acceleration_straight = 1000;
-            acceleration_straight_dash = 0; // 5000
-            // ターン
-            velocity_turn90 = 300;
-            alpha_turn90 = 8850;
-            acceleration_turn = 0;
-            dist_offset_in = 10;   // 8
-            dist_offset_out = 16.5; // 15.5
-            val_offset_in = 1750;
-            angle_turn_90 = 89.5;
-            // 壁切れ後の距離
-            dist_wall_end = 0;
-
-            // 壁制御とケツ当て
-            kp_wall = 0.015;
+            // 最短走行のパラメータリストから適用（Mode2/case1）
+            apply_case_params_mode1_idx(0);
+            apply_turn_params_mode1();
             duty_setposition = 40;
 
             // 壁判断しきい値の係数
@@ -171,26 +151,13 @@ void mode1() {
 
             break;
 
-        case 3: // 足立法全面探索 300mm/s しきい値高め
+        case 3: // 足立法全面探索（しきい値高め, Mode2/case1 基準）
 
             printf("Mode 1-3.\n");
 
-            // 直線
-            acceleration_straight = 1000;
-            acceleration_straight_dash = 0; // 5000
-            // ターン
-            velocity_turn90 = 300;
-            alpha_turn90 = 8850;
-            acceleration_turn = 0;
-            dist_offset_in = 10;   // 8
-            dist_offset_out = 16.5; // 15.5
-            val_offset_in = 1750;
-            angle_turn_90 = 89.5;
-            // 壁切れ後の距離
-            dist_wall_end = 0;
-
-            // 壁制御とケツ当て
-            kp_wall = 0.015;
+            // 最短走行のパラメータリストから適用（Mode2/case1）
+            apply_case_params_mode1_idx(0);
+            apply_turn_params_mode1();
             duty_setposition = 40;
 
             // 壁判断しきい値の係数
@@ -218,25 +185,12 @@ void mode1() {
 
             break;
 
-        case 4: // // 足立法全面探索 300mm/s  しきい値低め
+        case 4: // 足立法全面探索（しきい値低め, Mode2/case1 基準）
             printf("Mode 1-4.\n");
 
-            // 直線
-            acceleration_straight = 1000;
-            acceleration_straight_dash = 0; // 5000
-            // ターン
-            velocity_turn90 = 300;
-            alpha_turn90 = 8850;
-            acceleration_turn = 0;
-            dist_offset_in = 10;   // 8
-            dist_offset_out = 16.5; // 15.5
-            val_offset_in = 1750;
-            angle_turn_90 = 89.5;
-            // 壁切れ後の距離
-            dist_wall_end = 0;
-
-            // 壁制御とケツ当て
-            kp_wall = 0.015;
+            // 最短走行のパラメータリストから適用（Mode2/case1）
+            apply_case_params_mode1_idx(0);
+            apply_turn_params_mode1();
             duty_setposition = 40;
 
             // 壁判断しきい値の係数
@@ -264,28 +218,15 @@ void mode1() {
 
             break;
 
-        case 5: // 吸引探索 600mm/s
+        case 5: // 吸引探索（パラメータ: Mode2/case1 基準 + ファンON）
 
             printf("Mode 1-5.\n");
 
             MF.FLAG.RUNNING = 1;
 
-            // 直線
-            acceleration_straight = 4000;
-            acceleration_straight_dash = 0; // 5000
-            // ターン
-            velocity_turn90 = 300;
-            alpha_turn90 = 8850;
-            acceleration_turn = 0;
-            dist_offset_in = 10;   // 8
-            dist_offset_out = 16.5; // 15.5
-            val_offset_in = 1750;
-            angle_turn_90 = 89.5;
-            // 壁切れ後の距離
-            dist_wall_end = 0;
-
-            // 壁制御とケツ当て
-            kp_wall = 0.05;
+            // 最短走行と同様のパラメータリスト適用（Mode2 の case1 を基準）
+            apply_case_params_mode1_idx(0);
+            apply_turn_params_mode1();
             duty_setposition = 40;
 
             // 壁判断しきい値の係数
@@ -318,27 +259,13 @@ void mode1() {
 
             break;
 
-        case 6: // まずゴール探索→保存→全面探索（300mm/s）
+        case 6: // まずゴール探索→保存→全面探索（Mode2/case1 基準）
 
             printf("Mode 1-6 (Goal->Save->Full Explore).\n");
 
-            // ===== 走行パラメータ（case 2 と同一） =====
-            // 直線
-            acceleration_straight = 1000;
-            acceleration_straight_dash = 0; // 5000
-            // ターン
-            velocity_turn90 = 300;
-            alpha_turn90 = 8850;
-            acceleration_turn = 0;
-            dist_offset_in = 10;   // 8
-            dist_offset_out = 16.5; // 15.5
-            val_offset_in = 1750;
-            angle_turn_90 = 89.5;
-            // 壁切れ後の距離
-            dist_wall_end = 0;
-
-            // 壁制御とケツ当て
-            kp_wall = 0.015;
+            // ===== 走行パラメータ（最短: Mode2 の case1 を適用） =====
+            apply_case_params_mode1_idx(0);
+            apply_turn_params_mode1();
             duty_setposition = 40;
 
             // 壁判断しきい値の係数
@@ -381,27 +308,13 @@ void mode1() {
 
             break;
 
-        case 7: // ゴール探索→保存→スタートへ復帰（300mm/s）
+        case 7: // ゴール探索→保存→スタートへ復帰（Mode2/case1 基準）
 
             printf("Mode 1-7 (Goal->Save->Return to Start).\n");
 
-            // ===== 走行パラメータ（case 2 と同一） =====
-            // 直線
-            acceleration_straight = 1000;
-            acceleration_straight_dash = 0; // 5000
-            // ターン
-            velocity_turn90 = 300;
-            alpha_turn90 = 8850;
-            acceleration_turn = 0;
-            dist_offset_in = 10;   // 8
-            dist_offset_out = 16.5; // 15.5
-            val_offset_in = 1750;
-            angle_turn_90 = 89.5;
-            // 壁切れ後の距離
-            dist_wall_end = 0;
-
-            // 壁制御とケツ当て
-            kp_wall = 0.015;
+            // ===== 走行パラメータ（最短: Mode2 の case1 を適用） =====
+            apply_case_params_mode1_idx(0);
+            apply_turn_params_mode1();
             duty_setposition = 40;
 
             // 壁判断しきい値の係数
