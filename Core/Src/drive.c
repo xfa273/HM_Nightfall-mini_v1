@@ -266,13 +266,6 @@ void one_sectionD(void) {
         MF.FLAG.F_WALL_STOP = 1;
     }
 
-    // 壁切れ検知をアーム（探索でも検出できるようSCNDを一時有効化）
-    uint8_t prev_scnd = MF.FLAG.SCND;
-    MF.FLAG.R_WALL_END = 0;
-    MF.FLAG.L_WALL_END = 0;
-    MF.FLAG.WALL_END   = 1;
-    MF.FLAG.SCND       = 1;
-
     // 全距離に対する一定減速度 a_const を算出（負）
     const float total_mm = (HALF_MM() * 2.0f);
     const float a_const = (speed_out * speed_out - v0 * v0) / (2.0f * total_mm); // 期待上は -accel_lin
@@ -281,6 +274,31 @@ void one_sectionD(void) {
     const float step_blocks = (2.0f / HALF_MM()); // 2mm相当
     const float step_mm = step_blocks * HALF_MM();
     bool triggered = false;
+
+    // 壁切れ補正が無効な場合は、検出をアームせずにそのまま一定減速度で1区画を完了
+    if (!g_enable_wall_end_search) {
+        while (remaining_blocks > 0.0f) {
+            float step = (remaining_blocks < step_blocks) ? remaining_blocks : step_blocks;
+            float v_in = speed_now; // run_straight が更新していく現在速度
+            float v2 = v_in * v_in + 2.0f * a_const * (step * HALF_MM());
+            if (v2 < 0.0f) v2 = 0.0f;
+            float v_next = sqrtf(v2);
+            run_straight(step, v_next, 0);
+            remaining_blocks -= step;
+        }
+
+        MF.FLAG.F_WALL_STOP = 0;
+        MF.FLAG.CTRL = 0;
+        get_wall_info();
+        return;
+    }
+
+    // 壁切れ検知をアーム（探索でも検出できるようSCNDを一時有効化）
+    uint8_t prev_scnd = MF.FLAG.SCND;
+    MF.FLAG.R_WALL_END = 0;
+    MF.FLAG.L_WALL_END = 0;
+    MF.FLAG.WALL_END   = 1;
+    MF.FLAG.SCND       = 1;
 
     while (remaining_blocks > 0.0f) {
         float step = (remaining_blocks < step_blocks) ? remaining_blocks : step_blocks;
@@ -307,12 +325,12 @@ void one_sectionD(void) {
     MF.FLAG.SCND = prev_scnd;
 
     if (triggered) {
-        // 検出後は「半区画 + dist_wall_end」でターン速度(velocity_turn90)まで減速する
+        // 検出後は dist_wall_end（合計距離）でターン速度(velocity_turn90)まで減速する
         float v_init = speed_now;                 // 検出直後の現在速度
         float v_target = velocity_turn90;         // 探索の小回りターン入口速度
         if (v_target < 0.0f) v_target = 0.0f;     // 念のためクランプ
         if (v_target > v_init) v_target = v_init; // 減速のみ（加速はしない）
-        float follow_mm = (float)HALF_MM() + dist_wall_end;
+        float follow_mm = dist_wall_end;
         if (follow_mm > 0.0f) {
             // 一定減速度 a_follow を算出（v_target^2 = v_init^2 + 2*a*follow_mm）
             float a_follow = (v_target * v_target - v_init * v_init) / (2.0f * follow_mm);
@@ -377,10 +395,9 @@ void one_sectionU(uint8_t CTRL) {
 
     const float v_const = speed_now; // 等速維持
 
-    // テストモードでは距離の変化する補正（壁切れ検知・追従）を無効化
-    if (MF.FLAG.TEST_MODE) {
-        // 1区画 = blocksで2.0 をそのまま等速で走る
-        run_straight(2.0f, v_const, 0);
+    // 壁切れ補正が無効な場合、またはテストモードでは補正を行わず等速で1区画を走行
+    if (!g_enable_wall_end_search || MF.FLAG.TEST_MODE) {
+        run_straight_const(2.0f, v_const);
         MF.FLAG.CTRL = 0;
         speed_now = v_const;
         get_wall_info();
@@ -418,8 +435,8 @@ void one_sectionU(uint8_t CTRL) {
     MF.FLAG.SCND = prev_scnd;
 
     if (triggered) {
-        // 検出後は「半区画 + dist_wall_end」を等速で追従
-        float follow_mm = (float)HALF_MM() + dist_wall_end;
+        // 検出後は dist_wall_end（合計距離）を等速で追従
+        float follow_mm = dist_wall_end;
         if (follow_mm > 0.0f) {
             float extra_blocks = follow_mm / HALF_MM();
             run_straight(extra_blocks, v_const, 0);
@@ -1692,6 +1709,9 @@ void drive_init(void) {
     HAL_TIM_Encoder_Start(&htim4, TIM_CHANNEL_ALL);
 
     wall_end_count = 0;
+
+    // 探索走行の壁切れ補正は既定で有効
+    g_enable_wall_end_search = 1;
 
     //====走行系の変数の初期化====
 

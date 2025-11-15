@@ -7,6 +7,7 @@
 
 #include "global.h"
 #include "flash_params.h"
+#include "sensor_distance.h"
 
 // デバッグ出力ヘルパ：壁センサオフセットを表示
 static void print_wall_offsets(const char* label)
@@ -113,6 +114,9 @@ void sensor_init(void) {
     }
 
     IMU_Init_Auto();
+
+    // Initialize default distance LUTs for front sensors (FL/FR)
+    sensor_distance_init();
 }
 
 //+++++++++++++++++++++++++++++++++++++++++++++++

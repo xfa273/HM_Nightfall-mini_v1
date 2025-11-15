@@ -81,7 +81,30 @@ void mode1() {
 
             switch (sub) {
             case 0:
-                printf("(empty)\n");
+                // 初期区画 + 1区画の距離チェック（探索走行用パラメータ）
+                printf("Sub 0: First + 1 section distance check (search params).\n");
+
+                // 探索用の共通パラメータを適用
+                apply_search_run_params();
+
+                // 準備
+                velocity_interrupt = 0;
+                led_flash(10);
+                drive_variable_reset();
+                IMU_GetOffset();
+                drive_enable_motor();
+                led_flash(2);
+
+                // 基準値の取得（壁制御基準ベース）
+                get_base();
+
+                // 実行: 初期区画 + 1区画
+                first_sectionA();   // 初期加速区間（DIST_FIRST_SEC）
+                half_sectionU();    // 半区画 等速前進
+                half_sectionD(0);   // 半区画 減速停止
+
+                drive_stop();
+                led_flash(5);
                 break;
             case 1: // 通常ターン 90deg（探索用共通パラメータ）
                 // 探索用の共通パラメータを適用
@@ -146,6 +169,8 @@ void mode1() {
 
             // 探索用の共通パラメータを適用
             apply_search_run_params();
+            // ケース1の壁切れ補正 有効/無効設定
+            g_enable_wall_end_search = WALL_END_ENABLE_SEARCH_CASE1;
             duty_setposition = 40;
 
             // 壁判断しきい値の係数
@@ -182,6 +207,8 @@ void mode1() {
 
             // ===== 走行パラメータ（探索共通パラメータを適用） =====
             apply_search_run_params();
+            // ケース2の壁切れ補正 有効/無効設定
+            g_enable_wall_end_search = WALL_END_ENABLE_SEARCH_CASE2;
             duty_setposition = 40;
 
             // 壁判断しきい値の係数
@@ -233,6 +260,8 @@ void mode1() {
 
             // ===== 走行パラメータ（探索共通パラメータを適用） =====
             apply_search_run_params();
+            // ケース3の壁切れ補正 有効/無効設定
+            g_enable_wall_end_search = WALL_END_ENABLE_SEARCH_CASE3;
             duty_setposition = 40;
 
             // 壁判断しきい値の係数
@@ -277,12 +306,14 @@ void mode1() {
 
             // 探索用の共通パラメータを適用
             apply_search_run_params();
+            // ケース4の壁切れ補正 有効/無効設定
+            g_enable_wall_end_search = WALL_END_ENABLE_SEARCH_CASE4;
             duty_setposition = 40;
 
             // 壁判断しきい値の係数
             sensor_kx = 1.0;
 
-            MF.FLAG.WALL_ALIGN = 0;
+            MF.FLAG.WALL_ALIGN = 1;
 
             velocity_interrupt = 0;
 
@@ -300,7 +331,7 @@ void mode1() {
 
             // 全面探索モード
             set_search_mode(SEARCH_MODE_FULL);
-            search_end = false;
+            search_end = true;
 
             adachi();
 

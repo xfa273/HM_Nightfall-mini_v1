@@ -188,6 +188,9 @@ volatile float IMU_acceleration;
 volatile uint16_t buzzer_count;
 volatile uint16_t wall_end_count;
 
+// 探索走行時の壁切れ補正（wall_end）を有効/無効にするフラグ
+// 1: 有効（デフォルト）、0: 無効
+volatile uint8_t g_enable_wall_end_search;
 
 #else // main.c以外からこのファイルが呼ばれている場合
 /*グローバル変数の定義*/
@@ -327,16 +330,12 @@ extern volatile float out_rotate;     // 回転方向の出力
 /*エンコーダからの速度取得用*/
 extern volatile float encoder_count_r; // エンコーダのパルスカウント（右）
 extern volatile float encoder_count_l; // エンコーダのパルスカウント（左）
-extern volatile float
-    previous_encoder_count_r; // 1ループ前のエンコーダのパルスカウント（右）
-extern volatile float
-    previous_encoder_count_l; // 1ループ前のエンコーダのパルスカウント（左）
+extern volatile float previous_encoder_count_r; // 1ループ前のエンコーダのパルスカウント（右）
+extern volatile float previous_encoder_count_l; // 1ループ前のエンコーダのパルスカウント（左）
 extern volatile float encoder_speed_r; // エンコーダから取得した速度（右）[mm/s]
 extern volatile float encoder_speed_l; // エンコーダから取得した速度（左）[mm/s]
-extern volatile float
-    encoder_distance_r; // エンコーダから取得した距離（右）[mm]
-extern volatile float
-    encoder_distance_l; // エンコーダから取得した距離（左）[mm]
+extern volatile float encoder_distance_r; // エンコーダから取得した距離（右）[mm]
+extern volatile float encoder_distance_l; // エンコーダから取得した距離（左）[mm]
 
 /*IMUからの角度取得用*/
 extern volatile float IMU_angle; // IMUから取得した角度[deg]
@@ -363,6 +362,9 @@ extern volatile float IMU_acceleration;
 extern volatile uint16_t buzzer_count;
 extern volatile uint16_t wall_end_count;
 
+// 探索走行時の壁切れ補正（wall_end）を有効/無効にするフラグ
+// 1: 有効（デフォルト）、0: 無効
+extern volatile uint8_t g_enable_wall_end_search;
 
 #endif
 

@@ -15,12 +15,12 @@
     走行系
 ------------------------------------------------------------*/
 /*走行パラメータ*/
-#define D_TIRE            13.85F// タイヤ直径[mm] 13.75F
+#define D_TIRE            14.5F// タイヤ直径[mm] 13.75F
 #define DIST_HALF_SEC     45.0  // 迷路の半区間距離[mm] 0.94
 // 探索走行用の半区間距離[mm]（初期値は通常と同じ。探索専用に短くしたい場合に調整）
 #define DIST_HALF_SEC_SEARCH  45
 #define DIST_D_HALF_SEC   67.279 // 斜めの半区間距離[mm]
-#define DIST_FIRST_SEC    13     // 最初の区画の距離[mm]
+#define DIST_FIRST_SEC    22     // 最初の区画の距離[mm]
 #define DIST_SET_POSITION 13     // 壁当て後の前進距離[mm]
 
 #define ALPHA_ROTATE_90   3000  // 超信地旋回の角加速度[deg/sec^2]
@@ -34,8 +34,8 @@
 #define KI_DISTANCE 0.1F // 並進位置制御のI項  0.01F 0.04
 #define KD_DISTANCE 0.0F // 並進位置制御のD項  28.0F 150.0
 
-#define KP_VELOCITY 0.45F // 並進速度制御のP項  0.45F
-#define KI_VELOCITY 0.65F// 並進速度制御のI項  0.65F
+#define KP_VELOCITY 0.40F // 並進速度制御のP項  0.45F
+#define KI_VELOCITY 0.55F// 並進速度制御のI項  0.65F
 #define KD_VELOCITY 0.8F // 並進速度制御のD項  0.6F
 
 // 並進速度制御 フィードフォワードと積分クランプ
@@ -58,7 +58,7 @@
 #endif
 
 #ifndef KPOS2VEL_P
-#define KPOS2VEL_P 0.5F      // [ (mm/s) / mm ]  まずはP主体
+#define KPOS2VEL_P 0.65F      // [ (mm/s) / mm ]  まずはP主体
 #endif
 #ifndef KPOS2VEL_I
 #define KPOS2VEL_I 0.0F     // [ (mm/s) / mm / tick ] 1kHz積分前提で小さめ
@@ -132,10 +132,10 @@
     センサ系
 ------------------------------------------------------------*/
 /*壁判断閾値*/
-#define WALL_BASE_FR  330   // 前壁右センサ    //330
-#define WALL_BASE_FL  330   // 前壁左センサ    //330
-#define WALL_BASE_R   410   // 右壁センサ  //410
-#define WALL_BASE_L   410   // 左壁センサ  //410
+#define WALL_BASE_FR  450   // 前壁右センサ    //330
+#define WALL_BASE_FL  500   // 前壁左センサ    //330
+#define WALL_BASE_R   600   // 右壁センサ  //410
+#define WALL_BASE_L   600   // 左壁センサ  //410
 #define WALL_DIFF_THR 22   // 壁センサ値の変化量のしきい値
 #define K_SENSOR      1.0F // センサの補正値 0.94F
 
@@ -159,6 +159,21 @@
 // 例: 20mm。未検知でも暴走しないよう上限を設けるための値です。
 #ifndef WALL_END_EXTEND_MAX_MM
 #define WALL_END_EXTEND_MAX_MM  40.0F
+#endif
+
+// 探索走行の壁切れ補正 有効/無効（case単位の既定値）
+// 1: 有効, 0: 無効
+#ifndef WALL_END_ENABLE_SEARCH_CASE1
+#define WALL_END_ENABLE_SEARCH_CASE1 1
+#endif
+#ifndef WALL_END_ENABLE_SEARCH_CASE2
+#define WALL_END_ENABLE_SEARCH_CASE2 1
+#endif
+#ifndef WALL_END_ENABLE_SEARCH_CASE3
+#define WALL_END_ENABLE_SEARCH_CASE3 0
+#endif
+#ifndef WALL_END_ENABLE_SEARCH_CASE4
+#define WALL_END_ENABLE_SEARCH_CASE4 0
 #endif
 
 #define WALL_CTRL_BASE_L 2000// 壁制御の基準値（左） 2135
