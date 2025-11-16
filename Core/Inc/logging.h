@@ -90,4 +90,10 @@ void log_capture_tick(void);
  */
 void log_print_translation_csv(void);
 
+/**
+ * @brief 前壁補正テスト用のログをCSV出力する
+ * 列: timestamp,d_front_mm,d_front_thr_mm,dist_offset_in_mm,front_entry_mm,real_velocity_mm_s,ad_fr,ad_fl
+ */
+void log_print_frontwall_all(void);
+
 #endif /* INC_LOGGING_H_ */

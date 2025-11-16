@@ -18,7 +18,6 @@ typedef struct {
     float acceleration_turn;          ///< ターン加速度 (m/s^2)
     float dist_offset_in;             ///< 内側オフセット (mm)
     float dist_offset_out;            ///< 外側オフセット (mm)
-    float val_offset_in;              ///< 内部位置補正値
     float angle_turn_90;              ///< 90°ターン角度設定 (度)
     // 壁切れ後の追従距離
     float dist_wall_end;              ///< 壁切れ検知後にターン開始までに直進する距離 (mm)

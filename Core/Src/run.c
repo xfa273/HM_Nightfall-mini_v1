@@ -564,7 +564,6 @@ void run_shortest(uint8_t mode, uint8_t case_index) {
     acceleration_turn          = pm->acceleration_turn;
     dist_offset_in             = pm->dist_offset_in;
     dist_offset_out            = pm->dist_offset_out;
-    val_offset_in              = pm->val_offset_in;
     angle_turn_90              = pm->angle_turn_90;
     velocity_l_turn_90         = pm->velocity_l_turn_90;
     alpha_l_turn_90            = pm->alpha_l_turn_90;

@@ -2,11 +2,40 @@
 #include "interrupt.h"
 #include "logging.h"
 #include "stdio.h"
+#include "sensor_distance.h"
 
 // 現在のログプロファイル（取得内容の切替）
 static volatile LogProfile s_log_profile = LOG_PROFILE_OMEGA;
 
 void log_set_profile(LogProfile profile) { s_log_profile = profile; }
+
+// 前壁補正テスト用: CSV出力
+void log_print_frontwall_all(void) {
+    printf("=== Micromouse Log Data (CSV Format, FRONTWALL) ===\n");
+    printf("Total entries: %d\n", log_buffer.count);
+    printf("CSV Format: timestamp,d_front_mm,d_front_thr_mm,dist_offset_in_mm,front_entry_mm,real_velocity_mm_s,ad_fr,ad_fl\n");
+    printf("--- CSV Data Start ---\n");
+
+    uint16_t count = log_buffer.count > MAX_LOG_ENTRIES ? MAX_LOG_ENTRIES : log_buffer.count;
+    uint16_t start = log_buffer.count > MAX_LOG_ENTRIES ? log_buffer.head : 0;
+
+    for (uint16_t i = 0; i < count; i++) {
+        uint16_t idx = (start + i) % MAX_LOG_ENTRIES;
+        volatile LogEntry *entry = &log_buffer.entries[idx];
+        printf("%lu,%.3f,%.3f,%.3f,%.3f,%.3f,%.0f,%.0f\n",
+               entry->timestamp - log_buffer.start_time,
+               entry->target_omega,   // d_front_mm
+               entry->actual_omega,   // d_front_thr_mm
+               entry->p_term_omega,   // dist_offset_in
+               entry->i_term_omega,   // FRONT_DIST_AT_CELL_ENTRY_MM
+               entry->d_term_omega,   // real_velocity
+               entry->motor_out_r,    // ad_fr (整数に近い)
+               entry->motor_out_l);   // ad_fl (整数に近い)
+    }
+
+    printf("--- CSV Data End ---\n");
+    printf("=== End of Log ===\n");
+}
 
 // 角速度ログ（log_buffer）をCSV出力
 void log_print_omega_all(void) {
@@ -166,6 +195,32 @@ void log_capture_tick(void) {
             log_buffer2.head = (pos2 + 1) % MAX_LOG_ENTRIES;
             log_buffer2.count++;
         }
+        break;
+    }
+    case LOG_PROFILE_CUSTOM: {
+        // 前壁補正テスト用: d_front, d_front_thr, dist_offset_in, FRONT_DIST_AT_CELL_ENTRY_MM, real_velocity, ad_fr, ad_fl
+        if (log_buffer.logging_active && log_buffer.count < MAX_LOG_ENTRIES) {
+            uint16_t pos = log_buffer.head;
+            // 測定
+            uint32_t sum = (uint32_t)ad_fl + (uint32_t)ad_fr;
+            if (sum > 0xFFFFu) sum = 0xFFFFu;
+            float d_front = sensor_distance_from_fsum((uint16_t)sum);
+            float d_thr = FRONT_DIST_AT_CELL_ENTRY_MM - dist_offset_in;
+            if (d_thr < 0.0f) d_thr = 0.0f;
+
+            log_buffer.entries[pos].count = (uint16_t)log_buffer.count;
+            log_buffer.entries[pos].target_omega = d_front;            // d_front_mm
+            log_buffer.entries[pos].actual_omega = d_thr;               // d_front_thr_mm
+            log_buffer.entries[pos].p_term_omega = dist_offset_in;      // dist_offset_in_mm
+            log_buffer.entries[pos].i_term_omega = FRONT_DIST_AT_CELL_ENTRY_MM; // front_entry_mm
+            log_buffer.entries[pos].d_term_omega = real_velocity;       // real_velocity_mm_s
+            log_buffer.entries[pos].motor_out_r = (float)ad_fr;         // ad_fr
+            log_buffer.entries[pos].motor_out_l = (float)ad_fl;         // ad_fl
+            log_buffer.entries[pos].timestamp = current_time;
+            log_buffer.head = (pos + 1) % MAX_LOG_ENTRIES;
+            log_buffer.count++;
+        }
+        // log_buffer2 は未使用
         break;
     }
     case LOG_PROFILE_OMEGA: {

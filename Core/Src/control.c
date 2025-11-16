@@ -6,6 +6,7 @@
  */
 
 #include "global.h"
+#include "sensor_distance.h"
 #include <math.h>
 
 /*エンコーダから速度と位置を取得する*/
@@ -281,54 +282,57 @@ void wall_PID(void) {
     // 制御フラグがあれば制御
     if (MF.FLAG.CTRL) {
 
-        float wall_error = 0;
-        uint16_t wall_thr_r;
-        uint16_t wall_thr_l;
-        float sense_diff_r;
-        float sense_diff_l;
+        float wall_error = 0; // ADベース（最新の挙動判定用に保持）
+        float wall_error_mm = 0.0f; // 距離ベースの誤差[mm]
 
-        sense_diff_r = ad_r - previous_ad_r;
-        sense_diff_l = ad_l - previous_ad_l;
+        // 目標距離は左右とも固定値（params.h）を使用
+        const float d_l_target = WALL_TARGET_DIST_L_MM;
+        const float d_r_target = WALL_TARGET_DIST_R_MM;
+        // 現在距離をAD→距離に換算
+        const float d_l_now = sensor_distance_from_l(ad_l);
+        const float d_r_now = sensor_distance_from_r(ad_r);
+        // 距離ベースの壁有無判定
+        const bool r_has = (d_r_now <= WALL_DETECT_DIST_R_MM);
+        const bool l_has = (d_l_now <= WALL_DETECT_DIST_L_MM);
 
-        if (fabsf(sense_diff_r) > WALL_DIFF_THR) {
-            wall_thr_r = WALL_BASE_R + 30; //30
-        } else {
-            wall_thr_r = WALL_BASE_R;
-        }
-        if (fabsf(sense_diff_l) > WALL_DIFF_THR) {
-            wall_thr_l = WALL_BASE_L + 30;
-        } else {
-            wall_thr_l = WALL_BASE_L;
-        }
-
-        if (ad_r > wall_thr_r && ad_l > wall_thr_l) {
+        if (r_has && l_has) {
             // 左右壁が両方ある場合
             wall_error = (ad_l - base_l) - (ad_r - base_r);
             latest_wall_error = wall_error;
-        } else if (ad_r < wall_thr_r && ad_l < wall_thr_l) {
+            wall_error_mm = (d_l_now - d_l_target) - (d_r_now - d_r_target);
+        } else if (!r_has && !l_has) {
             // 左右壁が両方ない場合
             wall_error = 0;
             latest_wall_error = wall_error;
-        } else if (ad_r > wall_thr_r && ad_l < wall_thr_l) {
+            wall_error_mm = 0.0f;
+        } else if (r_has && !l_has) {
             // 右壁のみある場合
             wall_error = -2 * (ad_r - base_r);
             latest_wall_error = wall_error*0.5;
-        } else if (ad_r < wall_thr_r && ad_l > wall_thr_l) {
+            wall_error_mm = -2.0f * (d_r_now - d_r_target);
+        } else if (!r_has && l_has) {
             // 左壁のみある場合
             wall_error = 2 * (ad_l - base_l);
             latest_wall_error = wall_error*0.5;
+            wall_error_mm = 2.0f * (d_l_now - d_l_target);
         }
 
-        wall_control = wall_error * kp_wall;
+        // 横壁制御は距離[mm]ベースの誤差で実行（符号を系に合わせて反転）
+        // 正のkp_wallで「左が近い→右旋回」「右が近い→左旋回」になるようにする
+        wall_control = - (wall_error_mm * kp_wall);
 
         if(fabsf(out_l)<50 && fabsf(out_r)<50){
             wall_control = 0;
         }
 
-        if (wall_control > 0) {
-            wall_control = max(wall_control, WALL_CTRL_MAX);
-        } else {
-            wall_control = min(wall_control, -WALL_CTRL_MAX);
+        // Clamp wall_control magnitude to +/-WALL_CTRL_MAX
+        {
+            const float lim = WALL_CTRL_MAX;
+            if (wall_control > lim) {
+                wall_control = lim;
+            } else if (wall_control < -lim) {
+                wall_control = -lim;
+            }
         }
 
         previous_ad_r = ad_r;

@@ -8,7 +8,6 @@ const ShortestRunModeParams_t shortestRunModeParams2 = {
     .acceleration_turn  = 0.0f,
     .dist_offset_in     = 8.0f,
     .dist_offset_out    = 16.0f,
-    .val_offset_in      = 1750.0f,
     .angle_turn_90      = 89.5f,
     .dist_wall_end      = 1.0f,
     // Large 90deg
@@ -133,7 +132,6 @@ const ShortestRunModeParams_t shortestRunModeParams3 = {
     .acceleration_turn  = 0.0f,
     .dist_offset_in     = 8.0f,
     .dist_offset_out    = 19.5f,
-    .val_offset_in      = 1100.0f,
     .angle_turn_90      = 87.3f,
     .dist_wall_end      = 1.0f,
     // Large 90deg
@@ -258,7 +256,6 @@ const ShortestRunModeParams_t shortestRunModeParams4 = {
     .acceleration_turn  = 0.0f,
     .dist_offset_in     = 4.0f,
     .dist_offset_out    = 29.0f,
-    .val_offset_in      = 10.0f,
     .angle_turn_90      = 87.0f,
     .dist_wall_end      = 1.0f,
     // Large 90deg
@@ -381,7 +378,6 @@ const ShortestRunModeParams_t shortestRunModeParams5 = {
     .acceleration_turn  = 0.0f,
     .dist_offset_in     = 4.0f,
     .dist_offset_out    = 29.0f,
-    .val_offset_in      = 10.0f,
     .angle_turn_90      = 87.0f,
     .dist_wall_end      = 0.0f,
     // Large 90deg
@@ -436,7 +432,6 @@ const ShortestRunModeParams_t shortestRunModeParams6 = {
     .acceleration_turn  = 0.0f,
     .dist_offset_in     = 10.0f,
     .dist_offset_out    = 58.0f,
-    .val_offset_in      = 1050.0f,
     .angle_turn_90      = 80.5f,
     .dist_wall_end      = 12.0f,
     .velocity_l_turn_90 = 2000.0f,
@@ -489,7 +484,6 @@ const ShortestRunModeParams_t shortestRunModeParams7 = {
     .acceleration_turn  = 0.0f,
     .dist_offset_in     = 10.0f,
     .dist_offset_out    = 58.0f,
-    .val_offset_in      = 1050.0f,
     .angle_turn_90      = 80.5f,
     .dist_wall_end      = 12.0f,
     .velocity_l_turn_90 = 2200.0f,

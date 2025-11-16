@@ -10,6 +10,7 @@
 #include "../Inc/shortest_run_params.h"
 #include "../Inc/run.h"
 #include "../Inc/logging.h"
+#include "../Inc/sensor_distance.h"
 #include <math.h>
 
 // 探索パラメータの簡易調整用オーバーライド（未設定は NaN）
@@ -19,6 +20,41 @@ static float s_override_kp_wall = NAN;
 static float s_override_dist_wall_end = NAN;
 
 // （mode4相当のヘルパは不要のため削除）
+
+// === Front sensor 3-point calibration helpers ===
+static void wait_sensor_enter_and_settle(uint32_t settle_ms)
+{
+    // センサEnter: 前方センサを一時的に近づけて ad_fr/ad_fl のどちらかが閾値超え
+    while (1) {
+        if (ad_fr > 1500 || ad_fl > 1500) break;
+        HAL_Delay(50);
+    }
+    // 手を離して落ち着くのを待つ
+    HAL_Delay(settle_ms);
+}
+
+static void sample_front_ad_avg_ms(uint32_t duration_ms, uint16_t *out_fl, uint16_t *out_fr)
+{
+    uint32_t start = HAL_GetTick();
+    uint32_t sum_fl = 0, sum_fr = 0;
+    uint32_t cnt = 0;
+    while ((HAL_GetTick() - start) < duration_ms) {
+        sum_fl += (uint16_t)ad_fl;
+        sum_fr += (uint16_t)ad_fr;
+        cnt++;
+        HAL_Delay(2);
+    }
+    if (cnt == 0) cnt = 1;
+    if (out_fl) *out_fl = (uint16_t)(sum_fl / cnt);
+    if (out_fr) *out_fr = (uint16_t)(sum_fr / cnt);
+}
+
+static void enforce_strict_decreasing(uint16_t *a0, uint16_t *a1, uint16_t *a2)
+{
+    // validate_lut は厳密単調減少を要求。ノイズで逆転した場合は最小限の補正を入れる。
+    if (*a1 >= *a0) *a1 = (*a0 > 0) ? (uint16_t)(*a0 - 1) : 0;
+    if (*a2 >= *a1) *a2 = (*a1 > 0) ? (uint16_t)(*a1 - 1) : 0;
+}
 
 // Helper loader: apply exploration common params
 static void apply_search_run_params(void) {
@@ -35,7 +71,6 @@ static void apply_search_run_params(void) {
     acceleration_turn = p->acceleration_turn;
     dist_offset_in = p->dist_offset_in;
     dist_offset_out = p->dist_offset_out;
-    val_offset_in = p->val_offset_in;
     angle_turn_90 = p->angle_turn_90;
     // 壁切れ後追従
     dist_wall_end = p->dist_wall_end;
@@ -145,16 +180,165 @@ void mode1() {
                     HAL_Delay(50);
                 }
                 break;
-            case 2:
-            case 3:
+            case 2: // 前壁補正テスト（R90, search params, LOG_PROFILE_CUSTOM）
+                // 探索用の共通パラメータを適用
+                apply_search_run_params();
+
+                velocity_interrupt = 0;
+                led_flash(10);
+                drive_variable_reset();
+                IMU_GetOffset();
+                drive_enable_motor();
+                led_flash(2);
+
+                // 基準値（壁制御用ベース）の取得
+                get_base();
+
+                // ログ設定（前壁補正テスト）
+                log_init();
+                log_set_profile(LOG_PROFILE_CUSTOM);
+                log_start(HAL_GetTick());
+
+                // 接近→前壁補正→R90ターン→減速
+                half_sectionA(velocity_turn90);
+                one_sectionU(0);
+                turn_R90(1);
+                half_sectionD(0);
+
+                // ログ停止（出力は後でセンサEnterで実行）
+                log_stop();
+
+                // 走行停止・LED通知
+                drive_stop();
+                led_flash(5);
+
+                // センサEnter待ち（右前/左前でCSV出力）
+                while (1) {
+                    if (ad_fr > 700 && ad_fl < 200) {
+                        log_print_frontwall_all();
+                        break;
+                    }
+                    HAL_Delay(50);
+                }
+                break;
+            case 3: // 前壁補正テスト（L90, search params, LOG_PROFILE_CUSTOM）
+                // 探索用の共通パラメータを適用
+                apply_search_run_params();
+
+                velocity_interrupt = 0;
+                led_flash(10);
+                drive_variable_reset();
+                IMU_GetOffset();
+                drive_enable_motor();
+                led_flash(2);
+
+                // 基準値（壁制御用ベース）の取得
+                get_base();
+
+                // ログ設定（前壁補正テスト）
+                log_init();
+                log_set_profile(LOG_PROFILE_CUSTOM);
+                log_start(HAL_GetTick());
+
+                // 接近→前壁補正→L90ターン→減速
+                half_sectionA(velocity_turn90);
+                turn_L90(1);
+                half_sectionD(0);
+
+                // ログ停止（出力は後でセンサEnterで実行）
+                log_stop();
+
+                // 走行停止・LED通知
+                drive_stop();
+                led_flash(5);
+
+                // センサEnter待ち（右前/左前でCSV出力）
+                while (1) {
+                    if (ad_fr > 1500 || ad_fl > 1500) {
+                        log_print_frontwall_all();
+                        break;
+                    }
+                    HAL_Delay(50);
+                }
+                break;
             case 4:
             case 5:
             case 6:
             case 7:
             case 8:
-            case 9:
                 printf("(empty)\n");
                 break;
+            case 9: { // 前壁距離 3点キャリブレーション（0,24,114mm）
+                printf("Mode 1-0-9 Front Distance 3-point Calibration (0,24,114mm)\n");
+                printf("Place mouse at target distance, then do sensor ENTER (wave hand close to front) to capture.\n");
+
+                // 安全のためモータ停止
+                drive_stop();
+                drive_disable_motor();
+
+                uint16_t fl0=0, fr0=0, fl24=0, fr24=0, fl114=0, fr114=0;
+
+                // 0mm
+                printf("[Step 1/3] 0 mm: place and ENTER...\n");
+                wait_sensor_enter_and_settle(800);
+                led_flash(50);
+                sample_front_ad_avg_ms(600, &fl0, &fr0);
+                printf("  captured: FL=%u, FR=%u\n", (unsigned)fl0, (unsigned)fr0);
+                buzzer_enter(300);
+
+                // 24mm
+                printf("[Step 2/3] 24 mm: place and ENTER...\n");
+                wait_sensor_enter_and_settle(800);
+                led_flash(50);
+                sample_front_ad_avg_ms(600, &fl24, &fr24);
+                printf("  captured: FL=%u, FR=%u\n", (unsigned)fl24, (unsigned)fr24);
+                buzzer_enter(300);
+
+                // 114mm
+                printf("[Step 3/3] 114 mm: place and ENTER...\n");
+                wait_sensor_enter_and_settle(800);
+                led_flash(50);
+                sample_front_ad_avg_ms(600, &fl114, &fr114);
+                printf("  captured: FL=%u, FR=%u\n", (unsigned)fl114, (unsigned)fr114);
+                buzzer_enter(300);
+
+                // 単調減少の担保（ノイズ時の最小補正）
+                enforce_strict_decreasing(&fl0, &fl24, &fl114);
+                enforce_strict_decreasing(&fr0, &fr24, &fr114);
+
+                // 既存LUTは変えず、距離ワープを適用する。
+                // 1) 測定ADの合計から、現行LUTでの推定距離 mm_est を求める
+                uint16_t ad_sum0 = (uint16_t)((uint32_t)fl0 + (uint32_t)fr0);
+                uint16_t ad_sum24 = (uint16_t)((uint32_t)fl24 + (uint32_t)fr24);
+                uint16_t ad_sum114 = (uint16_t)((uint32_t)fl114 + (uint32_t)fr114);
+                float x_est[3];
+                x_est[0] = sensor_distance_from_fsum_unwarped(ad_sum0);
+                x_est[1] = sensor_distance_from_fsum_unwarped(ad_sum24);
+                x_est[2] = sensor_distance_from_fsum_unwarped(ad_sum114);
+
+                // 2) 真値（ターゲット）を用意
+                float y_true[3] = {0.0f, 24.0f, 114.0f};
+
+                // 3) ワープを適用（RAM）し、Flashにも保存
+                sensor_distance_set_warp_front_sum_3pt(x_est, y_true);
+                HAL_StatusTypeDef st = sensor_front_warp_save_to_flash(x_est, y_true);
+
+                printf("Applied distance warp (mm_est -> mm_true):\n");
+                printf("  (%.2f -> %.2f), (%.2f -> %.2f), (%.2f -> %.2f)\n",
+                       x_est[0], y_true[0], x_est[1], y_true[1], x_est[2], y_true[2]);
+                if (st == HAL_OK) {
+                    printf("Saved warp to Flash.\n");
+                } else {
+                    printf("Flash save failed (HAL=%d).\n", st);
+                }
+
+                // 終了合図
+                for(int i=0; i<3; i++) {
+                    buzzer_enter(300);
+                    HAL_Delay(300);
+                }
+                break;
+            }
             default:
                 printf("No sub-mode selected.\n");
                 break;
@@ -201,9 +385,65 @@ void mode1() {
 
             break;
 
-        case 2: // 探索: ゴールを目指し、到達後にスタートへ戻る
+        case 2: // 探索: ゴールを目指し、到達後にスタートへ戻る（サブ選択対応: 0=従来,1/2=前壁補正テスト）
 
             printf("Mode 1-2 (Explore: Goal -> Return to Start).\n");
+
+            // サブ選択: 0=従来動作, 1=前壁補正テスト(R90), 2=前壁補正テスト(L90)
+            {
+                int sub2 = 0;
+                sub2 = select_mode(sub2);
+                if (sub2 == 1 || sub2 == 2) {
+                    // ===== 前壁補正テスト（探索環境） =====
+                    apply_search_run_params();
+
+                    // 壁切れ補正は本テストでは不問（通常どおり）
+                    // g_enable_wall_end_search は変更しない
+
+                    // 準備
+                    velocity_interrupt = 0;
+                    led_flash(10);
+                    drive_variable_reset();
+                    IMU_GetOffset();
+                    drive_enable_motor();
+                    led_flash(2);
+
+                    // 基準値の取得
+                    get_base();
+
+                    // ログ設定（前壁補正テスト）
+                    log_init();
+                    log_set_profile(LOG_PROFILE_CUSTOM);
+                    log_start(HAL_GetTick());
+
+                    // 接近→前壁補正→ターン→減速
+                    half_sectionA(velocity_turn90);
+                    if (sub2 == 1) {
+                        turn_R90(1);
+                    } else {
+                        turn_L90(1);
+                    }
+                    half_sectionD(0);
+
+                    // ログ停止（出力は後でセンサEnterで実行）
+                    log_stop();
+
+                    // 走行停止・LED通知
+                    drive_stop();
+                    led_flash(5);
+
+                    // センサEnter待ち（右前/左前でCSV出力）
+                    while (1) {
+                        if (ad_fr > 1500 || ad_fl > 1500) {
+                            log_print_frontwall_all();
+                            break;
+                        }
+                        HAL_Delay(50);
+                    }
+
+                    break; // case 2 を終了
+                }
+            }
 
             // ===== 走行パラメータ（探索共通パラメータを適用） =====
             apply_search_run_params();

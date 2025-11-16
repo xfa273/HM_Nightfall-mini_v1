@@ -32,7 +32,6 @@ void mode5() {
             acceleration_turn = 0;
             dist_offset_in = 10;
             dist_offset_out = 35;
-            val_offset_in = 680;
             angle_turn_90 = 88;
 
             // 壁制御とケツ当て
@@ -203,7 +202,6 @@ void mode5() {
                 acceleration_turn          = pm->acceleration_turn;
                 dist_offset_in             = pm->dist_offset_in;
                 dist_offset_out            = pm->dist_offset_out;
-                val_offset_in              = pm->val_offset_in;
                 angle_turn_90              = pm->angle_turn_90;
                 velocity_l_turn_90         = pm->velocity_l_turn_90;
                 alpha_l_turn_90            = pm->alpha_l_turn_90;
@@ -262,7 +260,6 @@ void mode5() {
             acceleration_turn = 0;
             dist_offset_in = 10;
             dist_offset_out = 35;
-            val_offset_in = 1160;
             angle_turn_90 = 84;
             // 90°大回りターン
             velocity_l_turn_90 = 1700;

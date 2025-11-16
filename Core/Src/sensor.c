@@ -20,6 +20,38 @@ static void print_wall_offsets(const char* label)
            (unsigned)wall_offset_fl);
 }
 
+// Save front-sum distance-domain warp (3 anchors) to Flash (preserving other parameters)
+HAL_StatusTypeDef sensor_front_warp_save_to_flash(const float x_mm_est[3], const float y_mm_true[3])
+{
+    flash_params_t p;
+    if (!flash_params_load(&p)) {
+        flash_params_defaults(&p);
+        // Carry over current known globals for user convenience
+        p.base_l = base_l;
+        p.base_r = base_r;
+        p.base_f = base_f;
+        p.wall_offset_r  = wall_offset_r;
+        p.wall_offset_l  = wall_offset_l;
+        p.wall_offset_fr = wall_offset_fr;
+        p.wall_offset_fl = wall_offset_fl;
+        p.imu_offset_z = imu_offset_z;
+    }
+
+    for (int i = 0; i < 3; ++i) {
+        p.front_warp_x_mm_est[i] = x_mm_est[i];
+        p.front_warp_y_mm_true[i] = y_mm_true[i];
+    }
+    p.flags |= FLASH_FLAG_FRONT_WARP_VALID;
+
+    HAL_StatusTypeDef st = flash_params_save(&p);
+    if (st == HAL_OK) {
+        printf("[Flash] Saved front warp (3 anchors).\r\n");
+    } else {
+        printf("[Flash] Save front warp failed. HAL=%d\r\n", st);
+    }
+    return st;
+}
+
 //+++++++++++++++++++++++++++++++++++++++++++++++
 // sensor_calibrate_wall_ctrl_base_and_save
 // 壁制御の基準値（base_l/base_r/base_f）を一定時間平均して測定し、Flashへ保存
@@ -30,14 +62,6 @@ static void print_wall_offsets(const char* label)
 HAL_StatusTypeDef sensor_calibrate_wall_ctrl_base_and_save(uint32_t duration_ms)
 {
     if (duration_ms < 200) duration_ms = 200; // 最低200ms
-
-    printf("[CAL] Place robot centered with side walls. Waiting for both walls...\r\n");
-    // 両側壁の存在を待つ（しきい値はWALL_BASE_*）
-    while (!(ad_r > WALL_BASE_R && ad_l > WALL_BASE_L)) {
-        HAL_Delay(10);
-    }
-    buzzer_beep(1200);
-    printf("[CAL] Detected both walls. Measuring for %lu ms...\r\n", (unsigned long)duration_ms);
 
     uint32_t t0 = HAL_GetTick();
     uint32_t sum_l = 0, sum_r = 0, sum_f = 0;
@@ -103,6 +127,9 @@ void sensor_init(void) {
     HAL_TIM_Base_Start_IT(&htim5);
     HAL_TIM_Base_Start_IT(&htim6);
 
+    // Initialize default distance LUTs for sensors first
+    sensor_distance_init();
+
     // センサのオフセット値をフラッシュから読み込み（有効なら使用）
     // 失敗した場合のみ測定を実施
     bool loaded = sensor_params_load_from_flash();
@@ -114,9 +141,6 @@ void sensor_init(void) {
     }
 
     IMU_Init_Auto();
-
-    // Initialize default distance LUTs for front sensors (FL/FR)
-    sensor_distance_init();
 }
 
 //+++++++++++++++++++++++++++++++++++++++++++++++
@@ -142,6 +166,35 @@ bool sensor_params_load_from_flash(void)
     wall_offset_fl = (uint16_t)p.wall_offset_fl;
 
     imu_offset_z = p.imu_offset_z;
+
+    // Optionally apply front-distance LUT (3 points) if present
+    if (p.flags & FLASH_FLAG_FRONT_LUT_VALID) {
+        // Validate monotonicity to satisfy LUT API
+        const uint16_t *mm = p.front_lut_mm;
+        const uint16_t *fl = p.front_lut_fl;
+        const uint16_t *fr = p.front_lut_fr;
+        bool ok = true;
+        if (!(mm[0] < mm[1] && mm[1] < mm[2])) ok = false;
+        if (!(fl[0] > fl[1] && fl[1] > fl[2])) ok = false;
+        if (!(fr[0] > fr[1] && fr[1] > fr[2])) ok = false;
+        if (ok) {
+            (void)sensor_distance_set_lut_fl(mm, fl, 3);
+            (void)sensor_distance_set_lut_fr(mm, fr, 3);
+            uint16_t sum3[3];
+            for (int i = 0; i < 3; ++i) {
+                uint32_t s = (uint32_t)fl[i] + (uint32_t)fr[i];
+                sum3[i] = (uint16_t)((s > 0xFFFFu) ? 0xFFFFu : s);
+            }
+            (void)sensor_distance_set_lut_front_sum(mm, sum3, 3);
+            printf("[Flash] Applied front LUT: mm={%u,%u,%u}, FL={%u,%u,%u}, FR={%u,%u,%u}\r\n",
+                   (unsigned)mm[0], (unsigned)mm[1], (unsigned)mm[2],
+                   (unsigned)fl[0], (unsigned)fl[1], (unsigned)fl[2],
+                   (unsigned)fr[0], (unsigned)fr[1], (unsigned)fr[2]);
+        } else {
+            printf("[Flash] Front LUT invalid (monotonicity). Ignored.\r\n");
+        }
+    }
+
     return true;
 }
 
@@ -163,6 +216,41 @@ HAL_StatusTypeDef sensor_params_save_to_flash(void)
     p.imu_offset_z = imu_offset_z;
 
     return flash_params_save(&p);
+}
+
+// Save 3-point front distance LUT to Flash (preserving other parameters)
+HAL_StatusTypeDef sensor_front_lut_save_to_flash(const uint16_t mm[3], const uint16_t fl[3], const uint16_t fr[3])
+{
+    flash_params_t p;
+    if (!flash_params_load(&p)) {
+        // If nothing stored yet, start from defaults and copy known runtime values
+        flash_params_defaults(&p);
+        // Carry over current offsets/bases if globals hold them
+        p.base_l = base_l;
+        p.base_r = base_r;
+        p.base_f = base_f;
+        p.wall_offset_r  = wall_offset_r;
+        p.wall_offset_l  = wall_offset_l;
+        p.wall_offset_fr = wall_offset_fr;
+        p.wall_offset_fl = wall_offset_fl;
+        p.imu_offset_z = imu_offset_z;
+    }
+
+    // Copy LUT (3 points)
+    for (int i = 0; i < 3; ++i) {
+        p.front_lut_mm[i] = mm[i];
+        p.front_lut_fl[i] = fl[i];
+        p.front_lut_fr[i] = fr[i];
+    }
+    p.flags |= FLASH_FLAG_FRONT_LUT_VALID;
+
+    HAL_StatusTypeDef st = flash_params_save(&p);
+    if (st == HAL_OK) {
+        printf("[Flash] Saved front LUT (3pt) successfully.\r\n");
+    } else {
+        printf("[Flash] Save front LUT failed. HAL=%d\r\n", st);
+    }
+    return st;
 }
 
 // 任意タイミングで再測定してフラッシュへ保存するヘルパ（壁センサのみ）
@@ -272,26 +360,34 @@ void get_wall_info() {
     }
     //----壁情報の初期化----
     wall_info = 0x00; // 壁情報を初期化
-    //----前壁を見る----
-    if (ad_fr > WALL_BASE_FR * sensor_kx || ad_fl > WALL_BASE_FL * sensor_kx) {
-        // AD値が閾値より大きい（=壁があって光が跳ね返ってきている）場合
-        wall_info |= 0x88; // 壁情報を更新
+    //----距離ベースで前壁を見る----
+    {
+        float d_fr = sensor_distance_from_fr(ad_fr);
+        float d_fl = sensor_distance_from_fl(ad_fl);
+        // どちらかがしきい値以内なら前壁あり
+        if ((d_fr <= FRONT_DETECT_DIST_MM) || (d_fl <= FRONT_DETECT_DIST_MM)) {
+            wall_info |= 0x88;
+        }
     }
-    //----右壁を見る----
-    if (ad_r > WALL_BASE_R * sensor_kx) {
-        // AD値が閾値より大きい（=壁があって光が跳ね返ってきている）場合
-        wall_info |= 0x44; // 壁情報を更新
-        r_wall = true;
-    } else {
-        r_wall = false;
+    //----距離ベースで右壁を見る----
+    {
+        float d_r = sensor_distance_from_r(ad_r);
+        if (d_r <= WALL_DETECT_DIST_R_MM) {
+            wall_info |= 0x44;
+            r_wall = true;
+        } else {
+            r_wall = false;
+        }
     }
-    //----左壁を見る----
-    if (ad_l > WALL_BASE_L * sensor_kx) {
-        // AD値が閾値より大きい（=壁があって光が跳ね返ってきている）場合
-        wall_info |= 0x11; // 壁情報を更新
-        l_wall = true;
-    } else {
-        l_wall = false;
+    //----距離ベースで左壁を見る----
+    {
+        float d_l = sensor_distance_from_l(ad_l);
+        if (d_l <= WALL_DETECT_DIST_L_MM) {
+            wall_info |= 0x11;
+            l_wall = true;
+        } else {
+            l_wall = false;
+        }
     }
 }
 

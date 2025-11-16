@@ -39,7 +39,6 @@ volatile float velocity_turn90; // 90°ターンの速度[mm/s]
 volatile float alpha_turn90;    // 90°ターンの角加速度[deg/s^2]
 volatile float dist_offset_in;  // 90°ターンの入オフセット距離[mm]
 volatile float dist_offset_out; // 90°ターンの出オフセット距離[mm]
-volatile float val_offset_in; // 90°ターンの入前壁補正センサー値
 volatile float angle_turn_90; // 90°ターンの旋回角度[deg]
 
 // 補正用
@@ -212,7 +211,6 @@ extern volatile float velocity_turn90; // 90°ターンの速度[mm/s]
 extern volatile float alpha_turn90;    // 90°ターンの角加速度[deg/s^2]
 extern volatile float dist_offset_in; // 90°ターンの入オフセット距離[mm]
 extern volatile float dist_offset_out; // 90°ターンの出オフセット距離[mm]
-extern volatile float val_offset_in; // 90°ターンの入前壁補正センサー値
 extern volatile float angle_turn_90; // 90°ターンの旋回角度[deg]
 
 // 補正用

@@ -13,14 +13,13 @@ const SearchRunParams_t searchRunParams = {
     .acceleration_turn = 0.0f,
 
     // オフセット・角度
-    .dist_offset_in  = 10.0f,
-    .dist_offset_out = 20.0f,
-    .val_offset_in   = 1750.0f,
+    .dist_offset_in  = 10.0f,   
+    .dist_offset_out = 22.0f,
     .angle_turn_90   = 89.4f,
 
     // 壁切れ後追従距離
     .dist_wall_end   = 40.0f,
 
     // 壁制御
-    .kp_wall = 0.015f
+    .kp_wall = 0.65f
 };

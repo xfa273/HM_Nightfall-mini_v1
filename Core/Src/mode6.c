@@ -34,7 +34,6 @@ void mode6() {
             acceleration_turn = 0;
             dist_offset_in = 10;
             dist_offset_out = 30;
-            val_offset_in = 680;
             angle_turn_90 = 88.5;
 
             // 壁制御とケツ当て

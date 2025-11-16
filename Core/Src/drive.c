@@ -10,6 +10,7 @@
 #include "params.h"
 #include "drive.h"
 #include "sensor.h"
+#include "sensor_distance.h"
 #include "interrupt.h"
 #include "logging.h"
 #include <math.h>
@@ -1635,47 +1636,48 @@ void driveFWall(float dist, float spd_in, float spd_out) {
 
     drive_start();
 
-    // 実距離（real_distance）が目標値に達するか前壁しきい値に達した時点で抜ける。
-    // 未検知の場合は、WALL_END_EXTEND_MAX_MM の範囲で距離を延長して検出を待つ。
-    bool reached = false;
+    // エンコーダ距離は用いず、前壁距離がしきい値に達するまで直進する。
+    // 前壁補正の開始条件: 区画進入時の前壁距離(固定)から dist_offset_in を差し引いた距離
+    // 例) FRONT_DIST_AT_CELL_ENTRY_MM=52mm, dist_offset_in=10mm -> 42mm で開始
+    float d_front_thr = FRONT_DIST_AT_CELL_ENTRY_MM - dist_offset_in;
+    if (d_front_thr < 0.0f) d_front_thr = 0.0f;
     if (MF.FLAG.SLALOM_R) {
-        while (real_distance < dist) {
+        while (1) {
             background_replan_tick();
-            if (MF.FLAG.F_WALL && (ad_fr + ad_fl) >= val_offset_in) {
-                reached = true;
+            // 速度を spd_out にクランプ（加速し過ぎない）
+            if (acceleration_interrupt > 0.0f && velocity_interrupt >= spd_out) {
+                acceleration_interrupt = 0.0f;
+                velocity_interrupt = spd_out;
+            }
+            // 合成距離（FR+FL）で前壁までの距離を推定し、d_front_thr 以下で到達と判定
+            uint32_t fsum = (uint32_t)ad_fl + (uint32_t)ad_fr;
+            if (fsum > 0xFFFFu) fsum = 0xFFFFu;
+            float d_front = sensor_distance_from_fsum((uint16_t)fsum);
+            if (d_front <= d_front_thr) {
                 break;
             }
+            if (MF.FLAG.FAILED) break;
         }
     } else if (MF.FLAG.SLALOM_L) {
-        while (real_distance < dist) {
+        while (1) {
             background_replan_tick();
-            if (MF.FLAG.F_WALL && (ad_fr + ad_fl) >= val_offset_in) {
-                reached = true;
+            // 速度を spd_out にクランプ（加速し過ぎない）
+            if (acceleration_interrupt > 0.0f && velocity_interrupt >= spd_out) {
+                acceleration_interrupt = 0.0f;
+                velocity_interrupt = spd_out;
+            }
+            // 合成距離（FR+FL）で前壁までの距離を推定し、d_front_thr 以下で到達と判定
+            uint32_t fsum = (uint32_t)ad_fl + (uint32_t)ad_fr;
+            if (fsum > 0xFFFFu) fsum = 0xFFFFu;
+            float d_front = sensor_distance_from_fsum((uint16_t)fsum);
+            if (d_front <= d_front_thr) {
                 break;
             }
+            if (MF.FLAG.FAILED) break;
         }
     }
 
-    // 前壁しきい値に達していなければ延長して待つ（上限: WALL_END_EXTEND_MAX_MM）
-    if (!reached) {
-        const float extend_limit_mm = WALL_END_EXTEND_MAX_MM;
-        if (extend_limit_mm > 0.0f) {
-            const float dist_end = dist + extend_limit_mm;
-            // 延長区間は等速で追従
-            acceleration_interrupt = 0;
-            velocity_interrupt = spd_out;
-            while (real_distance < dist_end) {
-                background_replan_tick();
-                if (MF.FLAG.F_WALL && (ad_fr + ad_fl) >= val_offset_in) {
-                    reached = true;
-                    break;
-                }
-                if (MF.FLAG.FAILED) {
-                    break;
-                }
-            }
-        }
-    }
+    // エンコーダ由来の距離では抜けない設計に変更したため、延長待ちは不要
 
     velocity_interrupt = spd_out;
 
@@ -2178,7 +2180,6 @@ void test_run(void) {
             acceleration_turn = 0;
             dist_offset_in = 14;
             dist_offset_out = 18; // 32
-            val_offset_in = 2000;
             angle_turn_90 = 89.5;
             // 90°大回りターン
             velocity_l_turn_90 = 500;
@@ -2224,7 +2225,6 @@ void test_run(void) {
             acceleration_turn = 0;
             dist_offset_in = 14;
             dist_offset_out = 18; // 32
-            val_offset_in = 2000;
             angle_turn_90 = 89.5;
             // 90°大回りターン
             velocity_l_turn_90 = 500;
@@ -2277,7 +2277,6 @@ void test_run(void) {
             acceleration_turn = 0;
             dist_offset_in = 14;
             dist_offset_out = 18; // 32
-            val_offset_in = 2000;
             angle_turn_90 = 89.5;
             // 90°大回りターン
             velocity_l_turn_90 = 500;
@@ -2331,7 +2330,6 @@ void test_run(void) {
             acceleration_turn = 0;
             dist_offset_in = 14;
             dist_offset_out = 18; // 32
-            val_offset_in = 2000;
             angle_turn_90 = 89.5;
             // 90°大回りターン
             velocity_l_turn_90 = 500;
@@ -2386,7 +2384,6 @@ void test_run(void) {
             acceleration_turn = 0;
             dist_offset_in = 5;
             dist_offset_out = 8.47; // 32
-            val_offset_in = 2000;
             angle_turn_90 = 89.5;
             // 90°大回りターン
             velocity_l_turn_90 = 500;
@@ -2449,7 +2446,6 @@ void test_run(void) {
             acceleration_turn = 0;
             dist_offset_in = 5;
             dist_offset_out = 8.47; // 32
-            val_offset_in = 2000;
             angle_turn_90 = 89.5;
             // 90°大回りターン
             velocity_l_turn_90 = 1000;
@@ -2511,7 +2507,6 @@ void test_run(void) {
             acceleration_turn = 0;
             dist_offset_in = 14;
             dist_offset_out = 18; // 32
-            val_offset_in = 2000;
             angle_turn_90 = 89.5;
             // 90°大回りターン
             velocity_l_turn_90 = 500;
@@ -2564,7 +2559,6 @@ void test_run(void) {
             acceleration_turn = 0;
             dist_offset_in = 14;
             dist_offset_out = 18; // 32
-            val_offset_in = 2000;
             angle_turn_90 = 89.5;
             // 90°大回りターン
             velocity_l_turn_90 = 500;

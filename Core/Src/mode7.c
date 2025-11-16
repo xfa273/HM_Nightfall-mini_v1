@@ -32,7 +32,6 @@ void mode7() {
             acceleration_turn = 0;
             dist_offset_in = 10;
             dist_offset_out = 35;
-            val_offset_in = 1100;
             angle_turn_90 = 88;
 
             // 壁制御とケツ当て

@@ -20,7 +20,11 @@ extern "C" {
 #define FLASH_PARAMS_SECTOR         (FLASH_SECTOR_10)
 
 #define FLASH_PARAMS_MAGIC   (0x50415231UL)  // 'PAR1'
-#define FLASH_PARAMS_VERSION (0x00010001UL)
+#define FLASH_PARAMS_VERSION (0x00010002UL)
+
+// Flags for optional fields
+#define FLASH_FLAG_FRONT_LUT_VALID   (1u << 0)
+#define FLASH_FLAG_FRONT_WARP_VALID  (1u << 1)
 
 // Persisted parameters structure
 // Note: keep fields 32-bit aligned for word programming
@@ -43,8 +47,19 @@ typedef struct {
     // IMU offsets (optional)
     float imu_offset_z;
 
+    // Optional front distance LUT (3 points for FL/FR at fixed distances)
+    // Distances are stored to assert validity and allow future flexibility.
+    uint32_t flags; // see FLASH_FLAG_*
+    uint16_t front_lut_mm[3];  // typically {0,24,114}
+    uint16_t front_lut_fl[3];  // AD at those distances
+    uint16_t front_lut_fr[3];  // AD at those distances
+
+    // Optional distance-domain warp for FRONT SUM: mm_est -> mm_true (3 anchors)
+    float front_warp_x_mm_est[3];
+    float front_warp_y_mm_true[3];
+
     // Reserved/padding for future use
-    uint32_t reserved[8];
+    uint32_t reserved[2];
 } flash_params_t;
 
 // Load params from flash. Returns true if valid data loaded.

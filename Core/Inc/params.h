@@ -139,6 +139,42 @@
 #define WALL_DIFF_THR 22   // 壁センサ値の変化量のしきい値
 #define K_SENSOR      1.0F // センサの補正値 0.94F
 
+// センサ距離換算の一括調整係数（全センサ共通、mmスケール）
+// LUTから得た距離[mm]に対して、mm_out = SENSOR_DIST_GAIN * mm_in
+// デフォルトは1.0（無調整）
+#ifndef SENSOR_DIST_GAIN
+#define SENSOR_DIST_GAIN 1.0F
+#endif
+
+// 横壁制御の目標距離[mm]（左右別に微調整可能）
+// 例: 42mm を初期値とし、実機で微調整
+#ifndef WALL_TARGET_DIST_L_MM
+#define WALL_TARGET_DIST_L_MM 42.0F
+#endif
+#ifndef WALL_TARGET_DIST_R_MM
+#define WALL_TARGET_DIST_R_MM 42.0F
+#endif
+
+// 壁の有無判定を距離ベースに変更（mm）
+// true if 距離 <= しきい値
+#ifndef WALL_DETECT_DIST_L_MM
+#define WALL_DETECT_DIST_L_MM 70.0F
+#endif
+#ifndef WALL_DETECT_DIST_R_MM
+#define WALL_DETECT_DIST_R_MM 70.0F
+#endif
+#ifndef FRONT_DETECT_DIST_MM
+#define FRONT_DETECT_DIST_MM 90.0F
+#endif
+
+// 区画に入った直後（区画境界）における、センサ(FL/FR合成)から見た前壁までの距離[mm]
+// 前壁補正(driveFWall)では、ターン開始条件を
+//   sensor_distance_from_fsum(FL+FR) <= FRONT_DIST_AT_CELL_ENTRY_MM - dist_offset_in
+// として使用します。
+#ifndef FRONT_DIST_AT_CELL_ENTRY_MM
+#define FRONT_DIST_AT_CELL_ENTRY_MM 52.0F
+#endif
+
 // 壁切れ判定専用しきい値（高速走行向けに独立調整可能）
 // 既定値は探索用と同一。必要に応じて実機に合わせて変更してください。
 #ifndef WALL_END_THR_R
@@ -190,7 +226,7 @@
 /*制御閾値*/
 #define CTRL_BASE_L   1     // 左制御閾値
 #define CTRL_BASE_R   1     // 右制御閾値
-#define WALL_CTRL_MAX 0.002 // 制御量上限値
+#define WALL_CTRL_MAX 20.0f // 制御量上限値
 #define KP_DEFAULT    0.1F  // 比例制御係数
 #define KP_TURN_AP    0.3F  // スラロームのオフセット区間用比例制御係数
 
@@ -229,8 +265,8 @@
     探索系
 ------------------------------------------------------------*/
 //----ゴール座標----
-#define GOAL_X    7 // 7
-#define GOAL_Y    7 // 7
+#define GOAL_X    0 // 7
+#define GOAL_Y    8 // 7
 #define MAZE_SIZE 16
 #define START_X   0
 #define START_Y   0

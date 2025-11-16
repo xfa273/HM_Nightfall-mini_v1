@@ -45,21 +45,27 @@ bool flash_params_load(flash_params_t* out)
     if (src->magic != FLASH_PARAMS_MAGIC) {
         return false;
     }
-    if (src->length != sizeof(flash_params_t)) {
-        // version or layout mismatch
+
+    // Accept older versions with smaller length. Require sane bounds.
+    uint32_t stored_len = src->length;
+    if (stored_len < 16 || stored_len > sizeof(flash_params_t)) {
         return false;
     }
 
-    // verify checksum
+    // verify checksum over stored payload
     const uint8_t* payload = (const uint8_t*)src + 16;
-    const uint32_t payload_len = src->length - 16;
+    const uint32_t payload_len = stored_len - 16;
     const uint32_t crc_calc = calc_checksum(payload, payload_len);
     if (crc_calc != src->crc) {
         return false;
     }
 
-    // ok, copy out
-    memcpy(out, src, sizeof(flash_params_t));
+    // ok, copy available bytes and zero the rest
+    memset(out, 0, sizeof(flash_params_t));
+    memcpy(out, src, stored_len);
+    // Update header fields to current definition for callers
+    out->length = sizeof(flash_params_t);
+    out->version = FLASH_PARAMS_VERSION;
     return true;
 }
 

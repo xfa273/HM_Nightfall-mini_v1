@@ -20,7 +20,6 @@ typedef struct {
     // 進入/退出オフセット・角度
     float dist_offset_in;             // [mm]
     float dist_offset_out;            // [mm]
-    float val_offset_in;              // 壁合わせの目標センサ閾値
     float angle_turn_90;              // [deg]
 
     // 壁切れ後の直進距離（追従）

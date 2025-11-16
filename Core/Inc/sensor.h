@@ -124,6 +124,10 @@ HAL_StatusTypeDef sensor_adc_dma_start(volatile uint16_t *dst);
 bool sensor_params_load_from_flash(void);
 HAL_StatusTypeDef sensor_params_save_to_flash(void);
 HAL_StatusTypeDef sensor_recalibrate_and_save(void);
+// Save 3-point front distance LUT (FL/FR) to Flash (preserves other fields)
+HAL_StatusTypeDef sensor_front_lut_save_to_flash(const uint16_t mm[3], const uint16_t fl[3], const uint16_t fr[3]);
+// Save front-sum distance-domain warp (3 anchors) to Flash
+HAL_StatusTypeDef sensor_front_warp_save_to_flash(const float x_mm_est[3], const float y_mm_true[3]);
 
 // 壁制御の基準値（base_l/base_r/base_f）を一定時間平均して測定し、Flashに保存する
 // duration_ms: 測定に用いる時間[ms]

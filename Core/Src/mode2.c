@@ -30,7 +30,6 @@ static void apply_turn_normal_mode2(void) {
     acceleration_turn = m->acceleration_turn;
     dist_offset_in = m->dist_offset_in;
     dist_offset_out = m->dist_offset_out;
-    val_offset_in = m->val_offset_in;
     angle_turn_90 = m->angle_turn_90;
     dist_wall_end = m->dist_wall_end;
 }

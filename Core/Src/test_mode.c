@@ -79,8 +79,11 @@ void test_mode() {
             while (1) {
                 float d_fr = sensor_distance_from_fr((uint16_t)ad_fr);
                 float d_fl = sensor_distance_from_fl((uint16_t)ad_fl);
-                printf("R: %d, L: %d, FR: %d (%.1fmm), FL: %d (%.1fmm), BAT: %d\n",
-                       ad_r, ad_l, ad_fr, d_fr, ad_fl, d_fl, ad_bat);
+                float d_fsum = sensor_distance_from_front_sum((uint16_t)ad_fl, (uint16_t)ad_fr);
+                uint32_t fsum = (uint32_t)ad_fl + (uint32_t)ad_fr;
+                if (fsum > 0xFFFFu) fsum = 0xFFFFu;
+                printf("R: %d, L: %d, FR: %d (%.1fmm), FL: %d (%.1fmm), F_SUM: %lu (%.1fmm), BAT: %d\n",
+                       ad_r, ad_l, ad_fr, d_fr, ad_fl, d_fl, (unsigned long)fsum, d_fsum, ad_bat);
 
                 HAL_Delay(300);
             }
@@ -195,7 +198,6 @@ void test_mode() {
             acceleration_turn = 0;
             dist_offset_in = 10;
             dist_offset_out = 32;
-            val_offset_in = 700;
             angle_turn_90 = 88.5;
             // 90°大回りターン
             velocity_l_turn_90 = 850;
@@ -313,7 +315,7 @@ void test_mode() {
 
                 printf("[SENS] Measuring for %lu ms... Place the robot at the target distance.\n",
                        (unsigned long)duration_ms);
-                HAL_Delay(10000); // 準備時間
+                HAL_Delay(2000); // 準備時間
 
                 uint64_t sum_r = 0, sum_l = 0, sum_fr = 0, sum_fl = 0, sum_bat = 0;
                 uint32_t samples = 0;
@@ -363,15 +365,7 @@ void test_mode() {
             MF.FLAG.CTRL = 0;            // 壁制御を無効化
             MF.FLAG.CTRL_DIAGONAL = 0;   // 斜め制御を無効化
 
-            // 案内
-            printf("[CAL] Place the robot centered in the corridor with both side walls present.\n");
-            printf("[CAL] Press ENTER key on serial to start, or wait until both side walls are detected.\n");
-
-            // 自動開始: 両側壁の存在を待つ
-            while (!(ad_r > WALL_BASE_R && ad_l > WALL_BASE_L)) {
-                HAL_Delay(10);
-            }
-            buzzer_enter(1000);
+            led_flash(20);
 
             // 測定・保存（約1.5秒）
             {
