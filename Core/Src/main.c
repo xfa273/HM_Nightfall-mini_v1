@@ -790,7 +790,7 @@ static void MX_TIM5_Init(void)
 }
 
 /**
-  * @brief TIM6 Initialization Function (~32 kHz base for sensor scheduler)
+  * @brief TIM6 Initialization Function (4 kHz tick for sensor scheduler)
   * @param None
   * @retval None
   */
@@ -807,7 +807,7 @@ static void MX_TIM6_Init(void)
   htim6.Instance = TIM6;
   htim6.Init.Prescaler = 84-1;   // 84MHz / 84 = 1 MHz (1us tick)
   htim6.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim6.Init.Period = 32-1;      // 1 MHz / 32 = 31.25 kHz update (8-phase -> ~3.9 kHz/group)
+  htim6.Init.Period = 250-1;     // 1 MHz / 250 = 4 kHz tick (1 tick = 250us)
   htim6.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim6) != HAL_OK)
   {

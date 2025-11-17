@@ -274,7 +274,6 @@ void one_sectionD(void) {
 
     float remaining_blocks = 2.0f; // 1区画
     const float step_blocks = (2.0f / HALF_MM()); // 2mm相当
-    const float step_mm = step_blocks * HALF_MM();
     bool triggered = false;
 
     // 壁切れ補正が無効な場合は、検出をアームせずにそのまま一定減速度で1区画を完了

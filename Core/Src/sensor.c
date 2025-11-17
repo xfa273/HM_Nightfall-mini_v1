@@ -210,7 +210,6 @@ void sensor_init(void) {
     tp = 0;
     ad_l = ad_r = ad_fr = ad_fl = 0;
     base_l = base_r = base_f = 0;
-    ADC_task_counter = 0;
 
     HAL_TIM_Base_Start_IT(&htim1);
     HAL_TIM_Base_Start_IT(&htim5);
@@ -777,18 +776,6 @@ void get_sensor_offsets(void) {
     // interrupt.c ですでに実装されている ADC の LED ON/OFF 差分更新を使用する
     // 割り込み処理が複数回走るのを待つ
     for (i = 0; i < NUM_SAMPLES; i++) {
-        // ADCタスクカウンタが一周するのを待つ（センサ値が更新されるのを待つ）
-        uint8_t current_counter = ADC_task_counter;
-        uint32_t t0 = HAL_GetTick();
-        while (current_counter == ADC_task_counter) {
-            HAL_Delay(1);
-            if ((HAL_GetTick() - t0) > 200) {
-                // タイムアウト: 割り込みがまだ動いていない/停止している可能性
-                // 既存値で継続（起動ハングを回避）
-                break;
-            }
-        }
-
         // LED ON/OFF 差分（ad_on - ad_off）のみを加算（負値は0に丸め）
         int32_t dr  = (int32_t)ad_r_raw  - (int32_t)ad_r_off;  if (dr  < 0) dr  = 0;
         int32_t dl  = (int32_t)ad_l_raw  - (int32_t)ad_l_off;  if (dl  < 0) dl  = 0;

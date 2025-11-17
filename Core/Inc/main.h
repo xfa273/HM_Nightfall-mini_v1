@@ -38,12 +38,10 @@ extern "C" {
 /* USER CODE BEGIN ET */
 
 extern ADC_HandleTypeDef hadc1;
-extern ADC_HandleTypeDef hadc2;
 
 // DMA handle for ADC1 (used for DMA-based sensor acquisition)
 extern DMA_HandleTypeDef hdma_adc1;
 
-extern SPI_HandleTypeDef hspi1;
 extern SPI_HandleTypeDef hspi3;
 
 extern TIM_HandleTypeDef htim1;
@@ -53,7 +51,6 @@ extern TIM_HandleTypeDef htim4;
 extern TIM_HandleTypeDef htim5;
 extern TIM_HandleTypeDef htim6;
 extern TIM_HandleTypeDef htim8;
-extern TIM_HandleTypeDef htim9;
 
 extern UART_HandleTypeDef huart1;
 

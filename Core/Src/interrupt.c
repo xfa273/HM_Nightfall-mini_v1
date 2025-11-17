@@ -38,7 +38,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
         // TIM1: microsecond timer helper (used by tim1_wait_us)
     }
     if (htim->Instance == htim6.Instance) {
-        // TIM6: センサスケジューラ（DMA駆動）: 32kHzベース/8相 ≒ 3.9kHz/group
+        // TIM6: センサスケジューラ（DMA駆動）: 4kHz tick / 8相 = 500Hz per full cycle
         if (!s_adc_inflight) {
             HAL_StatusTypeDef st = HAL_OK;
             uint8_t start_dma = 0;
@@ -185,9 +185,7 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
             // LEDをOFFに戻す
             HAL_GPIO_WritePin(IR_R_GPIO_Port, IR_R_Pin, GPIO_PIN_RESET);
             HAL_GPIO_WritePin(IR_L_GPIO_Port, IR_L_Pin, GPIO_PIN_RESET);
-
-            // グループ識別（互換性: RL=0）
-            ADC_task_counter = 0;
+            
             break;
         }
         case 7: { // FR/FL ON capture 完了 -> 差分算出
@@ -228,9 +226,7 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
 
             // バッテリー更新（OFF側の最新値）
             ad_bat = adc_dma_buf_off[8];
-
-            // グループ識別（互換性: FR/FL=1）
-            ADC_task_counter = 1;
+            
             break;
         }
         default:
