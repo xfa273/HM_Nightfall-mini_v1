@@ -13,6 +13,7 @@
 #include "sensor_distance.h"
 #include "interrupt.h"
 #include "logging.h"
+#include "search_run_params.h"
 #include <math.h>
 
 // 半区画距離を返すヘルパ
@@ -658,7 +659,7 @@ void rotate_180(void) { driveR(ANGLE_ROTATE_90_R * 2); }
 //+++++++++++++++++++++++++++++++++++++++++++++++
 void turn_R90(uint8_t fwall) {
     MF.FLAG.SLALOM_R = 1;
-    MF.FLAG.CTRL = 1;
+    MF.FLAG.CTRL = 0;
 
     if (fwall) {
         if (MF.FLAG.F_WALL) {
@@ -673,7 +674,7 @@ void turn_R90(uint8_t fwall) {
     MF.FLAG.CTRL = 0;
 
     driveSR(angle_turn_90, alpha_turn90);
-    MF.FLAG.CTRL = 1;
+    MF.FLAG.CTRL = 0;
     driveA(dist_offset_out, velocity_turn90, speed_now, 0);
     MF.FLAG.CTRL = 0;
     get_wall_info();
@@ -688,7 +689,7 @@ void turn_R90(uint8_t fwall) {
 //+++++++++++++++++++++++++++++++++++++++++++++++
 void turn_L90(uint8_t fwall) {
     MF.FLAG.SLALOM_L = 1;
-    MF.FLAG.CTRL = 1;
+    MF.FLAG.CTRL = 0;
 
     if (fwall) {
 
@@ -704,7 +705,7 @@ void turn_L90(uint8_t fwall) {
     MF.FLAG.CTRL = 0;
 
     driveSL(angle_turn_90, alpha_turn90);
-    MF.FLAG.CTRL = 1;
+    MF.FLAG.CTRL = 0;
     driveA(dist_offset_out, velocity_turn90, speed_now, 0);
     MF.FLAG.CTRL = 0;
     get_wall_info();
@@ -1262,11 +1263,13 @@ void match_position(uint16_t target_value) {
 
     while (count < 2000 && ad_fr > WALL_BASE_FR * 1.5 && ad_fl > WALL_BASE_FL * 1.5) {
 
-        // 誤差算出（+は目標より近い/右が強い）
-        float e_fr = (float)((int32_t)ad_fr - (int32_t)F_ALIGN_TARGET_FR);
-        float e_fl = (float)((int32_t)ad_fl - (int32_t)F_ALIGN_TARGET_FL);
-        float e_pos = 0.5f * (e_fr + e_fl);   // 並進：平均を使う
-        float e_ang = (e_fr - e_fl);          // 角度：差分を使う
+        // 距離[mm]ベースの誤差算出（+は目標より遠い/右が遠い）
+        float d_fr = sensor_distance_from_fr(ad_fr); // warp適用済み距離
+        float d_fl = sensor_distance_from_fl(ad_fl);
+        float e_fr = d_fr - F_ALIGN_TARGET_FR; // [mm]
+        float e_fl = d_fl - F_ALIGN_TARGET_FL; // [mm]
+        float e_pos = 0.5f * (e_fr + e_fl);    // 並進：平均を使う（正: 遠い→前進）
+        float e_ang = (e_fr - e_fl);           // 角度：差分を使う（正: 右が遠い）
 
         // 収束判定（両センサが目標±MATCH_POS_TOL 内に連続して入ったら終了）
         if (fabsf(e_fr) <= MATCH_POS_TOL && fabsf(e_fl) <= MATCH_POS_TOL) {
@@ -1280,7 +1283,8 @@ void match_position(uint16_t target_value) {
         }
 
         // 並進は速度FBへ直接指示（velocity_interrupt を更新）
-        float v_cmd = -MATCH_POS_KP_TRANS * e_pos; // [mm/s]
+        // 距離が遠い(+e_pos)ときは前進(+)させる
+        float v_cmd = MATCH_POS_KP_TRANS * e_pos; // [mm/s]
         if (v_cmd >  MATCH_POS_VEL_MAX) v_cmd =  MATCH_POS_VEL_MAX;
         if (v_cmd < -MATCH_POS_VEL_MAX) v_cmd = -MATCH_POS_VEL_MAX;
         velocity_interrupt = v_cmd;
@@ -1637,10 +1641,16 @@ void driveFWall(float dist, float spd_in, float spd_out) {
     drive_start();
 
     // エンコーダ距離は用いず、前壁距離がしきい値に達するまで直進する。
-    // 前壁補正の開始条件: 区画進入時の前壁距離(固定)から dist_offset_in を差し引いた距離
-    // 例) FRONT_DIST_AT_CELL_ENTRY_MM=52mm, dist_offset_in=10mm -> 42mm で開始
-    float d_front_thr = FRONT_DIST_AT_CELL_ENTRY_MM - dist_offset_in;
-    if (d_front_thr < 0.0f) d_front_thr = 0.0f;
+    // しきい値は以下の優先順：
+    //  (1) searchRunParams.front_dist_turn_start_moving (>0 のとき)
+    //  (2) 従来式 FRONT_DIST_AT_CELL_ENTRY_MM - dist_offset_in
+    float d_front_thr;
+    if (searchRunParams.front_dist_turn_start_moving > 0.0f) {
+        d_front_thr = searchRunParams.front_dist_turn_start_moving;
+    } else {
+        d_front_thr = FRONT_DIST_AT_CELL_ENTRY_MM - dist_offset_in;
+        if (d_front_thr < 0.0f) d_front_thr = 0.0f;
+    }
     if (MF.FLAG.SLALOM_R) {
         while (1) {
             background_replan_tick();

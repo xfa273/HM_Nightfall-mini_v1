@@ -46,6 +46,9 @@ size_t sensor_distance_lut_size_r (void);
 // Returns distance in mm. If LUT is not initialized, default LUT is used where available.
 float sensor_distance_from_fl(uint16_t ad_value);
 float sensor_distance_from_fr(uint16_t ad_value);
+// Unwarped accessors (LUT only)
+float sensor_distance_from_fl_unwarped(uint16_t ad_value);
+float sensor_distance_from_fr_unwarped(uint16_t ad_value);
 float sensor_distance_from_l (uint16_t ad_value);
 float sensor_distance_from_r (uint16_t ad_value);
 
@@ -67,6 +70,12 @@ void sensor_distance_clear_warp_front_sum(void);
 
 // Raw distance from FRONT SUM LUT without warp (uses SENSOR_DIST_GAIN).
 float sensor_distance_from_fsum_unwarped(uint16_t ad_sum);
+
+// Optional distance-domain warps for individual FL/FR channels
+void sensor_distance_set_warp_fl_3pt(const float x_mm_est[3], const float y_mm_true[3]);
+void sensor_distance_clear_warp_fl(void);
+void sensor_distance_set_warp_fr_3pt(const float x_mm_est[3], const float y_mm_true[3]);
+void sensor_distance_clear_warp_fr(void);
 
 #ifdef __cplusplus
 }

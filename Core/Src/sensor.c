@@ -20,6 +20,58 @@ static void print_wall_offsets(const char* label)
            (unsigned)wall_offset_fl);
 }
 
+// Save FL distance-domain warp (3 anchors) to Flash
+HAL_StatusTypeDef sensor_front_warp_fl_save_to_flash(const float x_mm_est[3], const float y_mm_true[3])
+{
+    flash_params_t p;
+    if (!flash_params_load(&p)) {
+        flash_params_defaults(&p);
+        // Carry over known globals for convenience
+        p.base_l = base_l; p.base_r = base_r; p.base_f = base_f;
+        p.wall_offset_r = wall_offset_r; p.wall_offset_l = wall_offset_l;
+        p.wall_offset_fr = wall_offset_fr; p.wall_offset_fl = wall_offset_fl;
+        p.imu_offset_z = imu_offset_z;
+    }
+    for (int i = 0; i < 3; ++i) {
+        p.front_warp_fl_x_mm_est[i] = x_mm_est[i];
+        p.front_warp_fl_y_mm_true[i] = y_mm_true[i];
+    }
+    p.flags |= FLASH_FLAG_FRONT_WARP_FL;
+    HAL_StatusTypeDef st = flash_params_save(&p);
+    if (st == HAL_OK) {
+        printf("[Flash] Saved FL warp (3 anchors).\r\n");
+    } else {
+        printf("[Flash] Save FL warp failed. HAL=%d\r\n", st);
+    }
+    return st;
+}
+
+// Save FR distance-domain warp (3 anchors) to Flash
+HAL_StatusTypeDef sensor_front_warp_fr_save_to_flash(const float x_mm_est[3], const float y_mm_true[3])
+{
+    flash_params_t p;
+    if (!flash_params_load(&p)) {
+        flash_params_defaults(&p);
+        // Carry over known globals for convenience
+        p.base_l = base_l; p.base_r = base_r; p.base_f = base_f;
+        p.wall_offset_r = wall_offset_r; p.wall_offset_l = wall_offset_l;
+        p.wall_offset_fr = wall_offset_fr; p.wall_offset_fl = wall_offset_fl;
+        p.imu_offset_z = imu_offset_z;
+    }
+    for (int i = 0; i < 3; ++i) {
+        p.front_warp_fr_x_mm_est[i] = x_mm_est[i];
+        p.front_warp_fr_y_mm_true[i] = y_mm_true[i];
+    }
+    p.flags |= FLASH_FLAG_FRONT_WARP_FR;
+    HAL_StatusTypeDef st = flash_params_save(&p);
+    if (st == HAL_OK) {
+        printf("[Flash] Saved FR warp (3 anchors).\r\n");
+    } else {
+        printf("[Flash] Save FR warp failed. HAL=%d\r\n", st);
+    }
+    return st;
+}
+
 // Save front-sum distance-domain warp (3 anchors) to Flash (preserving other parameters)
 HAL_StatusTypeDef sensor_front_warp_save_to_flash(const float x_mm_est[3], const float y_mm_true[3])
 {
@@ -35,6 +87,43 @@ HAL_StatusTypeDef sensor_front_warp_save_to_flash(const float x_mm_est[3], const
         p.wall_offset_fr = wall_offset_fr;
         p.wall_offset_fl = wall_offset_fl;
         p.imu_offset_z = imu_offset_z;
+    }
+
+    // Optionally apply distance-domain warp for FRONT SUM (3 anchors)
+    if (p.flags & FLASH_FLAG_FRONT_WARP_VALID) {
+        const float *x = p.front_warp_x_mm_est;
+        const float *y = p.front_warp_y_mm_true;
+        if (x[0] < x[1] && x[1] < x[2] && y[0] < y[1] && y[1] < y[2]) {
+            sensor_distance_set_warp_front_sum_3pt(x, y);
+            printf("[Flash] Applied front warp: x={%.2f,%.2f,%.2f} -> y={%.2f,%.2f,%.2f}\r\n",
+                   x[0], x[1], x[2], y[0], y[1], y[2]);
+        } else {
+            printf("[Flash] Front warp invalid. Ignored.\r\n");
+        }
+    }
+
+    // Optionally apply FL/FR individual warps
+    if (p.flags & FLASH_FLAG_FRONT_WARP_FL) {
+        const float *x = p.front_warp_fl_x_mm_est;
+        const float *y = p.front_warp_fl_y_mm_true;
+        if (x[0] < x[1] && x[1] < x[2] && y[0] < y[1] && y[1] < y[2]) {
+            sensor_distance_set_warp_fl_3pt(x, y);
+            printf("[Flash] Applied FL warp: x={%.2f,%.2f,%.2f} -> y={%.2f,%.2f,%.2f}\r\n",
+                   x[0], x[1], x[2], y[0], y[1], y[2]);
+        } else {
+            printf("[Flash] FL warp invalid. Ignored.\r\n");
+        }
+    }
+    if (p.flags & FLASH_FLAG_FRONT_WARP_FR) {
+        const float *x = p.front_warp_fr_x_mm_est;
+        const float *y = p.front_warp_fr_y_mm_true;
+        if (x[0] < x[1] && x[1] < x[2] && y[0] < y[1] && y[1] < y[2]) {
+            sensor_distance_set_warp_fr_3pt(x, y);
+            printf("[Flash] Applied FR warp: x={%.2f,%.2f,%.2f} -> y={%.2f,%.2f,%.2f}\r\n",
+                   x[0], x[1], x[2], y[0], y[1], y[2]);
+        } else {
+            printf("[Flash] FR warp invalid. Ignored.\r\n");
+        }
     }
 
     for (int i = 0; i < 3; ++i) {

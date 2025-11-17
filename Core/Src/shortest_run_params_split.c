@@ -3,13 +3,13 @@
 // ========================= Mode 2 =========================
 const ShortestRunModeParams_t shortestRunModeParams2 = {
     // 90deg
-    .velocity_turn90    = 300.0f,
-    .alpha_turn90       = 8850.0f,
-    .acceleration_turn  = 0.0f,
-    .dist_offset_in     = 8.0f,
-    .dist_offset_out    = 16.0f,
-    .angle_turn_90      = 89.5f,
-    .dist_wall_end      = 1.0f,
+    .velocity_turn90   = 300.0f,
+    .alpha_turn90      = 8080.0f,
+    .acceleration_turn = 0.0f,
+    .dist_offset_in    = 15.0f,
+    .dist_offset_out   = 26.0f,
+    .angle_turn_90     = 88.0f,
+    .dist_wall_end     = 46.0f,
     // Large 90deg
     .velocity_l_turn_90 = 500.0f,
     .alpha_l_turn_90    = 4700.0f,  // 4250
@@ -63,7 +63,7 @@ const ShortestRunCaseParams_t shortestRunCaseParamsMode2[9] = {
     // case1 (index 0): independent (initially same as former case3)
     {
         .acceleration_straight = 1000.0f, .acceleration_straight_dash = 2000.0f,
-        .velocity_straight = 500.0f, .kp_wall = 0.05f,
+        .velocity_straight = 500.0f, .kp_wall = 0.8f,
         .straight_weight = 0, .diagonal_weight = 0
     },
     // case2 (index 1): independent (initially same as former case4)

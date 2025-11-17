@@ -6,11 +6,13 @@
  */
 
 #include "global.h"
+#include "../Inc/sensor.h"
 #include "../Inc/search_run_params.h"
 #include "../Inc/shortest_run_params.h"
 #include "../Inc/run.h"
 #include "../Inc/logging.h"
 #include "../Inc/sensor_distance.h"
+#include "../Inc/params.h"
 #include <math.h>
 
 // 探索パラメータの簡易調整用オーバーライド（未設定は NaN）
@@ -199,10 +201,12 @@ void mode1() {
                 log_set_profile(LOG_PROFILE_CUSTOM);
                 log_start(HAL_GetTick());
 
+                g_enable_wall_end_search = true;
+
                 // 接近→前壁補正→R90ターン→減速
                 half_sectionA(velocity_turn90);
-                one_sectionU(0);
-                turn_R90(1);
+                one_sectionU(1);
+                turn_R90(0);
                 half_sectionD(0);
 
                 // ログ停止（出力は後でセンサEnterで実行）
@@ -240,9 +244,12 @@ void mode1() {
                 log_set_profile(LOG_PROFILE_CUSTOM);
                 log_start(HAL_GetTick());
 
-                // 接近→前壁補正→L90ターン→減速
+                g_enable_wall_end_search = true;
+
+                // 接近→前壁補正→R90ターン→減速
                 half_sectionA(velocity_turn90);
-                turn_L90(1);
+                one_sectionU(1);
+                turn_R90(1);
                 half_sectionD(0);
 
                 // ログ停止（出力は後でセンサEnterで実行）
@@ -254,7 +261,7 @@ void mode1() {
 
                 // センサEnter待ち（右前/左前でCSV出力）
                 while (1) {
-                    if (ad_fr > 1500 || ad_fl > 1500) {
+                    if (ad_fr > 700 && ad_fl < 200) {
                         log_print_frontwall_all();
                         break;
                     }
@@ -265,9 +272,63 @@ void mode1() {
             case 5:
             case 6:
             case 7:
-            case 8:
-                printf("(empty)\n");
-                break;
+            case 8: { // 前壁距離ホールド（距離ベース）: 一定距離に吸い付く
+                printf("Mode 1-0-8 Front Distance Hold (target FR/FL=%.1f/%.1f mm). Press RESET to exit.\n",
+                       (double)F_ALIGN_TARGET_FR, (double)F_ALIGN_TARGET_FL);
+
+                // 安全のため停止し、モータ有効化
+                drive_stop();
+                drive_enable_motor();
+
+                // 側壁の自動壁制御は無効化（前壁のみで位置・角度を合わせる）
+                MF.FLAG.CTRL = 0;
+                kp_wall = 0.0f;
+
+                // 制御状態の初期化
+                drive_variable_reset();
+                acceleration_interrupt = 0;
+                alpha_interrupt = 0;
+                velocity_interrupt = 0;
+                omega_interrupt = 0;
+                drive_start();
+
+                led_flash(3);
+
+                // 距離ベースの連続制御ループ（2ms周期）
+                while (1) {
+                    // 前壁がある程度見えているか（ノイズ抑制程度のゲート）
+                    if (ad_fr > F_ALIGN_DETECT_THR && ad_fl > F_ALIGN_DETECT_THR) {
+                        float d_fr = sensor_distance_from_fr(ad_fr);
+                        float d_fl = sensor_distance_from_fl(ad_fl);
+                        float e_fr = d_fr - F_ALIGN_TARGET_FR; // [mm]
+                        float e_fl = d_fl - F_ALIGN_TARGET_FL; // [mm]
+                        float e_pos = 0.5f * (e_fr + e_fl);     // 並進（正: 遠い）
+                        float e_ang = (e_fr - e_fl);            // 角度（正: 右が遠い）
+
+                        // 並進速度指令
+                        float v_cmd = MATCH_POS_KP_TRANS * e_pos; // [mm/s]
+                        if (v_cmd >  MATCH_POS_VEL_MAX) v_cmd =  MATCH_POS_VEL_MAX;
+                        if (v_cmd < -MATCH_POS_VEL_MAX) v_cmd = -MATCH_POS_VEL_MAX;
+                        velocity_interrupt = v_cmd;
+
+                        // 角速度指令
+                        float w_cmd = MATCH_POS_KP_ROT * e_ang; // [deg/s]
+                        if (w_cmd >  MATCH_POS_OMEGA_MAX) w_cmd =  MATCH_POS_OMEGA_MAX;
+                        if (w_cmd < -MATCH_POS_OMEGA_MAX) w_cmd = -MATCH_POS_OMEGA_MAX;
+                        omega_interrupt = w_cmd;
+                    } else {
+                        // 前壁が見えていない: 並進/角をゼロにして待つ
+                        velocity_interrupt = 0;
+                        omega_interrupt = 0;
+                    }
+
+                    HAL_Delay(2);
+                }
+
+                // 到達不可（RESETで抜ける想定）
+                // drive_stop();
+                // break; // 実際には到達しない
+            }
             case 9: { // 前壁距離 3点キャリブレーション（0,24,114mm）
                 printf("Mode 1-0-9 Front Distance 3-point Calibration (0,24,114mm)\n");
                 printf("Place mouse at target distance, then do sensor ENTER (wave hand close to front) to capture.\n");
@@ -319,17 +380,39 @@ void mode1() {
                 // 2) 真値（ターゲット）を用意
                 float y_true[3] = {0.0f, 24.0f, 114.0f};
 
-                // 3) ワープを適用（RAM）し、Flashにも保存
+                // 3) ワープを適用（RAM）し、Flashにも保存（FSUM/FL/FR 全て）
                 sensor_distance_set_warp_front_sum_3pt(x_est, y_true);
-                HAL_StatusTypeDef st = sensor_front_warp_save_to_flash(x_est, y_true);
+                HAL_StatusTypeDef st_fsum = sensor_front_warp_save_to_flash(x_est, y_true);
 
-                printf("Applied distance warp (mm_est -> mm_true):\n");
+                // FL 個別: 現行LUT（unwarped）から距離を算出
+                float x_est_fl[3];
+                x_est_fl[0] = sensor_distance_from_fl_unwarped(fl0);
+                x_est_fl[1] = sensor_distance_from_fl_unwarped(fl24);
+                x_est_fl[2] = sensor_distance_from_fl_unwarped(fl114);
+                sensor_distance_set_warp_fl_3pt(x_est_fl, y_true);
+                HAL_StatusTypeDef st_fl = sensor_front_warp_fl_save_to_flash(x_est_fl, y_true);
+
+                // FR 個別
+                float x_est_fr[3];
+                x_est_fr[0] = sensor_distance_from_fr_unwarped(fr0);
+                x_est_fr[1] = sensor_distance_from_fr_unwarped(fr24);
+                x_est_fr[2] = sensor_distance_from_fr_unwarped(fr114);
+                sensor_distance_set_warp_fr_3pt(x_est_fr, y_true);
+                HAL_StatusTypeDef st_fr = sensor_front_warp_fr_save_to_flash(x_est_fr, y_true);
+
+                printf("Applied distance warp FSUM (mm_est -> mm_true):\n");
                 printf("  (%.2f -> %.2f), (%.2f -> %.2f), (%.2f -> %.2f)\n",
                        x_est[0], y_true[0], x_est[1], y_true[1], x_est[2], y_true[2]);
-                if (st == HAL_OK) {
-                    printf("Saved warp to Flash.\n");
+                printf("Applied distance warp FL  (mm_est -> mm_true):\n");
+                printf("  (%.2f -> %.2f), (%.2f -> %.2f), (%.2f -> %.2f)\n",
+                       x_est_fl[0], y_true[0], x_est_fl[1], y_true[1], x_est_fl[2], y_true[2]);
+                printf("Applied distance warp FR  (mm_est -> mm_true):\n");
+                printf("  (%.2f -> %.2f), (%.2f -> %.2f), (%.2f -> %.2f)\n",
+                       x_est_fr[0], y_true[0], x_est_fr[1], y_true[1], x_est_fr[2], y_true[2]);
+                if (st_fsum == HAL_OK && st_fl == HAL_OK && st_fr == HAL_OK) {
+                    printf("Saved all warps to Flash.\n");
                 } else {
-                    printf("Flash save failed (HAL=%d).\n", st);
+                    printf("Flash save failed: FSUM=%d, FL=%d, FR=%d.\n", st_fsum, st_fl, st_fr);
                 }
 
                 // 終了合図

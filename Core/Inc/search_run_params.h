@@ -22,6 +22,11 @@ typedef struct {
     float dist_offset_out;            // [mm]
     float angle_turn_90;              // [deg]
 
+    // 走行中の推定前壁距離（ターン開始時のしきい値に使用）。
+    // 正の値を設定すると、その値[mm]を driveFWall の前壁距離しきい値に使用。
+    // 0以下の場合は従来通り FRONT_DIST_AT_CELL_ENTRY_MM - dist_offset_in を用いる。
+    float front_dist_turn_start_moving; // [mm]
+
     // 壁切れ後の直進距離（追従）
     float dist_wall_end;              // [mm]
 

@@ -35,6 +35,17 @@ static float s_warp_x[3]; // mm_est anchors (strictly increasing)
 static float s_warp_y[3]; // mm_true anchors (strictly increasing)
 static float s_warp_m[3]; // slopes at anchors
 
+// Optional FL/FR distance-domain warps
+static int   s_fl_warp_valid = 0;
+static float s_warp_x_fl[3];
+static float s_warp_y_fl[3];
+static float s_warp_m_fl[3];
+
+static int   s_fr_warp_valid = 0;
+static float s_warp_x_fr[3];
+static float s_warp_y_fr[3];
+static float s_warp_m_fr[3];
+
 // Default fine LUT: 0..20mm at 1mm steps, then 30..90mm at 10mm steps
 // Values are based on provided measurements, with re-measured 4mm values applied:
 //   FL@4mm=2092, FR@4mm=1957 (monotonicity preserved).
@@ -200,21 +211,74 @@ static float interpolate_mm_from_ad(const uint16_t *mm, const uint16_t *ad, size
     return mm1 + t * (mm2 - mm1);
 }
 
-float sensor_distance_from_fl(uint16_t ad_value)
+float sensor_distance_from_fl_unwarped(uint16_t ad_value)
 {
     if (s_n_fl < 2) {
-        // Initialize defaults lazily if not done
         sensor_distance_init();
     }
     return SENSOR_DIST_GAIN * interpolate_mm_from_ad(s_mm_fl, s_ad_fl, s_n_fl, ad_value);
 }
 
-float sensor_distance_from_fr(uint16_t ad_value)
+float sensor_distance_from_fl(uint16_t ad_value)
+{
+    float mm_est = sensor_distance_from_fl_unwarped(ad_value);
+    if (!s_fl_warp_valid) return mm_est;
+
+    const float x0 = s_warp_x_fl[0], x1 = s_warp_x_fl[1], x2 = s_warp_x_fl[2];
+    const float y0 = s_warp_y_fl[0], y1 = s_warp_y_fl[1], y2 = s_warp_y_fl[2];
+    const float m0 = s_warp_m_fl[0], m1 = s_warp_m_fl[1], m2 = s_warp_m_fl[2];
+    if (mm_est <= x0) return y0 + m0 * (mm_est - x0);
+    if (mm_est >= x2) return y2 + m2 * (mm_est - x2);
+    if (mm_est <= x1) {
+        float h = x1 - x0; float t = (mm_est - x0) / h; float t2 = t*t; float t3 = t2*t;
+        float h00 = (2.0f*t3 - 3.0f*t2 + 1.0f);
+        float h10 = (t3 - 2.0f*t2 + t);
+        float h01 = (-2.0f*t3 + 3.0f*t2);
+        float h11 = (t3 - t2);
+        return h00*y0 + h10*h*m0 + h01*y1 + h11*h*m1;
+    } else {
+        float h = x2 - x1; float t = (mm_est - x1) / h; float t2 = t*t; float t3 = t2*t;
+        float h00 = (2.0f*t3 - 3.0f*t2 + 1.0f);
+        float h10 = (t3 - 2.0f*t2 + t);
+        float h01 = (-2.0f*t3 + 3.0f*t2);
+        float h11 = (t3 - t2);
+        return h00*y1 + h10*h*m1 + h01*y2 + h11*h*m2;
+    }
+}
+
+float sensor_distance_from_fr_unwarped(uint16_t ad_value)
 {
     if (s_n_fr < 2) {
         sensor_distance_init();
     }
     return SENSOR_DIST_GAIN * interpolate_mm_from_ad(s_mm_fr, s_ad_fr, s_n_fr, ad_value);
+}
+
+float sensor_distance_from_fr(uint16_t ad_value)
+{
+    float mm_est = sensor_distance_from_fr_unwarped(ad_value);
+    if (!s_fr_warp_valid) return mm_est;
+
+    const float x0 = s_warp_x_fr[0], x1 = s_warp_x_fr[1], x2 = s_warp_x_fr[2];
+    const float y0 = s_warp_y_fr[0], y1 = s_warp_y_fr[1], y2 = s_warp_y_fr[2];
+    const float m0 = s_warp_m_fr[0], m1 = s_warp_m_fr[1], m2 = s_warp_m_fr[2];
+    if (mm_est <= x0) return y0 + m0 * (mm_est - x0);
+    if (mm_est >= x2) return y2 + m2 * (mm_est - x2);
+    if (mm_est <= x1) {
+        float h = x1 - x0; float t = (mm_est - x0) / h; float t2 = t*t; float t3 = t2*t;
+        float h00 = (2.0f*t3 - 3.0f*t2 + 1.0f);
+        float h10 = (t3 - 2.0f*t2 + t);
+        float h01 = (-2.0f*t3 + 3.0f*t2);
+        float h11 = (t3 - t2);
+        return h00*y0 + h10*h*m0 + h01*y1 + h11*h*m1;
+    } else {
+        float h = x2 - x1; float t = (mm_est - x1) / h; float t2 = t*t; float t3 = t2*t;
+        float h00 = (2.0f*t3 - 3.0f*t2 + 1.0f);
+        float h10 = (t3 - 2.0f*t2 + t);
+        float h01 = (-2.0f*t3 + 3.0f*t2);
+        float h11 = (t3 - t2);
+        return h00*y1 + h10*h*m1 + h01*y2 + h11*h*m2;
+    }
 }
 
 float sensor_distance_from_l(uint16_t ad_value)
@@ -343,6 +407,48 @@ void sensor_distance_set_warp_front_sum_3pt(const float x_mm_est[3], const float
 void sensor_distance_clear_warp_front_sum(void)
 {
     s_fsum_warp_valid = 0;
+}
+
+void sensor_distance_set_warp_fl_3pt(const float x_mm_est[3], const float y_mm_true[3])
+{
+    s_warp_x_fl[0] = x_mm_est[0];
+    s_warp_x_fl[1] = x_mm_est[1];
+    s_warp_x_fl[2] = x_mm_est[2];
+    s_warp_y_fl[0] = y_mm_true[0];
+    s_warp_y_fl[1] = y_mm_true[1];
+    s_warp_y_fl[2] = y_mm_true[2];
+    if (!(s_warp_x_fl[0] < s_warp_x_fl[1])) s_warp_x_fl[1] = s_warp_x_fl[0] + 1e-3f;
+    if (!(s_warp_x_fl[1] < s_warp_x_fl[2])) s_warp_x_fl[2] = s_warp_x_fl[1] + 1e-3f;
+    if (!(s_warp_y_fl[0] < s_warp_y_fl[1])) s_warp_y_fl[1] = s_warp_y_fl[0] + 1e-3f;
+    if (!(s_warp_y_fl[1] < s_warp_y_fl[2])) s_warp_y_fl[2] = s_warp_y_fl[1] + 1e-3f;
+    pchip3_slopes(s_warp_x_fl, s_warp_y_fl, s_warp_m_fl);
+    s_fl_warp_valid = 1;
+}
+
+void sensor_distance_clear_warp_fl(void)
+{
+    s_fl_warp_valid = 0;
+}
+
+void sensor_distance_set_warp_fr_3pt(const float x_mm_est[3], const float y_mm_true[3])
+{
+    s_warp_x_fr[0] = x_mm_est[0];
+    s_warp_x_fr[1] = x_mm_est[1];
+    s_warp_x_fr[2] = x_mm_est[2];
+    s_warp_y_fr[0] = y_mm_true[0];
+    s_warp_y_fr[1] = y_mm_true[1];
+    s_warp_y_fr[2] = y_mm_true[2];
+    if (!(s_warp_x_fr[0] < s_warp_x_fr[1])) s_warp_x_fr[1] = s_warp_x_fr[0] + 1e-3f;
+    if (!(s_warp_x_fr[1] < s_warp_x_fr[2])) s_warp_x_fr[2] = s_warp_x_fr[1] + 1e-3f;
+    if (!(s_warp_y_fr[0] < s_warp_y_fr[1])) s_warp_y_fr[1] = s_warp_y_fr[0] + 1e-3f;
+    if (!(s_warp_y_fr[1] < s_warp_y_fr[2])) s_warp_y_fr[2] = s_warp_y_fr[1] + 1e-3f;
+    pchip3_slopes(s_warp_x_fr, s_warp_y_fr, s_warp_m_fr);
+    s_fr_warp_valid = 1;
+}
+
+void sensor_distance_clear_warp_fr(void)
+{
+    s_fr_warp_valid = 0;
 }
 
 float sensor_distance_from_front_sum(uint16_t ad_fl, uint16_t ad_fr)

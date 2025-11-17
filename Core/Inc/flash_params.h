@@ -25,6 +25,9 @@ extern "C" {
 // Flags for optional fields
 #define FLASH_FLAG_FRONT_LUT_VALID   (1u << 0)
 #define FLASH_FLAG_FRONT_WARP_VALID  (1u << 1)
+// Individual channel warps
+#define FLASH_FLAG_FRONT_WARP_FL     (1u << 2)
+#define FLASH_FLAG_FRONT_WARP_FR     (1u << 3)
 
 // Persisted parameters structure
 // Note: keep fields 32-bit aligned for word programming
@@ -57,6 +60,12 @@ typedef struct {
     // Optional distance-domain warp for FRONT SUM: mm_est -> mm_true (3 anchors)
     float front_warp_x_mm_est[3];
     float front_warp_y_mm_true[3];
+
+    // Optional distance-domain warps for FL / FR channels
+    float front_warp_fl_x_mm_est[3];
+    float front_warp_fl_y_mm_true[3];
+    float front_warp_fr_x_mm_est[3];
+    float front_warp_fr_y_mm_true[3];
 
     // Reserved/padding for future use
     uint32_t reserved[2];

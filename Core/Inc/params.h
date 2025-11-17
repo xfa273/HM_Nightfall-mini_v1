@@ -239,24 +239,23 @@
 #define WALL_ALIGN_ERR_THR  700
 
 /* 前壁センサを用いた中央合わせ（非接触）用パラメータ */
-// 区画中央における前壁センサの目標値（実機で調整）
-#define F_ALIGN_TARGET_FR    3500*0.85   // 3750
-#define F_ALIGN_TARGET_FL    3515*0.85   // 3790
-// 小鷺田寮: FR3750 FL3790
-// 九州: FR3587 FL3587
+// 目標距離[mm]（距離ベース制御）。初期値は 10mm。
+#define F_ALIGN_TARGET_FR    10.0f
+#define F_ALIGN_TARGET_FL    10.0f
 
 // アライン実行条件（前壁が十分に見えているか判定する閾値）
 #define F_ALIGN_DETECT_THR   500
 
-// 閉ループ制御ゲイン（実機調整用）
-#define MATCH_POS_KP_TRANS   0.6F   // [mm/s] / [ADcount]
-#define MATCH_POS_KP_ROT     0.2F   // [deg/s] / [ADcount]
+// 閉ループ制御ゲイン（実機調整用：距離ベース）
+// 並進: [mm/s] / [mm]、角度: [deg/s] / [mm]
+#define MATCH_POS_KP_TRANS   6.0F
+#define MATCH_POS_KP_ROT     -4.0F
 
 // 飽和・許容値・タイムアウト
 #define MATCH_POS_VEL_MAX     200.0F   // [mm/s]
 #define MATCH_POS_OMEGA_MAX   300.0F   // [deg/s]
-#define MATCH_POS_TOL         100       // [ADcount]
-#define MATCH_POS_TOL_ANGLE   40       // [ADcount]
+#define MATCH_POS_TOL         1.5F         // [mm]
+#define MATCH_POS_TOL_ANGLE   1.5F         // [mm]
 #define MATCH_POS_TIMEOUT_MS  20     // [ms]
 // 収束判定：FR/FL が目標±MATCH_POS_TOL 内に連続して入る必要回数（2ms/loop前提）
 #define MATCH_POS_STABLE_COUNT 100      // [loop] ≒ 400ms
@@ -280,18 +279,18 @@
 #endif
 
 #ifndef GOAL2_X
-#define GOAL2_X 7
-#define GOAL2_Y 8
+#define GOAL2_X 0
+#define GOAL2_Y 0
 #endif
 
 #ifndef GOAL3_X
-#define GOAL3_X 8
-#define GOAL3_Y 7
+#define GOAL3_X 0
+#define GOAL3_Y 0
 #endif
 
 #ifndef GOAL4_X
-#define GOAL4_X 8
-#define GOAL4_Y 8
+#define GOAL4_X 0
+#define GOAL4_Y 0
 #endif
 
 #ifndef GOAL5_X
