@@ -37,10 +37,8 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
     if (htim->Instance == htim1.Instance) {
         // TIM1: microsecond timer helper (used by tim1_wait_us)
     }
-    if (htim->Instance == htim5.Instance) {
-        // TIM5: 1kHz（制御系・IMU・エンコーダ等）
-
-        // センサスケジューラ（DMA駆動）: 8相を1msごとに1ステップ進める
+    if (htim->Instance == htim6.Instance) {
+        // TIM6: センサスケジューラ（DMA駆動）: 32kHzベース/8相 ≒ 3.9kHz/group
         if (!s_adc_inflight) {
             HAL_StatusTypeDef st = HAL_OK;
             uint8_t start_dma = 0;
@@ -88,6 +86,9 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
                 s_adc_phase = (uint8_t)((s_adc_phase + 1u) & 0x07u);
             }
         }
+    }
+    if (htim->Instance == htim5.Instance) {
+        // TIM5: 1kHz（制御系・IMU・エンコーダ等）
 
         // 前壁有無（簡易判定）
         if (ad_fr > WALL_BASE_FR * 1.1 && ad_fl > WALL_BASE_FL * 1.1) {

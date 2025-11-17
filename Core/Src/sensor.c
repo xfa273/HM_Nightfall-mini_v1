@@ -233,17 +233,6 @@ void sensor_init(void) {
 }
 
 //+++++++++++++++++++++++++++++++++++++++++++++++
-// ADC DMA helpers
-//+++++++++++++++++++++++++++++++++++++++++++++++
-HAL_StatusTypeDef sensor_adc_dma_start(volatile uint16_t *dst)
-{
-    // Ensure previous DMA is stopped
-    (void)HAL_ADC_Stop_DMA(&hadc1);
-    // Start regular group conversion with DMA into provided buffer (9 ranks)
-    return HAL_ADC_Start_DMA(&hadc1, (uint32_t*)dst, 9);
-}
-
-//+++++++++++++++++++++++++++++++++++++++++++++++
 // Flash parameter I/O (separate from maze EEPROM emulation)
 // Save/Load sensor baselines and offsets to FLASH_SECTOR_10
 //+++++++++++++++++++++++++++++++++++++++++++++++
