@@ -35,13 +35,12 @@ static uint8_t  s_ma_count_rl = 0, s_ma_count_frfl = 0; // 立ち上がり中は
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
     if (htim->Instance == htim1.Instance) {
-        // TIM1の割り込み処理
-
-        // printf("TIM1 Interrupt\n");
+        // TIM1: microsecond timer helper (used by tim1_wait_us)
     }
-    if (htim->Instance == htim6.Instance) {
-        // TIM6: 4kHz センサスケジューラ（非同期DMA駆動）
-        // 1tick=250us間隔をIRの安定待ちに利用し、ISR内のbusy-waitを排除
+    if (htim->Instance == htim5.Instance) {
+        // TIM5: 1kHz（制御系・IMU・エンコーダ等）
+
+        // センサスケジューラ（DMA駆動）: 8相を1msごとに1ステップ進める
         if (!s_adc_inflight) {
             HAL_StatusTypeDef st = HAL_OK;
             uint8_t start_dma = 0;
@@ -89,36 +88,22 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
                 s_adc_phase = (uint8_t)((s_adc_phase + 1u) & 0x07u);
             }
         }
-    }
 
-    if (htim->Instance == htim5.Instance) {
-        // TIM5の割り込み処理 1kHz（制御系・IMU・エンコーダ等、センサ読み取りはTIM6へ移設）
-
-        // 前壁補正の判定
+        // 前壁有無（簡易判定）
         if (ad_fr > WALL_BASE_FR * 1.1 && ad_fl > WALL_BASE_FL * 1.1) {
             MF.FLAG.F_WALL = 1;
         } else {
             MF.FLAG.F_WALL = 0;
         }
 
-        // エンコーダ値の取得
+        // エンコーダ・IMU（センサDMA処理とは独立）
         read_encoder();
-
-        // IMU値の取得（センサ処理と分離済み）
         read_IMU();
-
-        // バッテリー電圧の監視
-        if (ad_bat > 3000) { // 3.3*3060/4095*3=7.4[V]で発動
-            // バッテリーOK
-        } else {
-            // バッテリー消耗
-        }
 
         // 横壁の立ち下がりによる壁切れ検知（探索用の壁判断とは独立）
         detect_wall_end();
 
         if (MF.FLAG.OVERRIDE == 0) {
-
             // 壁制御
             wall_PID();
             diagonal_CTRL();
@@ -126,8 +111,6 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
             // 目標値の積算計算
             calculate_translation();
             calculate_rotation();
-
-            // 並進は速度フィードバックのみ（位置→速度のカスケードは廃止）
             velocity_PID();
 
             // 角度→角速度のPID
