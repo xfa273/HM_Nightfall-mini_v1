@@ -9,96 +9,101 @@
 #include "interrupt.h"
 #include "logging.h"
 
+// 非同期ADC DMA制御用ステート
+// 8相スケジュール（250us刻み）でIR安定待ちを確保
+// 0:RL OFF set, 1:RL OFF capture, 2:RL ON set, 3:RL ON capture,
+// 4:FR/FL OFF set, 5:FR/FL OFF capture, 6:FR/FL ON set, 7:FR/FL ON capture
+static volatile uint8_t s_adc_phase = 0;
+static volatile uint8_t s_adc_inflight = 0;  // 0:idle, 1:converting (DMA中)
+
+// センサ差分後の移動平均（SENSOR_MA_TAPSで切替、1で無効）
+#if SENSOR_MA_TAPS < 1
+#undef SENSOR_MA_TAPS
+#define SENSOR_MA_TAPS 1
+#endif
+
+#if SENSOR_MA_TAPS > 1
+static uint16_t s_ma_buf_r[SENSOR_MA_TAPS];
+static uint16_t s_ma_buf_l[SENSOR_MA_TAPS];
+static uint16_t s_ma_buf_fr[SENSOR_MA_TAPS];
+static uint16_t s_ma_buf_fl[SENSOR_MA_TAPS];
+static uint32_t s_ma_sum_r = 0, s_ma_sum_l = 0, s_ma_sum_fr = 0, s_ma_sum_fl = 0;
+static uint8_t  s_ma_idx_rl = 0, s_ma_idx_frfl = 0;
+static uint8_t  s_ma_count_rl = 0, s_ma_count_frfl = 0; // 立ち上がり中は有効長を短く
+#endif
+
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
     if (htim->Instance == htim1.Instance) {
-        // TIM1の割り込み処理
-
-        // printf("TIM1 Interrupt\n");
+        // TIM1: microsecond timer helper (used by tim1_wait_us)
     }
 
     if (htim->Instance == htim5.Instance) {
-        // TIM5の割り込み処理 1kHz
+        // TIM5: 1kHz（制御系・IMU・エンコーダ等）
 
-        // センサ値の取得
-        if (ADC_task_counter == 0) {
-
-            // 左右壁センサ値の取得
-
-            // LED OFFのセンサ値
-            HAL_GPIO_WritePin(IR_R_GPIO_Port, IR_R_Pin, GPIO_PIN_RESET);
-            HAL_GPIO_WritePin(IR_L_GPIO_Port, IR_L_Pin, GPIO_PIN_RESET);
-            tim1_wait_us(IR_WAIT_US);
-            ad_r_off = get_sensor_value_r();
-            ad_l_off = get_sensor_value_l();
-
-            // LED ONのセンサ値
-            HAL_GPIO_WritePin(IR_R_GPIO_Port, IR_R_Pin, GPIO_PIN_SET);
-            HAL_GPIO_WritePin(IR_L_GPIO_Port, IR_L_Pin, GPIO_PIN_SET);
-            tim1_wait_us(IR_WAIT_US);
-            ad_r_raw = get_sensor_value_r();
-            ad_l_raw = get_sensor_value_l();
-            ad_r = max(ad_r_raw - ad_r_off - wall_offset_r, 0);
-            ad_l = max(ad_l_raw - ad_l_off - wall_offset_l, 0);
-            HAL_GPIO_WritePin(IR_R_GPIO_Port, IR_R_Pin, GPIO_PIN_RESET);
-            HAL_GPIO_WritePin(IR_L_GPIO_Port, IR_L_Pin, GPIO_PIN_RESET);
-
-            ADC_task_counter++;
-
-        } else if (ADC_task_counter == 1) {
-            
-            // 前壁センサ値の取得
-
-            // LED OFFのセンサ値
-            HAL_GPIO_WritePin(IR_FR_GPIO_Port, IR_FR_Pin, GPIO_PIN_RESET);
-            HAL_GPIO_WritePin(IR_FL_GPIO_Port, IR_FL_Pin, GPIO_PIN_RESET);
-            tim1_wait_us(IR_WAIT_US);
-            ad_fr_off = get_sensor_value_fr();
-            ad_fl_off = get_sensor_value_fl();
-
-            // LED ONのセンサ値
-            HAL_GPIO_WritePin(IR_FR_GPIO_Port, IR_FR_Pin, GPIO_PIN_SET);
-            HAL_GPIO_WritePin(IR_FL_GPIO_Port, IR_FL_Pin, GPIO_PIN_SET);
-            tim1_wait_us(IR_WAIT_US);
-            ad_fr_raw = get_sensor_value_fr();
-            ad_fl_raw = get_sensor_value_fl();
-            ad_fr = max(ad_fr_raw - ad_fr_off - wall_offset_fr, 0);
-            ad_fl = max(ad_fl_raw - ad_fl_off - wall_offset_fl, 0);
-            HAL_GPIO_WritePin(IR_FR_GPIO_Port, IR_FR_Pin, GPIO_PIN_RESET);
-            HAL_GPIO_WritePin(IR_FL_GPIO_Port, IR_FL_Pin, GPIO_PIN_RESET);
-
-            ADC_task_counter++;
-
-        } else {
-            // バッテリー電圧値の取得
-            ad_bat = get_battery_value();
-            ADC_task_counter = 0;
+        // センサスケジューラ（DMA駆動）: 8相を1msごとに1ステップ進める
+        if (!s_adc_inflight) {
+            HAL_StatusTypeDef st = HAL_OK;
+            uint8_t start_dma = 0;
+            switch (s_adc_phase & 0x07u) {
+                case 0: // RL OFF set
+                    HAL_GPIO_WritePin(IR_R_GPIO_Port, IR_R_Pin, GPIO_PIN_RESET);
+                    HAL_GPIO_WritePin(IR_L_GPIO_Port, IR_L_Pin, GPIO_PIN_RESET);
+                    break;
+                case 1: // RL OFF capture
+                    st = sensor_adc_dma_start(adc_dma_buf_off);
+                    start_dma = 1;
+                    break;
+                case 2: // RL ON set
+                    HAL_GPIO_WritePin(IR_R_GPIO_Port, IR_R_Pin, GPIO_PIN_SET);
+                    HAL_GPIO_WritePin(IR_L_GPIO_Port, IR_L_Pin, GPIO_PIN_SET);
+                    break;
+                case 3: // RL ON capture
+                    st = sensor_adc_dma_start(adc_dma_buf_on);
+                    start_dma = 1;
+                    break;
+                case 4: // FR/FL OFF set
+                    HAL_GPIO_WritePin(IR_FR_GPIO_Port, IR_FR_Pin, GPIO_PIN_RESET);
+                    HAL_GPIO_WritePin(IR_FL_GPIO_Port, IR_FL_Pin, GPIO_PIN_RESET);
+                    break;
+                case 5: // FR/FL OFF capture
+                    st = sensor_adc_dma_start(adc_dma_buf_off);
+                    start_dma = 1;
+                    break;
+                case 6: // FR/FL ON set
+                    HAL_GPIO_WritePin(IR_FR_GPIO_Port, IR_FR_Pin, GPIO_PIN_SET);
+                    HAL_GPIO_WritePin(IR_FL_GPIO_Port, IR_FL_Pin, GPIO_PIN_SET);
+                    break;
+                case 7: // FR/FL ON capture
+                    st = sensor_adc_dma_start(adc_dma_buf_on);
+                    start_dma = 1;
+                    break;
+                default:
+                    s_adc_phase = 0;
+                    break;
+            }
+            if (start_dma && st == HAL_OK) {
+                s_adc_inflight = 1; // DMA進行中
+            } else if (!start_dma) {
+                // セット相はここで次相へ進める（キャプチャ相はDMA完了CBで進める）
+                s_adc_phase = (uint8_t)((s_adc_phase + 1u) & 0x07u);
+            }
         }
 
-        // 前壁補正の判定
+        // 前壁有無（簡易判定）
         if (ad_fr > WALL_BASE_FR * 1.1 && ad_fl > WALL_BASE_FL * 1.1) {
             MF.FLAG.F_WALL = 1;
         } else {
             MF.FLAG.F_WALL = 0;
         }
 
-        // エンコーダ値の取得
+        // エンコーダ・IMU（センサDMA処理とは独立）
         read_encoder();
-
-        // IMU値の取得
         read_IMU();
-
-        // バッテリー電圧の監視
-        if (ad_bat > 3000) { // 3.3*3060/4095*3=7.4[V]で発動
-            // バッテリーOK
-        } else {
-            // バッテリー消耗
-        }
 
         // 横壁の立ち下がりによる壁切れ検知（探索用の壁判断とは独立）
         detect_wall_end();
 
         if (MF.FLAG.OVERRIDE == 0) {
-
             // 壁制御
             wall_PID();
             diagonal_CTRL();
@@ -106,9 +111,6 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
             // 目標値の積算計算
             calculate_translation();
             calculate_rotation();
-
-            // 並進位置→並進速度のPID
-            distance_PID();
             velocity_PID();
 
             // 角度→角速度のPID

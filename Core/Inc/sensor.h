@@ -106,6 +106,18 @@ void wall_end();
 // 壁切れ検知（横壁の立ち下がりエッジ検出）
 void detect_wall_end(void);
 
+// ADC DMA 連続スキャン用の共有バッファ（9エントリ: R,L,R,L,FR,FL,FR,FL,BAT）
+#ifdef MAIN_C_
+volatile uint16_t adc_dma_buf_off[9];
+volatile uint16_t adc_dma_buf_on[9];
+#else
+extern volatile uint16_t adc_dma_buf_off[9];
+extern volatile uint16_t adc_dma_buf_on[9];
+#endif
+
+// ADC DMA ワンショットスキャンを開始（dst に 9サンプルを格納）
+HAL_StatusTypeDef sensor_adc_dma_start(volatile uint16_t *dst);
+
 // フラッシュ保存/読込API（迷路用領域とは別セクタに保存）
 // センサ基準値・オフセットなどを保存/読込する
 // 戻り値: 読込はtrueで有効データ、falseで未初期化または破損
