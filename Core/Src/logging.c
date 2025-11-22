@@ -172,7 +172,8 @@ void log_capture_tick(void) {
             log_buffer.entries[pos].actual_omega = real_velocity;      // 実速度
             log_buffer.entries[pos].p_term_omega = KP_VELOCITY * velocity_error;
             log_buffer.entries[pos].i_term_omega = KI_VELOCITY * velocity_integral;
-            log_buffer.entries[pos].d_term_omega = KD_VELOCITY * velocity_error_error;
+            // d_term_omega フィールドには target_velocity を記録（直進速度ログの可視化用）
+            log_buffer.entries[pos].d_term_omega = target_velocity;  
             log_buffer.entries[pos].motor_out_r = (float)out_r;
             log_buffer.entries[pos].motor_out_l = (float)out_l;
             log_buffer.entries[pos].timestamp = current_time;

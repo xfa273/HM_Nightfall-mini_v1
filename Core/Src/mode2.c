@@ -355,10 +355,10 @@ void mode2() {
                 // センサEnter待ち（右前:速度, 左前:距離）
                 printf("[mode2-case8] Press RIGHT FRONT for VELOCITY (FR>1500), LEFT FRONT for DISTANCE (FL>1500) ...\n");
                 while (1) {
-                    if (ad_fr > 1500) {
+                    if (ad_fr > WALL_BASE_FR) {
                         log_print_velocity_all();
                         break;
-                    } else if (ad_fl > 1500) {
+                    } else if (ad_fl > WALL_BASE_FL) {
                         log_print_distance_all();
                         break;
                     }
@@ -409,10 +409,10 @@ void mode2() {
                 // センサEnter待ち（右前:速度, 左前:距離）
                 printf("[mode2-case9] Press RIGHT FRONT for VELOCITY (FR>1500), LEFT FRONT for DISTANCE (FL>1500) ...\n");
                 while (1) {
-                    if (ad_fr > 1500) {
+                    if (ad_fr > WALL_BASE_FR) {
                         log_print_velocity_all();
                         break;
-                    } else if (ad_fl > 1500) {
+                    } else if (ad_fl > WALL_BASE_FL) {
                         log_print_distance_all();
                         break;
                     }
