@@ -1767,11 +1767,6 @@ void drive_variable_reset(void) {
     velocity_error_error = 0;
     velocity_integral = 0;
 
-    // 位置→速度補正（外側PI）
-    pos2vel_integral = 0;
-    pos2vel_prev_error = 0;
-    pos2vel_correction = 0;
-
     // PIDの積算項（角度）
     angle_error = 0;
     previous_angle_error = 0;
@@ -1824,12 +1819,7 @@ void drive_enable_motor(void) {
         omega_error_error = 0.0f;
         omega_integral = 0.0f;
 
-        // 位置→速度補正の内部状態
-        pos2vel_integral = 0.0f;
-        pos2vel_prev_error = 0.0f;
-        pos2vel_correction = 0.0f;
-
-        // 参照距離（pos2velの原点）
+        // 参照距離の原点
         target_distance = 0.0f;
 
         // 実距離・エンコーダ距離/速度のクリア

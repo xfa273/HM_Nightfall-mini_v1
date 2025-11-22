@@ -120,59 +120,8 @@ void calculate_rotation(void) {
 
 /*並進速度のPID制御*/
 void velocity_PID(void) {
-
-    // 位置→速度補正（外側PI）: target_distance - real_distance を速度指令に変換
-    // 最小改変: distance_PID は呼ばず、ここで直接距離誤差を使用
-    float v_profile = velocity_interrupt;
-    float v_corr = 0.0f;
-
-#if POS2VEL_ENABLE
-    // 回転中やスラローム中は位置→速度補正を無効化（直線のみ有効）
-    bool allow_pos2vel = true;
-    if (fabsf(omega_interrupt) > 1.0f || fabsf(real_omega) > 5.0f || MF.FLAG.SLALOM_L || MF.FLAG.SLALOM_R) {
-        allow_pos2vel = false;
-    }
-
-    if (allow_pos2vel) {
-        // 距離誤差 [mm]
-        float e_s = target_distance - real_distance;
-        // デッドバンド
-        if (e_s > -POS2VEL_DEAD_BAND_MM && e_s < POS2VEL_DEAD_BAND_MM) {
-            e_s = 0.0f;
-        }
-
-        // 積分（アンチワインドアップ: 生積分に上限）
-        pos2vel_integral += e_s;
-        {
-            const float ki = (KPOS2VEL_I != 0.0f) ? KPOS2VEL_I : 1e-6f;
-            const float lim = POS2VEL_I_LIMIT / ki;
-            if (pos2vel_integral >  lim) pos2vel_integral =  lim;
-            if (pos2vel_integral < -lim) pos2vel_integral = -lim;
-        }
-
-        // D（原則0。非0設定時のみ有効）
-        float d_es = e_s - pos2vel_prev_error;
-        pos2vel_prev_error = e_s;
-
-        float v_corr_raw = (KPOS2VEL_P * e_s)
-                         + (KPOS2VEL_I * pos2vel_integral)
-                         + (KPOS2VEL_D * d_es);
-
-        // 速度補正量のクランプ
-        if (v_corr_raw >  V_POS2VEL_MAX) v_corr =  V_POS2VEL_MAX;
-        else if (v_corr_raw < -V_POS2VEL_MAX) v_corr = -V_POS2VEL_MAX;
-        else v_corr = v_corr_raw;
-
-        // モニタ用
-        pos2vel_correction = v_corr;
-    } else {
-        // 回転・スラローム中は補正無効
-        v_corr = 0.0f;
-    }
-#endif
-
-    // 速度フィードバック: 目標速度(プロファイル+位置補正) - 実測速度
-    target_velocity = v_profile + v_corr;
+    // 速度フィードバック: 目標速度（distance_PIDで算出） - 実測速度
+    // target_velocity は distance_PID() 内で更新される
     velocity_error = target_velocity - real_velocity;
 
     if (velocity_error > 10000 || velocity_error < -10000) {
@@ -213,20 +162,21 @@ void velocity_PID(void) {
 
 /*並進距離のPID制御*/
 void distance_PID(void) {
-
-    // P項
+    // 位置PID（距離誤差から目標速度を生成）
+    // 誤差
     distance_error = target_distance - real_distance;
-
     // I項
     distance_integral += distance_error;
-
     // D項
     distance_error_error = distance_error - previous_distance_error;
 
-    // 位置→速度のカスケードは廃止。目標速度の更新は行わない（速度FB単独）。
-    // target_velocity は velocity_PID 内で velocity_interrupt を反映する。
+    // 目標速度（プロファイル速度 + 位置PIDの補正）
+    float v_fb = (KP_DISTANCE * distance_error)
+               + (KI_DISTANCE * distance_integral)
+               + (KD_DISTANCE * distance_error_error);
+    target_velocity = velocity_interrupt + v_fb;
 
-    // 並進位置の偏差を保存
+    // 誤差履歴更新
     previous_distance_error = distance_error;
 }
 

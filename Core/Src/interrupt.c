@@ -112,6 +112,8 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
             // 目標値の積算計算
             calculate_translation();
             calculate_rotation();
+            // 位置PID→速度PIDのカスケード
+            distance_PID();
             velocity_PID();
 
             // 角度→角速度のPID

@@ -52,33 +52,6 @@
 #define VEL_I_LIMIT  15000.0F // 速度I項クランプ
 #endif
 
-// 位置→速度補正（外側PI）設定
-#ifndef POS2VEL_ENABLE
-#define POS2VEL_ENABLE 1      // 1: 有効, 0: 無効
-#endif
-
-#ifndef KPOS2VEL_P
-#define KPOS2VEL_P 0.65F      // [ (mm/s) / mm ]  まずはP主体
-#endif
-#ifndef KPOS2VEL_I
-#define KPOS2VEL_I 0.0F     // [ (mm/s) / mm / tick ] 1kHz積分前提で小さめ
-#endif
-#ifndef KPOS2VEL_D
-#define KPOS2VEL_D 0.0F       // 原則0（内側速度PIDと役割重複のため）
-#endif
-
-#ifndef V_POS2VEL_MAX
-#define V_POS2VEL_MAX 1000.0F  // 位置補正で付加する速度の上限[mm/s]
-#endif
-#ifndef POS2VEL_I_LIMIT
-#define POS2VEL_I_LIMIT 15000.0F // 位置→速度補正のI項クランプ（生積分に対して）
-#endif
-#ifndef POS2VEL_DEAD_BAND_MM
-#define POS2VEL_DEAD_BAND_MM 1.0F // 誤差デッドバンド[mm]
-#endif
-#ifndef POS2VEL_MIN_VEL
-#define POS2VEL_MIN_VEL 30.0F // 低速域では補正を抑制する閾値[mm/s]
-#endif
 
 // ---- Fan ON/OFF specific FF gains ----
 // Fan ON: use current values

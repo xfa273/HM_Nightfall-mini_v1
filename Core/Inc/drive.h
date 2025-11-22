@@ -124,9 +124,6 @@ volatile float distance_error;       // 並進距離の偏差[mm]
 volatile float distance_error_error; // 並進距離の偏差の偏差[mm]
 volatile float previous_distance_error; // 1ループ前の並進距離の偏差[mm]
 volatile float distance_integral;       // 並進距離の積分項
-volatile float pos2vel_integral;      // 位置→速度補正のI項（生積分）
-volatile float pos2vel_prev_error;    // 位置→速度補正の前回距離誤差[mm]
-volatile float pos2vel_correction;    // 位置→速度の補正速度[mm/s]（モニタ用）
 
 /*並進速度制御用*/
 volatile float target_velocity;      // 目標並進速度[mm/s]
@@ -209,7 +206,7 @@ extern volatile float duty_setposition; // 壁当てのDuty[%]
 // 旋回用
 extern volatile float velocity_turn90; // 90°ターンの速度[mm/s]
 extern volatile float alpha_turn90;    // 90°ターンの角加速度[deg/s^2]
-extern volatile float dist_offset_in; // 90°ターンの入オフセット距離[mm]
+extern volatile float dist_offset_in;  // 90°ターンの入オフセット距離[mm]
 extern volatile float dist_offset_out; // 90°ターンの出オフセット距離[mm]
 extern volatile float angle_turn_90; // 90°ターンの旋回角度[deg]
 
@@ -296,9 +293,6 @@ extern volatile float distance_error;       // 並進距離の偏差[mm]
 extern volatile float distance_error_error; // 並進距離の偏差の偏差[mm]
 extern volatile float previous_distance_error; // 1ループ前の並進距離の偏差[mm]
 extern volatile float distance_integral; // 並進距離の積分項
-extern volatile float pos2vel_integral;   // 位置→速度補正のI項（生積分）
-extern volatile float pos2vel_prev_error; // 位置→速度補正の前回距離誤差[mm]
-extern volatile float pos2vel_correction; // 位置→速度の補正速度[mm/s]（モニタ用）
 
 /*並進速度制御用*/
 extern volatile float target_velocity;      // 目標並進速度[mm/s]
