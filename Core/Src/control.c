@@ -134,10 +134,15 @@ void velocity_PID(void) {
     // D項
     velocity_error_error = velocity_error - previous_velocity_error;
 
+    // 吸引ON/OFFでゲイン切替
+    const float kp_v = MF.FLAG.SUCTION ? KP_VELOCITY_FAN_ON : KP_VELOCITY_FAN_OFF;
+    const float ki_v = MF.FLAG.SUCTION ? KI_VELOCITY_FAN_ON : KI_VELOCITY_FAN_OFF;
+    const float kd_v = MF.FLAG.SUCTION ? KD_VELOCITY_FAN_ON : KD_VELOCITY_FAN_OFF;
+
     // モータ制御量を計算（純PID）
-    out_translation =   KP_VELOCITY * velocity_error
-                    + KI_VELOCITY * velocity_integral
-                    + KD_VELOCITY * velocity_error_error;
+    out_translation =   kp_v * velocity_error
+                    + ki_v * velocity_integral
+                    + kd_v * velocity_error_error;
 
     // 並進速度の偏差を保存
     previous_velocity_error = velocity_error;
@@ -154,9 +159,13 @@ void distance_PID(void) {
     distance_error_error = distance_error - previous_distance_error;
 
     // 目標速度（プロファイル速度 + 位置PIDの補正）
-    float v_fb = (KP_DISTANCE * distance_error)
-               + (KI_DISTANCE * distance_integral)
-               + (KD_DISTANCE * distance_error_error);
+    const float kp_d = MF.FLAG.SUCTION ? KP_DISTANCE_FAN_ON : KP_DISTANCE_FAN_OFF;
+    const float ki_d = MF.FLAG.SUCTION ? KI_DISTANCE_FAN_ON : KI_DISTANCE_FAN_OFF;
+    const float kd_d = MF.FLAG.SUCTION ? KD_DISTANCE_FAN_ON : KD_DISTANCE_FAN_OFF;
+
+    float v_fb = (kp_d * distance_error)
+               + (ki_d * distance_integral)
+               + (kd_d * distance_error_error);
     target_velocity = velocity_interrupt + v_fb;
 
     // 誤差履歴更新

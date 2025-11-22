@@ -39,6 +39,47 @@
 #define KD_VELOCITY 0.8F // 並進速度制御のD項  0.6F
 
 
+// 吸引ON/OFFで使い分けるための並進PIDゲイン（初期値は現行値を複製）
+#ifndef KP_VELOCITY_FAN_ON
+#define KP_VELOCITY_FAN_ON  KP_VELOCITY
+#endif
+#ifndef KI_VELOCITY_FAN_ON
+#define KI_VELOCITY_FAN_ON  KI_VELOCITY
+#endif
+#ifndef KD_VELOCITY_FAN_ON
+#define KD_VELOCITY_FAN_ON  KD_VELOCITY
+#endif
+
+#ifndef KP_VELOCITY_FAN_OFF
+#define KP_VELOCITY_FAN_OFF KP_VELOCITY
+#endif
+#ifndef KI_VELOCITY_FAN_OFF
+#define KI_VELOCITY_FAN_OFF KI_VELOCITY
+#endif
+#ifndef KD_VELOCITY_FAN_OFF
+#define KD_VELOCITY_FAN_OFF KD_VELOCITY
+#endif
+
+#ifndef KP_DISTANCE_FAN_ON
+#define KP_DISTANCE_FAN_ON  KP_DISTANCE
+#endif
+#ifndef KI_DISTANCE_FAN_ON
+#define KI_DISTANCE_FAN_ON  KI_DISTANCE
+#endif
+#ifndef KD_DISTANCE_FAN_ON
+#define KD_DISTANCE_FAN_ON  KD_DISTANCE
+#endif
+
+#ifndef KP_DISTANCE_FAN_OFF
+#define KP_DISTANCE_FAN_OFF KP_DISTANCE
+#endif
+#ifndef KI_DISTANCE_FAN_OFF
+#define KI_DISTANCE_FAN_OFF KI_DISTANCE
+#endif
+#ifndef KD_DISTANCE_FAN_OFF
+#define KD_DISTANCE_FAN_OFF KD_DISTANCE
+#endif
+
 
 #define KP_ANGLE 0.0F // 角度制御のP項
 #define KI_ANGLE 0.0F // 角度制御のI項

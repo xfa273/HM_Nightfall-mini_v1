@@ -170,8 +170,13 @@ void log_capture_tick(void) {
             log_buffer.entries[pos].count = (uint16_t)log_buffer.count;
             log_buffer.entries[pos].target_omega = velocity_interrupt; // 目標速度
             log_buffer.entries[pos].actual_omega = real_velocity;      // 実速度
-            log_buffer.entries[pos].p_term_omega = KP_VELOCITY * velocity_error;
-            log_buffer.entries[pos].i_term_omega = KI_VELOCITY * velocity_integral;
+            // 吸引ON/OFFでゲイン切替（速度ログ）
+            {
+                const float kp_v = MF.FLAG.SUCTION ? KP_VELOCITY_FAN_ON : KP_VELOCITY_FAN_OFF;
+                const float ki_v = MF.FLAG.SUCTION ? KI_VELOCITY_FAN_ON : KI_VELOCITY_FAN_OFF;
+                log_buffer.entries[pos].p_term_omega = kp_v * velocity_error;
+                log_buffer.entries[pos].i_term_omega = ki_v * velocity_integral;
+            }
             // d_term_omega フィールドには target_velocity を記録（直進速度ログの可視化用）
             log_buffer.entries[pos].d_term_omega = target_velocity;  
             log_buffer.entries[pos].motor_out_r = (float)out_r;
@@ -187,9 +192,15 @@ void log_capture_tick(void) {
             log_buffer2.entries[pos2].count = (uint16_t)log_buffer2.count;
             log_buffer2.entries[pos2].target_omega = target_distance; // 目標距離
             log_buffer2.entries[pos2].actual_omega = real_distance;   // 実距離
-            log_buffer2.entries[pos2].p_term_omega = KP_DISTANCE * distance_error;
-            log_buffer2.entries[pos2].i_term_omega = KI_DISTANCE * distance_integral;
-            log_buffer2.entries[pos2].d_term_omega = KD_DISTANCE * distance_error_error;
+            // 吸引ON/OFFでゲイン切替（距離ログ）
+            {
+                const float kp_d = MF.FLAG.SUCTION ? KP_DISTANCE_FAN_ON : KP_DISTANCE_FAN_OFF;
+                const float ki_d = MF.FLAG.SUCTION ? KI_DISTANCE_FAN_ON : KI_DISTANCE_FAN_OFF;
+                const float kd_d = MF.FLAG.SUCTION ? KD_DISTANCE_FAN_ON : KD_DISTANCE_FAN_OFF;
+                log_buffer2.entries[pos2].p_term_omega = kp_d * distance_error;
+                log_buffer2.entries[pos2].i_term_omega = ki_d * distance_integral;
+                log_buffer2.entries[pos2].d_term_omega = kd_d * distance_error_error;
+            }
             log_buffer2.entries[pos2].motor_out_r = (float)out_r;
             log_buffer2.entries[pos2].motor_out_l = (float)out_l;
             log_buffer2.entries[pos2].timestamp = current_time;
