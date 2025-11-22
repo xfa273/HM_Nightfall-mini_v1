@@ -38,43 +38,7 @@
 #define KI_VELOCITY 0.55F// 並進速度制御のI項  0.65F
 #define KD_VELOCITY 0.8F // 並進速度制御のD項  0.6F
 
-// 並進速度制御 フィードフォワードと積分クランプ
-#ifndef KFF_VELOCITY
-#define KFF_VELOCITY 0.0F   // 速度FF [PWMcount/(mm/s)] 0.18F
-#endif
-#ifndef KFF_ACCEL
-#define KFF_ACCEL    0.0F   // 加速度FF [PWMcount/(mm/s^2)] 0.0020F
-#endif
-#ifndef KFF_COULOMB
-#define KFF_COULOMB  0.0F   // クーロン摩擦補償 [PWMcount] 22.0F
-#endif
-#ifndef VEL_I_LIMIT
-#define VEL_I_LIMIT  15000.0F // 速度I項クランプ
-#endif
 
-
-// ---- Fan ON/OFF specific FF gains ----
-// Fan ON: use current values
-#ifndef KFF_VELOCITY_FAN_ON
-#define KFF_VELOCITY_FAN_ON  KFF_VELOCITY
-#endif
-#ifndef KFF_ACCEL_FAN_ON
-#define KFF_ACCEL_FAN_ON     KFF_ACCEL
-#endif
-#ifndef KFF_COULOMB_FAN_ON
-#define KFF_COULOMB_FAN_ON   KFF_COULOMB
-#endif
-
-// Fan OFF: use commented-out values noted above
-#ifndef KFF_VELOCITY_FAN_OFF
-#define KFF_VELOCITY_FAN_OFF 0.0F
-#endif
-#ifndef KFF_ACCEL_FAN_OFF
-#define KFF_ACCEL_FAN_OFF    0.0F
-#endif
-#ifndef KFF_COULOMB_FAN_OFF
-#define KFF_COULOMB_FAN_OFF  0.0F
-#endif
 
 #define KP_ANGLE 0.0F // 角度制御のP項
 #define KI_ANGLE 0.0F // 角度制御のI項

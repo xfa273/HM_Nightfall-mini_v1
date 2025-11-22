@@ -128,31 +128,14 @@ void velocity_PID(void) {
         MF.FLAG.FAILED = 1;
     }
 
-    // I項（先に積分→クランプ）
+    // I項（単純積分）
     velocity_integral += velocity_error;
-    // 速度I項クランプ（KI=0回避のため微小値で割る）
-    {
-        const float ki = (KI_VELOCITY != 0.0f) ? KI_VELOCITY : 1e-6f;
-        const float limit_int = VEL_I_LIMIT / ki; // 積分の生値に対する上限
-        if (velocity_integral >  limit_int) velocity_integral =  limit_int;
-        if (velocity_integral < -limit_int) velocity_integral = -limit_int;
-    }
 
     // D項
     velocity_error_error = velocity_error - previous_velocity_error;
 
-    // フィードフォワード（粘性・加速度・クーロン）
-    // ファンON/OFFでFFゲインを切替える（ON: *_FAN_ON, OFF: *_FAN_OFF）
-    float kv = MF.FLAG.SUCTION ? KFF_VELOCITY_FAN_ON : KFF_VELOCITY_FAN_OFF;
-    float ka = MF.FLAG.SUCTION ? KFF_ACCEL_FAN_ON    : KFF_ACCEL_FAN_OFF;
-    float kc = MF.FLAG.SUCTION ? KFF_COULOMB_FAN_ON  : KFF_COULOMB_FAN_OFF;
-    float ff = kv * target_velocity
-             + ka * acceleration_interrupt
-             + kc * ((target_velocity >= 0.0f) ? 1.0f : -1.0f);
-
-    // モータ制御量を計算（FF + PID）
-    out_translation = ff
-                    + KP_VELOCITY * velocity_error
+    // モータ制御量を計算（純PID）
+    out_translation =   KP_VELOCITY * velocity_error
                     + KI_VELOCITY * velocity_integral
                     + KD_VELOCITY * velocity_error_error;
 
