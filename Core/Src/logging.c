@@ -13,7 +13,7 @@ void log_set_profile(LogProfile profile) { s_log_profile = profile; }
 void log_print_frontwall_all(void) {
     printf("=== Micromouse Log Data (CSV Format, FRONTWALL) ===\n");
     printf("Total entries: %d\n", log_buffer.count);
-    printf("CSV Format: timestamp,d_front_mm,d_front_thr_mm,dist_offset_in_mm,front_entry_mm,real_velocity_mm_s,ad_fr,ad_fl\n");
+    printf("CSV Format: timestamp,param1,param2,param3,param4,param5,param6,param7\n");
     printf("--- CSV Data Start ---\n");
 
     uint16_t count = log_buffer.count > MAX_LOG_ENTRIES ? MAX_LOG_ENTRIES : log_buffer.count;
@@ -41,7 +41,7 @@ void log_print_frontwall_all(void) {
 void log_print_omega_all(void) {
     printf("=== Micromouse Log Data (CSV Format, OMEGA) ===\n");
     printf("Total entries: %d\n", log_buffer.count);
-    printf("CSV Format: timestamp,target_omega,actual_omega,p_term_omega,i_term_omega,d_term_omega,motor_out_r,motor_out_l\n");
+    printf("CSV Format: timestamp,param1,param2,param3,param4,param5,param6,param7\n");
     printf("--- CSV Data Start ---\n");
 
     uint16_t count = log_buffer.count > MAX_LOG_ENTRIES ? MAX_LOG_ENTRIES : log_buffer.count;
@@ -69,7 +69,7 @@ void log_print_omega_all(void) {
 void log_print_angle_all(void) {
     printf("=== Micromouse Log Data (CSV Format, ANGLE) ===\n");
     printf("Total entries: %d\n", log_buffer2.count);
-    printf("CSV Format: timestamp,target_angle,actual_angle,p_term,i_term,d_term,motor_out_r,motor_out_l\n");
+    printf("CSV Format: timestamp,param1,param2,param3,param4,param5,param6,param7\n");
     printf("--- CSV Data Start ---\n");
 
     uint16_t count = log_buffer2.count > MAX_LOG_ENTRIES ? MAX_LOG_ENTRIES : log_buffer2.count;
@@ -104,7 +104,7 @@ void log_print_angle_all(void) {
 void log_print_translation_csv(void) {
     printf("=== Micromouse Log Data (CSV Format, TRANSLATION) ===\n");
     printf("Total entries: %d\n", log_buffer.count);
-    printf("CSV Format: timestamp,target_omega,actual_omega,p_term_omega,i_term_omega,d_term_omega,motor_out_r,motor_out_l\n");
+    printf("CSV Format: timestamp,param1,param2,param3,param4,param5,param6,param7\n");
     printf("--- CSV Data Start ---\n");
 
     uint16_t count = log_buffer.count > MAX_LOG_ENTRIES ? MAX_LOG_ENTRIES : log_buffer.count;
@@ -391,7 +391,7 @@ void log_add_entry(uint16_t index, float target_omega, float actual_omega,
 void log_print_all(void) {
     printf("=== Micromouse Log Data (CSV Format) ===\n");
     printf("Total entries: %d\n", log_buffer.count);
-    printf("CSV Format: timestamp,target_omega,actual_omega,p_term_omega,i_term_omega,d_term_omega,motor_out_r,motor_out_l\n");
+    printf("CSV Format: timestamp,param1,param2,param3,param4,param5,param6,param7\n");
     printf("--- CSV Data Start ---\n");
     
     // CSV形式でデータを出力（micromouse_log_visualizer用）
@@ -432,7 +432,7 @@ void log_print_all(void) {
 void log_print_velocity_all(void) {
     printf("=== Micromouse Log Data (CSV Format, VELOCITY) ===\n");
     printf("Total entries: %d\n", log_buffer.count);
-    printf("CSV Format: timestamp,target_omega,actual_omega,p_term_omega,i_term_omega,d_term_omega,motor_out_r,motor_out_l\n");
+    printf("CSV Format: timestamp,param1,param2,param3,param4,param5,param6,param7\n");
     printf("--- CSV Data Start ---\n");
 
     uint16_t count = log_buffer.count > MAX_LOG_ENTRIES ? MAX_LOG_ENTRIES : log_buffer.count;
@@ -460,7 +460,7 @@ void log_print_velocity_all(void) {
 void log_print_distance_all(void) {
     printf("=== Micromouse Log Data (CSV Format, DISTANCE) ===\n");
     printf("Total entries: %d\n", log_buffer2.count);
-    printf("CSV Format: timestamp,target_omega,actual_omega,p_term_omega,i_term_omega,d_term_omega,motor_out_r,motor_out_l\n");
+    printf("CSV Format: timestamp,param1,param2,param3,param4,param5,param6,param7\n");
     printf("--- CSV Data Start ---\n");
 
     uint16_t count = log_buffer2.count > MAX_LOG_ENTRIES ? MAX_LOG_ENTRIES : log_buffer2.count;
