@@ -54,6 +54,26 @@ void log_add_entry(uint16_t index, float target_omega, float actual_omega,
 void log_print_all(void);
 
 /**
+ * @brief 速度ログ（log_buffer）をCSV出力
+ */
+void log_print_velocity_all(void);
+
+/**
+ * @brief 距離ログ（log_buffer2 またはプロファイルに応じたバッファ）をCSV出力
+ */
+void log_print_distance_all(void);
+
+/**
+ * @brief 角速度ログ（log_buffer）をCSV出力
+ */
+void log_print_omega_all(void);
+
+/**
+ * @brief 角度ログ（log_buffer2）をCSV出力
+ */
+void log_print_angle_all(void);
+
+/**
  * @brief ログデータを純粋なCSV形式で出力する（可視化ツール貼り付け用）
  */
 void log_print_csv_only(void);

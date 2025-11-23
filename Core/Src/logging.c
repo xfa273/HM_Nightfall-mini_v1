@@ -7,16 +7,135 @@
 static volatile LogProfile s_log_profile = LOG_PROFILE_OMEGA;
 
 void log_set_profile(LogProfile profile) { s_log_profile = profile; }
+
+// 速度ログ（log_buffer）をCSV出力
+void log_print_velocity_all(void) {
+    printf("=== Micromouse Log Data (CSV Format, VELOCITY) ===\n");
+    printf("Total entries: %d\n", log_buffer.count);
+    printf("CSV Format: timestamp,param1,param2,param3,param4,param5,param6,param7\n");
+    printf("--- CSV Data Start ---\n");
+
+    uint16_t count = log_buffer.count > MAX_LOG_ENTRIES ? MAX_LOG_ENTRIES : log_buffer.count;
+    uint16_t start = log_buffer.count > MAX_LOG_ENTRIES ? log_buffer.head : 0;
+
+    for (uint16_t i = 0; i < count; i++) {
+        uint16_t idx = (start + i) % MAX_LOG_ENTRIES;
+        volatile LogEntry *entry = &log_buffer.entries[idx];
+        printf("%lu,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f\n",
+               entry->timestamp - log_buffer.start_time,
+               entry->target_omega,
+               entry->actual_omega,
+               entry->p_term_omega,
+               entry->i_term_omega,
+               entry->d_term_omega,
+               entry->motor_out_r,
+               entry->motor_out_l);
+    }
+
+    printf("--- CSV Data End ---\n");
+    printf("=== End of Log ===\n");
+}
+
+// 距離ログ（log_buffer2）をCSV出力
+void log_print_distance_all(void) {
+    printf("=== Micromouse Log Data (CSV Format, DISTANCE) ===\n");
+    printf("Total entries: %d\n", log_buffer2.count);
+    printf("CSV Format: timestamp,param1,param2,param3,param4,param5,param6,param7\n");
+    printf("--- CSV Data Start ---\n");
+
+    uint16_t count = log_buffer2.count > MAX_LOG_ENTRIES ? MAX_LOG_ENTRIES : log_buffer2.count;
+    uint16_t start = log_buffer2.count > MAX_LOG_ENTRIES ? log_buffer2.head : 0;
+
+    for (uint16_t i = 0; i < count; i++) {
+        uint16_t idx = (start + i) % MAX_LOG_ENTRIES;
+        volatile LogEntry *entry = &log_buffer2.entries[idx];
+        printf("%lu,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f\n",
+               entry->timestamp - log_buffer2.start_time,
+               entry->target_omega,
+               entry->actual_omega,
+               entry->p_term_omega,
+               entry->i_term_omega,
+               entry->d_term_omega,
+               entry->motor_out_r,
+               entry->motor_out_l);
+    }
+
+    printf("--- CSV Data End ---\n");
+    printf("=== End of Log ===\n");
+}
+
+// 角速度ログ（log_buffer）をCSV出力
+void log_print_omega_all(void) {
+    printf("=== Micromouse Log Data (CSV Format, OMEGA) ===\n");
+    printf("Total entries: %d\n", log_buffer.count);
+    printf("CSV Format: timestamp,param1,param2,param3,param4,param5,param6,param7\n");
+    printf("--- CSV Data Start ---\n");
+
+    uint16_t count = log_buffer.count > MAX_LOG_ENTRIES ? MAX_LOG_ENTRIES : log_buffer.count;
+    uint16_t start = log_buffer.count > MAX_LOG_ENTRIES ? log_buffer.head : 0;
+
+    for (uint16_t i = 0; i < count; i++) {
+        uint16_t idx = (start + i) % MAX_LOG_ENTRIES;
+        volatile LogEntry *entry = &log_buffer.entries[idx];
+        printf("%lu,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f\n",
+               entry->timestamp - log_buffer.start_time,
+               entry->target_omega,
+               entry->actual_omega,
+               entry->p_term_omega,
+               entry->i_term_omega,
+               entry->d_term_omega,
+               entry->motor_out_r,
+               entry->motor_out_l);
+    }
+
+    printf("--- CSV Data End ---\n");
+    printf("=== End of Log ===\n");
+}
+
+// 角度ログ（log_buffer2）をCSV出力
+void log_print_angle_all(void) {
+    printf("=== Micromouse Log Data (CSV Format, ANGLE) ===\n");
+    printf("Total entries: %d\n", log_buffer2.count);
+    printf("CSV Format: timestamp,param1,param2,param3,param4,param5,param6,param7\n");
+    printf("--- CSV Data Start ---\n");
+
+    uint16_t count = log_buffer2.count > MAX_LOG_ENTRIES ? MAX_LOG_ENTRIES : log_buffer2.count;
+    uint16_t start = log_buffer2.count > MAX_LOG_ENTRIES ? log_buffer2.head : 0;
+
+    for (uint16_t i = 0; i < count; i++) {
+        uint16_t idx = (start + i) % MAX_LOG_ENTRIES;
+        volatile LogEntry *entry = &log_buffer2.entries[idx];
+        printf("%lu,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f\n",
+               entry->timestamp - log_buffer2.start_time,
+               entry->target_omega,
+               entry->actual_omega,
+               entry->p_term_omega,
+               entry->i_term_omega,
+               entry->d_term_omega,
+               entry->motor_out_r,
+               entry->motor_out_l);
+    }
+
+    printf("--- CSV Data End ---\n");
+    printf("=== End of Log ===\n");
+}
 LogProfile log_get_profile(void) { return s_log_profile; }
 
 /**
  * @brief ロギングシステムを初期化する
  */
 void log_init(void) {
+    // 速度/角速度 等（主）
     log_buffer.head = 0;
     log_buffer.count = 0;
     log_buffer.logging_active = 0;
     log_buffer.start_time = 0;
+
+    // 距離/角度 等（副）
+    log_buffer2.head = 0;
+    log_buffer2.count = 0;
+    log_buffer2.logging_active = 0;
+    log_buffer2.start_time = 0;
 }
 
 /**
@@ -33,49 +152,80 @@ void log_capture_tick(void) {
     switch (s_log_profile) {
 
     case LOG_PROFILE_OMEGA:
-    // 角速度
-    log_add_entry(
-        (uint16_t)log_buffer.count,     // インデックス
-        omega_interrupt,                 // 目標角速度
-        real_omega,                      // 実際の角速度
-        KP_OMEGA * omega_error,          // P項
-        KI_OMEGA * omega_integral,       // I項
-        KD_OMEGA * omega_error_error,    // D項
-        (float)out_r,                    // 右モーター出力
-        (float)out_l,                    // 左モーター出力
-        current_time                     // タイムスタンプ
-    );
-    break;
+        // 角速度（主バッファ）
+        log_add_entry(
+            (uint16_t)log_buffer.count,
+            omega_interrupt,
+            real_omega,
+            KP_OMEGA * omega_error,
+            KI_OMEGA * omega_integral,
+            KD_OMEGA * omega_error_error,
+            (float)out_r,
+            (float)out_l,
+            current_time
+        );
+        break;
 
     case LOG_PROFILE_VELOCITY:
-    // 並進速度
-    log_add_entry(
-        (uint16_t)log_buffer.count,     // インデックス
-        velocity_interrupt,                 // 目標速度
-        real_velocity,                      // 実際の速度
-        KP_VELOCITY * velocity_error,          // P項
-        KI_VELOCITY * velocity_integral,       // I項
-        KD_VELOCITY * velocity_error_error,    // D項
-        (float)out_r,                    // 右モーター出力
-        (float)out_l,                    // 左モーター出力
-        current_time                     // タイムスタンプ
-    );
-    break;
+        // 並進速度（主バッファ）
+        log_add_entry(
+            (uint16_t)log_buffer.count,
+            velocity_interrupt,
+            real_velocity,
+            KP_VELOCITY * velocity_error,
+            KI_VELOCITY * velocity_integral,
+            KD_VELOCITY * velocity_error_error,
+            (float)out_r,
+            (float)out_l,
+            current_time
+        );
+
+        // 並進距離（副バッファ）
+        if (log_buffer2.logging_active && log_buffer2.count < MAX_LOG_ENTRIES) {
+            uint16_t pos2 = log_buffer2.head;
+            log_buffer2.entries[pos2].count = (uint16_t)log_buffer2.count;
+            log_buffer2.entries[pos2].target_omega = target_distance;
+            log_buffer2.entries[pos2].actual_omega = real_distance;
+            log_buffer2.entries[pos2].p_term_omega = KP_DISTANCE * distance_error;
+            log_buffer2.entries[pos2].i_term_omega = KI_DISTANCE * distance_integral;
+            log_buffer2.entries[pos2].d_term_omega = KD_DISTANCE * distance_error_error;
+            log_buffer2.entries[pos2].motor_out_r = (float)out_r;
+            log_buffer2.entries[pos2].motor_out_l = (float)out_l;
+            log_buffer2.entries[pos2].timestamp = current_time;
+            log_buffer2.head = (pos2 + 1) % MAX_LOG_ENTRIES;
+            log_buffer2.count++;
+        }
+        break;
     
     case LOG_PROFILE_DISTANCE:
-    // 並進距離
-    log_add_entry(
-        (uint16_t)log_buffer.count,     // インデックス
-        target_distance,               // 目標距離
-        real_distance,                      // 実際の距離
-        KP_DISTANCE * distance_error,          // P項
-        KI_DISTANCE * distance_integral,       // I項
-        KD_DISTANCE * distance_error_error,    // D項
-        (float)out_r,                    // 右モーター出力
-        (float)out_l,                    // 左モーター出力
-        current_time                     // タイムスタンプ
-    );
-    break;
+        // 並進距離（副バッファ）
+        if (log_buffer2.logging_active && log_buffer2.count < MAX_LOG_ENTRIES) {
+            uint16_t pos2 = log_buffer2.head;
+            log_buffer2.entries[pos2].count = (uint16_t)log_buffer2.count;
+            log_buffer2.entries[pos2].target_omega = target_distance;
+            log_buffer2.entries[pos2].actual_omega = real_distance;
+            log_buffer2.entries[pos2].p_term_omega = KP_DISTANCE * distance_error;
+            log_buffer2.entries[pos2].i_term_omega = KI_DISTANCE * distance_integral;
+            log_buffer2.entries[pos2].d_term_omega = KD_DISTANCE * distance_error_error;
+            log_buffer2.entries[pos2].motor_out_r = (float)out_r;
+            log_buffer2.entries[pos2].motor_out_l = (float)out_l;
+            log_buffer2.entries[pos2].timestamp = current_time;
+            log_buffer2.head = (pos2 + 1) % MAX_LOG_ENTRIES;
+            log_buffer2.count++;
+        }
+        // 並進速度（主バッファ）も併記しておく（閲覧側でVELOCITYを選ばれても空にならないように）
+        log_add_entry(
+            (uint16_t)log_buffer.count,
+            velocity_interrupt,
+            real_velocity,
+            KP_VELOCITY * velocity_error,
+            KI_VELOCITY * velocity_integral,
+            KD_VELOCITY * velocity_error_error,
+            (float)out_r,
+            (float)out_l,
+            current_time
+        );
+        break;
     case LOG_PROFILE_CUSTOM:
     default:
         break;
@@ -88,13 +238,21 @@ void log_capture_tick(void) {
  * @note この関数はMF.FLAG.GET_LOG_1フラグも操作します
  */
 void log_start(uint32_t start_time) {
+    // 主ログ開始
     log_buffer.head = 0;
     log_buffer.count = 0;
     log_buffer.logging_active = 1;
     log_buffer.start_time = start_time;
-    
+
+    // 副ログ開始
+    log_buffer2.head = 0;
+    log_buffer2.count = 0;
+    log_buffer2.logging_active = 1;
+    log_buffer2.start_time = start_time;
+
     // ロギングフラグを設定
     MF.FLAG.GET_LOG_1 = 1;
+    MF.FLAG.GET_LOG_2 = 1;
 }
 
 /**
@@ -103,9 +261,11 @@ void log_start(uint32_t start_time) {
  */
 void log_stop(void) {
     log_buffer.logging_active = 0;
-    
+    log_buffer2.logging_active = 0;
+
     // ロギングフラグをクリア
     MF.FLAG.GET_LOG_1 = 0;
+    MF.FLAG.GET_LOG_2 = 0;
 }
 
 /**

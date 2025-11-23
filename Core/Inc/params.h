@@ -65,10 +65,10 @@
     センサ系
 ------------------------------------------------------------*/
 /*壁判断閾値*/
-#define WALL_BASE_FR  330   // 前壁右センサ    //700
-#define WALL_BASE_FL  330   // 前壁左センサ    //700
-#define WALL_BASE_R   410   // 右壁センサ  //800
-#define WALL_BASE_L   410   // 左壁センサ  //800
+#define WALL_BASE_FR  160   // 前壁右センサ    //700
+#define WALL_BASE_FL  160   // 前壁左センサ    //700
+#define WALL_BASE_R   250   // 右壁センサ  //800
+#define WALL_BASE_L   250   // 左壁センサ  //800
 #define WALL_DIFF_THR 22   // 壁センサ値の変化量のしきい値
 #define K_SENSOR      1.00F // センサの補正値 0.94F
 

@@ -8,6 +8,7 @@
 #include "global.h"
 #include "../Inc/shortest_run_params.h"
 #include "../Inc/run.h"
+#include "../Inc/logging.h"
 
 // Helper loaders: apply case/mode parameters to runtime globals
 static void apply_case_params_mode2_idx(int idx) {
@@ -124,176 +125,159 @@ void mode2() {
                 apply_turn_normal_mode2();
                 printf("Loaded params: normal turn (mode2).\n");
 
-                velocity_interrupt = 0;
+                // path を上書きして run()
+                for (int i = 0; i < ROUTE_MAX_LEN; i++) path[i] = 0;
+                // 初期加速(first_sectionA)の直後に右小回り
+                path[0] = 300; // 右小回り
+                path[1] = 0;
 
-                led_flash(10);
-
-                drive_variable_reset();
-                IMU_GetOffset();
-                drive_enable_motor();
-
-                led_flash(5);
-
-                half_sectionA(velocity_turn90);
-                turn_R90(0);
-                half_sectionD(0);
-
-                led_flash(5);
-                drive_stop();
+                // 実行
+                run();
                 break;
+            case 8: { // Straight test using case1 params (index0)
+                // 直進テスト: mode2 の case1（index0）の直線パラメータを使用
+                apply_case_params_mode2_idx(0);
+                kp_wall = 0.0f; // テスト時は壁制御を無効化
+                printf("Loaded params: straight test (mode2, case8 -> case1 params).\n");
+
+                // ログ開始（距離プロファイル）
+                log_init();
+                log_set_profile(LOG_PROFILE_DISTANCE);
+                log_start(HAL_GetTick());
+
+                // path を上書きして run()
+                for (int i = 0; i < ROUTE_MAX_LEN; i++) path[i] = 0;
+                // 直進：初期 half_sectionA(S2) + S3 + 最後の half_sectionD(S1) = 合計S6
+                path[0] = 200 + 3; // S3 (半区画×3)
+                path[1] = 0;
+
+                // 実行
+                run();
+
+                // ログ停止
+                log_stop();
+
+                // センサEnter待ち（右前=速度ログ, 左前=距離ログ）
+                printf("[mode2-case8] Press RIGHT FRONT for VELOCITY (FR>%u), LEFT FRONT for DISTANCE (FL>%u) ...\n",
+                       (unsigned)WALL_BASE_FR, (unsigned)WALL_BASE_FL);
+                while (1) {
+                    if (ad_fr > WALL_BASE_FR) {
+                        log_print_velocity_all();
+                        break;
+                    } else if (ad_fl > WALL_BASE_FL) {
+                        log_print_distance_all();
+                        break;
+                    }
+                    HAL_Delay(50);
+                }
+
+                led_flash(5);
+                break;
+            }
+            case 9: { // Straight test using case7 params (index6)
+                // 直進テスト: mode2 の case7（index6）の直線パラメータを使用
+                apply_case_params_mode2_idx(6);
+                kp_wall = 0.0f; // テスト時は壁制御を無効化
+                printf("Loaded params: straight test (mode2, case9 -> case7 params).\n");
+
+                // ログ開始（速度プロファイル）
+                log_init();
+                log_set_profile(LOG_PROFILE_VELOCITY);
+                log_start(HAL_GetTick());
+
+                // path を上書きして run()
+                for (int i = 0; i < ROUTE_MAX_LEN; i++) path[i] = 0;
+                // 直進：初期 half_sectionA(S2) + S3 + 最後の half_sectionD(S1) = 合計S6
+                path[0] = 200 + 3; // S3
+                path[1] = 0;
+
+                // 実行
+                run();
+
+                // ログ停止
+                log_stop();
+
+                // センサEnter待ち（右前=速度ログ, 左前=距離ログ）
+                printf("[mode2-case9] Press RIGHT FRONT for VELOCITY (FR>%u), LEFT FRONT for DISTANCE (FL>%u) ...\n",
+                       (unsigned)WALL_BASE_FR, (unsigned)WALL_BASE_FL);
+                while (1) {
+                    if (ad_fr > WALL_BASE_FR) {
+                        log_print_velocity_all();
+                        break;
+                    } else if (ad_fl > WALL_BASE_FL) {
+                        log_print_distance_all();
+                        break;
+                    }
+                    HAL_Delay(50);
+                }
+
+                led_flash(5);
+                break;
+            }
             case 1: // 90deg大回り
                 apply_case_params_mode2_idx(idx_normal);
                 apply_turn_large90_mode2();
                 printf("Loaded params: large 90deg (mode2).\n");
-
-                velocity_interrupt = 0;
-
-                led_flash(10);
-
-                drive_variable_reset();
-                IMU_GetOffset();
-                drive_enable_motor();
-
-                led_flash(5);
-
-                half_sectionA(velocity_l_turn_90);
-                l_turn_R90();
-                half_sectionD(0);
-
-                led_flash(5);
-                drive_stop();
+                // path: 初期加速→右大回り90
+                for (int i = 0; i < ROUTE_MAX_LEN; i++) path[i] = 0;
+                path[0] = 501; // L-R90
+                run();
                 break;
             case 2: // 180deg大回り
                 apply_case_params_mode2_idx(idx_normal);
                 apply_turn_large180_mode2();
                 printf("Loaded params: large 180deg (mode2).\n");
-
-                velocity_interrupt = 0;
-
-                led_flash(10);
-
-                drive_variable_reset();
-                IMU_GetOffset();
-                drive_enable_motor();
-
-                led_flash(5);
-
-                half_sectionA(velocity_l_turn_180);
-                l_turn_R180(0);
-                half_sectionD(0);
-
-                led_flash(5);
-                drive_stop();
+                for (int i = 0; i < ROUTE_MAX_LEN; i++) path[i] = 0;
+                path[0] = 502; // L-R180
+                run();
                 break;
             case 3: // 45deg 入り
                 apply_case_params_mode2_idx(idx_diag);
                 apply_turn_d45in_mode2();
                 printf("Loaded params: diag 45-in (mode2).\n");
-
-                velocity_interrupt = 0;
-
-                led_flash(10);
-
-                drive_variable_reset();
-                IMU_GetOffset();
-                drive_enable_motor();
-
-                led_flash(5);
-
-                half_sectionA(velocity_turn45in);
-                turn_R45_In();
-                run_diagonal(1,0);
-
-                led_flash(5);
-                drive_stop();
+                for (int i = 0; i < ROUTE_MAX_LEN; i++) path[i] = 0;
+                path[0] = 701;   // 右45°入り
+                path[1] = 1000+1; // 斜めS1
+                run();
                 break;
             case 4: // 45deg 出
                 apply_case_params_mode2_idx(idx_diag);
                 apply_turn_d45out_mode2();
                 printf("Loaded params: diag 45-out (mode2).\n");
-
-                velocity_interrupt = 0;
-
-                led_flash(10);
-
-                drive_variable_reset();
-                IMU_GetOffset();
-                drive_enable_motor();
-
-                led_flash(5);
-
-                run_diagonal(1,velocity_turn45out);
-                turn_L45_Out();
-                run_diagonal(1,0);
-
-                led_flash(5);
-                drive_stop();
+                for (int i = 0; i < ROUTE_MAX_LEN; i++) path[i] = 0;
+                path[0] = 1000+1; // 斜めS1
+                path[1] = 704;    // 左45°出
+                path[2] = 1000+1; // 斜めS1
+                run();
                 break;
             case 5: // V90
                 apply_case_params_mode2_idx(idx_diag);
                 apply_turn_v90_mode2();
                 printf("Loaded params: diag V90 (mode2).\n");
-
-                velocity_interrupt = 0;
-
-                led_flash(10);
-
-                drive_variable_reset();
-                IMU_GetOffset();
-                drive_enable_motor();
-
-                led_flash(5);
-
-                run_diagonal(1,velocity_turnV90);
-                turn_LV90();
-                run_diagonal(1,0);
-
-                led_flash(5);
-                drive_stop();
+                for (int i = 0; i < ROUTE_MAX_LEN; i++) path[i] = 0;
+                path[0] = 1000+1; // 斜めS1
+                path[1] = 802;    // 左V90
+                path[2] = 1000+1; // 斜めS1
+                run();
                 break;
             case 6: // 135deg 入り
                 apply_case_params_mode2_idx(idx_diag);
                 apply_turn_d135in_mode2();
                 printf("Loaded params: diag 135-in (mode2).\n");
-
-                velocity_interrupt = 0;
-
-                led_flash(10);
-
-                drive_variable_reset();
-                IMU_GetOffset();
-                drive_enable_motor();
-
-                led_flash(5);
-
-                half_sectionA(velocity_turn135in);
-                turn_R135_In();
-                run_diagonal(1,0);
-
-                led_flash(5);
-                drive_stop();
+                for (int i = 0; i < ROUTE_MAX_LEN; i++) path[i] = 0;
+                path[0] = 901;    // 右135°入り
+                path[1] = 1000+1; // 斜めS1
+                run();
                 break;
             case 7: // 135deg 出
                 apply_case_params_mode2_idx(idx_diag);
                 apply_turn_d135out_mode2();
                 printf("Loaded params: diag 135-out (mode2).\n");
-
-                velocity_interrupt = 0;
-
-                led_flash(10);
-
-                drive_variable_reset();
-                IMU_GetOffset();
-                drive_enable_motor();
-
-                led_flash(5);
-
-                run_diagonal(1,velocity_turn135out);
-                turn_L135_Out();
-                run_diagonal(1,0);
-
-                led_flash(5);
-                drive_stop();
+                for (int i = 0; i < ROUTE_MAX_LEN; i++) path[i] = 0;
+                path[0] = 1000+1; // 斜めS1
+                path[1] = 904;    // 左135°出
+                path[2] = 1000+1; // 斜めS1
+                run();
                 break;
             default:
                 printf("No sub-mode selected.\n");

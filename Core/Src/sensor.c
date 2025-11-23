@@ -20,6 +20,18 @@ static void print_wall_offsets(const char* label)
 }
 
 //+++++++++++++++++++++++++++++++++++++++++++++++
+// ADC DMA helpers (commit 89a941a based)
+//+++++++++++++++++++++++++++++++++++++++++++++++
+HAL_StatusTypeDef sensor_adc_dma_start(volatile uint16_t *dst)
+{
+    // Ensure previous DMA is stopped
+    (void)HAL_ADC_Stop_DMA(&hadc1);
+
+    // Start regular group conversion with DMA into provided buffer (9 ranks)
+    return HAL_ADC_Start_DMA(&hadc1, (uint32_t*)dst, 9);
+}
+
+//+++++++++++++++++++++++++++++++++++++++++++++++
 // sensor_init
 // センサ系の変数の初期化，ADコンバータの設定とセンサ値取得に使用するタイマの設定をする
 // 引数：なし
@@ -34,6 +46,8 @@ void sensor_init(void) {
 
     HAL_TIM_Base_Start_IT(&htim1);
     HAL_TIM_Base_Start_IT(&htim5);
+    // センサスケジューラ（TIM6）も開始（非同期DMA駆動）
+    HAL_TIM_Base_Start_IT(&htim6);
 
     // センサのオフセット値をフラッシュから読み込み（有効なら使用）
     // 失敗した場合のみ測定を実施
@@ -508,10 +522,7 @@ void get_sensor_offsets(void) {
     wall_offset_fr = 0;
     wall_offset_fl = 0;
     
-    // 起動時ログを抑制
-    
-    // interrupt.cですでに実装されているADCの値取得を使用する
-    // interruption処理が複数回走るのを待つ
+    // interrupt.c のLED ON/OFF差分更新が進むのを待ってサンプルを収集
     for (i = 0; i < NUM_SAMPLES; i++) {
         // ADCタスクカウンタが一周するのを待つ（センサ値が更新されるのを待つ）
         uint8_t current_counter = ADC_task_counter;
@@ -520,29 +531,29 @@ void get_sensor_offsets(void) {
             HAL_Delay(1);
             if ((HAL_GetTick() - t0) > 200) {
                 // タイムアウト: 割り込みがまだ動いていない/停止している可能性
-                // 既存値で継続（起動ハングを回避）
                 break;
             }
         }
 
-        // LEDが発光しているときのオフセット値（壁なしでも受光する光量）を加算
-        sum_r += ad_r_raw;  // LEDが発光しているときの受光量
-        sum_l += ad_l_raw;
-        sum_fr += ad_fr_raw;
-        sum_fl += ad_fl_raw;
+        // LED ON/OFF 差分（ad_on - ad_off）のみを加算（負値は0に丸め）
+        int32_t dr  = (int32_t)ad_r_raw  - (int32_t)ad_r_off;  if (dr  < 0) dr  = 0;
+        int32_t dl  = (int32_t)ad_l_raw  - (int32_t)ad_l_off;  if (dl  < 0) dl  = 0;
+        int32_t dfr = (int32_t)ad_fr_raw - (int32_t)ad_fr_off; if (dfr < 0) dfr = 0;
+        int32_t dfl = (int32_t)ad_fl_raw - (int32_t)ad_fl_off; if (dfl < 0) dfl = 0;
+
+        sum_r  += (uint32_t)dr;
+        sum_l  += (uint32_t)dl;
+        sum_fr += (uint32_t)dfr;
+        sum_fl += (uint32_t)dfl;
 
         HAL_Delay(10); // 少し待機して次のサンプルを取得
     }
     
-    // 平均値を計算して設定
-    // LEDが発光しているときの基本受光量をオフセット値として設定
-    // 新しい変数にオフセット値を保存（割り込みで上書きされない）
-    wall_offset_r = sum_r / NUM_SAMPLES;
-    wall_offset_l = sum_l / NUM_SAMPLES;
-    wall_offset_fr = sum_fr / NUM_SAMPLES;
-    wall_offset_fl = sum_fl / NUM_SAMPLES;
-    
-    // 起動時ログを抑制
+    // 平均値を計算して設定（LED同期差分の基本成分をオフセット値として設定）
+    wall_offset_r  = (uint16_t)(sum_r  / (uint32_t)NUM_SAMPLES);
+    wall_offset_l  = (uint16_t)(sum_l  / (uint32_t)NUM_SAMPLES);
+    wall_offset_fr = (uint16_t)(sum_fr / (uint32_t)NUM_SAMPLES);
+    wall_offset_fl = (uint16_t)(sum_fl / (uint32_t)NUM_SAMPLES);
 }
 
 // 静止状態でIMUのオフセット値を取得

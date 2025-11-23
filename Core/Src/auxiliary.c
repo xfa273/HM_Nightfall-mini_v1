@@ -147,7 +147,7 @@ int select_mode(int mode) {
             buzzer_beep((11 - mode) * 0.5 * 800);
         }
 
-        if (ad_fr > 1500 && ad_fl < 600) {
+        if (ad_fr > WALL_BASE_FR && ad_fl < WALL_BASE_FL) {
             buzzer_enter(900);
             return mode;
         }
