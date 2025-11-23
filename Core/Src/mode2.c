@@ -136,12 +136,33 @@ void mode2() {
 
                 led_flash(5);
 
+                // ログ開始（角速度/角度プロファイル）
+                log_init();
+                log_set_profile(LOG_PROFILE_OMEGA);
+                log_start(HAL_GetTick());
+
                 half_sectionA(velocity_turn90);
                 turn_R90(0);
                 half_sectionD(0);
 
-                led_flash(5);
+                // ログ停止・走行停止
+                log_stop();
                 drive_stop();
+
+                // センサEnter待ち（右前:角速度, 左前:角度）
+                printf("[mode2-tune-0] Press RIGHT FRONT for OMEGA (FR>WALL_BASE_FR), LEFT FRONT for ANGLE (FL>WALL_BASE_FL) ...\n");
+                while (1) {
+                    if (ad_fr > WALL_BASE_FR) {
+                        log_print_omega_all();
+                        break;
+                    } else if (ad_fl > WALL_BASE_FL) {
+                        log_print_angle_all();
+                        break;
+                    }
+                    HAL_Delay(50);
+                }
+
+                led_flash(5);
                 break;
             case 1: // 90deg大回り
                 apply_case_params_mode2_idx(idx_normal);
@@ -160,12 +181,33 @@ void mode2() {
 
                 led_flash(5);
 
+                // ログ開始（角速度/角度プロファイル）
+                log_init();
+                log_set_profile(LOG_PROFILE_OMEGA);
+                log_start(HAL_GetTick());
+
                 half_sectionA(velocity_l_turn_90);
                 l_turn_R90();
                 half_sectionD(0);
 
-                led_flash(5);
+                // ログ停止・走行停止
+                log_stop();
                 drive_stop();
+
+                // センサEnter待ち（右前:角速度, 左前:角度）
+                printf("[mode2-tune-1] Press RIGHT FRONT for OMEGA (FR>WALL_BASE_FR), LEFT FRONT for ANGLE (FL>WALL_BASE_FL) ...\n");
+                while (1) {
+                    if (ad_fr > WALL_BASE_FR) {
+                        log_print_omega_all();
+                        break;
+                    } else if (ad_fl > WALL_BASE_FL) {
+                        log_print_angle_all();
+                        break;
+                    }
+                    HAL_Delay(50);
+                }
+
+                led_flash(5);
                 break;
             case 2: // 180deg大回り
                 apply_case_params_mode2_idx(idx_normal);
@@ -184,12 +226,33 @@ void mode2() {
 
                 led_flash(5);
 
+                // ログ開始（角速度/角度プロファイル）
+                log_init();
+                log_set_profile(LOG_PROFILE_OMEGA);
+                log_start(HAL_GetTick());
+
                 half_sectionA(velocity_l_turn_180);
                 l_turn_R180(0);
                 half_sectionD(0);
 
-                led_flash(5);
+                // ログ停止・走行停止
+                log_stop();
                 drive_stop();
+
+                // センサEnter待ち（右前:角速度, 左前:角度）
+                printf("[mode2-tune-2] Press RIGHT FRONT for OMEGA (FR>WALL_BASE_FR), LEFT FRONT for ANGLE (FL>WALL_BASE_FL) ...\n");
+                while (1) {
+                    if (ad_fr > WALL_BASE_FR) {
+                        log_print_omega_all();
+                        break;
+                    } else if (ad_fl > WALL_BASE_FL) {
+                        log_print_angle_all();
+                        break;
+                    }
+                    HAL_Delay(50);
+                }
+
+                led_flash(5);
                 break;
             case 3: // 45deg 入り
                 apply_case_params_mode2_idx(idx_diag);
@@ -208,12 +271,33 @@ void mode2() {
 
                 led_flash(5);
 
+                // ログ開始（角速度/角度プロファイル）
+                log_init();
+                log_set_profile(LOG_PROFILE_OMEGA);
+                log_start(HAL_GetTick());
+
                 half_sectionA(velocity_turn45in);
                 turn_R45_In();
                 run_diagonal(1,0);
 
-                led_flash(5);
+                // ログ停止・走行停止
+                log_stop();
                 drive_stop();
+
+                // センサEnter待ち（右前:角速度, 左前:角度）
+                printf("[mode2-tune-3] Press RIGHT FRONT for OMEGA (FR>WALL_BASE_FR), LEFT FRONT for ANGLE (FL>WALL_BASE_FL) ...\n");
+                while (1) {
+                    if (ad_fr > WALL_BASE_FR) {
+                        log_print_omega_all();
+                        break;
+                    } else if (ad_fl > WALL_BASE_FL) {
+                        log_print_angle_all();
+                        break;
+                    }
+                    HAL_Delay(50);
+                }
+
+                led_flash(5);
                 break;
             case 4: // 45deg 出
                 apply_case_params_mode2_idx(idx_diag);
@@ -232,12 +316,33 @@ void mode2() {
 
                 led_flash(5);
 
+                // ログ開始（角速度/角度プロファイル）
+                log_init();
+                log_set_profile(LOG_PROFILE_OMEGA);
+                log_start(HAL_GetTick());
+
                 run_diagonal(1,velocity_turn45out);
                 turn_L45_Out();
                 run_diagonal(1,0);
 
-                led_flash(5);
+                // ログ停止・走行停止
+                log_stop();
                 drive_stop();
+
+                // センサEnter待ち（右前:角速度, 左前:角度）
+                printf("[mode2-tune-4] Press RIGHT FRONT for OMEGA (FR>WALL_BASE_FR), LEFT FRONT for ANGLE (FL>WALL_BASE_FL) ...\n");
+                while (1) {
+                    if (ad_fr > WALL_BASE_FR) {
+                        log_print_omega_all();
+                        break;
+                    } else if (ad_fl > WALL_BASE_FL) {
+                        log_print_angle_all();
+                        break;
+                    }
+                    HAL_Delay(50);
+                }
+
+                led_flash(5);
                 break;
             case 5: // V90
                 apply_case_params_mode2_idx(idx_diag);
@@ -256,12 +361,33 @@ void mode2() {
 
                 led_flash(5);
 
+                // ログ開始（角速度/角度プロファイル）
+                log_init();
+                log_set_profile(LOG_PROFILE_OMEGA);
+                log_start(HAL_GetTick());
+
                 run_diagonal(1,velocity_turnV90);
                 turn_LV90();
                 run_diagonal(1,0);
 
-                led_flash(5);
+                // ログ停止・走行停止
+                log_stop();
                 drive_stop();
+
+                // センサEnter待ち（右前:角速度, 左前:角度）
+                printf("[mode2-tune-5] Press RIGHT FRONT for OMEGA (FR>WALL_BASE_FR), LEFT FRONT for ANGLE (FL>WALL_BASE_FL) ...\n");
+                while (1) {
+                    if (ad_fr > WALL_BASE_FR) {
+                        log_print_omega_all();
+                        break;
+                    } else if (ad_fl > WALL_BASE_FL) {
+                        log_print_angle_all();
+                        break;
+                    }
+                    HAL_Delay(50);
+                }
+
+                led_flash(5);
                 break;
             case 6: // 135deg 入り
                 apply_case_params_mode2_idx(idx_diag);
@@ -280,12 +406,33 @@ void mode2() {
 
                 led_flash(5);
 
+                // ログ開始（角速度/角度プロファイル）
+                log_init();
+                log_set_profile(LOG_PROFILE_OMEGA);
+                log_start(HAL_GetTick());
+
                 half_sectionA(velocity_turn135in);
                 turn_R135_In();
                 run_diagonal(1,0);
 
-                led_flash(5);
+                // ログ停止・走行停止
+                log_stop();
                 drive_stop();
+
+                // センサEnter待ち（右前:角速度, 左前:角度）
+                printf("[mode2-tune-6] Press RIGHT FRONT for OMEGA (FR>WALL_BASE_FR), LEFT FRONT for ANGLE (FL>WALL_BASE_FL) ...\n");
+                while (1) {
+                    if (ad_fr > WALL_BASE_FR) {
+                        log_print_omega_all();
+                        break;
+                    } else if (ad_fl > WALL_BASE_FL) {
+                        log_print_angle_all();
+                        break;
+                    }
+                    HAL_Delay(50);
+                }
+
+                led_flash(5);
                 break;
             case 7: // 135deg 出
                 apply_case_params_mode2_idx(idx_diag);
@@ -304,12 +451,33 @@ void mode2() {
 
                 led_flash(5);
 
+                // ログ開始（角速度/角度プロファイル）
+                log_init();
+                log_set_profile(LOG_PROFILE_OMEGA);
+                log_start(HAL_GetTick());
+
                 run_diagonal(1,velocity_turn135out);
                 turn_L135_Out();
                 run_diagonal(1,0);
 
-                led_flash(5);
+                // ログ停止・走行停止
+                log_stop();
                 drive_stop();
+
+                // センサEnter待ち（右前:角速度, 左前:角度）
+                printf("[mode2-tune-7] Press RIGHT FRONT for OMEGA (FR>WALL_BASE_FR), LEFT FRONT for ANGLE (FL>WALL_BASE_FL) ...\n");
+                while (1) {
+                    if (ad_fr > WALL_BASE_FR) {
+                        log_print_omega_all();
+                        break;
+                    } else if (ad_fl > WALL_BASE_FL) {
+                        log_print_angle_all();
+                        break;
+                    }
+                    HAL_Delay(50);
+                }
+
+                led_flash(5);
                 break;
             case 8: // Straight test using case1 params (index0)
                 // 直進テスト: mode2 の case1 で使用されるパラメータを参照
