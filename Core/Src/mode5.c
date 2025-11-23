@@ -296,7 +296,7 @@ void mode5() {
 
             led_flash(3);
 
-            run();
+            run_shortest(5, 5);
 
             drive_fan(0);
 

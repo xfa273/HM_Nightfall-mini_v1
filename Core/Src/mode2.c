@@ -124,20 +124,49 @@ void mode2() {
                 apply_case_params_mode2_idx(idx_normal);
                 apply_turn_normal_mode2();
                 printf("Loaded params: normal turn (mode2).\n");
-                // 最短走行API経由で実行（fan_power反映）
-                run_shortest(2, 3); // mode2, case3 相当
+
+                // fan_power を反映（代替案A）
+                const ShortestRunModeParams_t *pm0 = &shortestRunModeParams2;
+                drive_fan(pm0->fan_power);
+
+                // path を上書きして run()
+                for (int i = 0; i < ROUTE_MAX_LEN; i++) path[i] = 0;
+                // 初期加速(first_sectionA)の直後に右小回り
+                path[0] = 300; // 右小回り
+                path[1] = 0;
+
+                // 実行
+                run();
+
+                // fan停止
+                drive_fan(0);
                 break;
             case 8: { // Straight test using case1 params (index0)
                 // 直進テスト: mode2 の case1（index0）の直線パラメータを使用
+                apply_case_params_mode2_idx(0);
+                kp_wall = 0.0f; // テスト時は壁制御を無効化
                 printf("Loaded params: straight test (mode2, case8 -> case1 params).\n");
+
+                // fan_power を反映（代替案A）
+                const ShortestRunModeParams_t *pm8 = &shortestRunModeParams2;
+                drive_fan(pm8->fan_power);
 
                 // ログ開始（距離プロファイル）
                 log_init();
                 log_set_profile(LOG_PROFILE_DISTANCE);
                 log_start(HAL_GetTick());
 
-                // 実行（fan_power反映のため run_shortest 経由）
-                run_shortest(2, 1); // mode2, case1
+                // path を上書きして run()
+                for (int i = 0; i < ROUTE_MAX_LEN; i++) path[i] = 0;
+                // 直進：初期 half_sectionA(S2) + S3 + 最後の half_sectionD(S1) = 合計S6
+                path[0] = 200 + 3; // S3 (半区画×3)
+                path[1] = 0;
+
+                // 実行
+                run();
+
+                // fan停止
+                drive_fan(0);
 
                 // ログ停止
                 log_stop();
@@ -161,15 +190,30 @@ void mode2() {
             }
             case 9: { // Straight test using case7 params (index6)
                 // 直進テスト: mode2 の case7（index6）の直線パラメータを使用
+                apply_case_params_mode2_idx(6);
+                kp_wall = 0.0f; // テスト時は壁制御を無効化
                 printf("Loaded params: straight test (mode2, case9 -> case7 params).\n");
+
+                // fan_power を反映（代替案A）
+                const ShortestRunModeParams_t *pm9 = &shortestRunModeParams2;
+                drive_fan(pm9->fan_power);
 
                 // ログ開始（速度プロファイル）
                 log_init();
                 log_set_profile(LOG_PROFILE_VELOCITY);
                 log_start(HAL_GetTick());
 
-                // 実行（fan_power反映のため run_shortest 経由）
-                run_shortest(2, 7); // mode2, case7
+                // path を上書きして run()
+                for (int i = 0; i < ROUTE_MAX_LEN; i++) path[i] = 0;
+                // 直進：初期 half_sectionA(S2) + S3 + 最後の half_sectionD(S1) = 合計S6
+                path[0] = 200 + 3; // S3
+                path[1] = 0;
+
+                // 実行
+                run();
+
+                // fan停止
+                drive_fan(0);
 
                 // ログ停止
                 log_stop();
@@ -195,44 +239,100 @@ void mode2() {
                 apply_case_params_mode2_idx(idx_normal);
                 apply_turn_large90_mode2();
                 printf("Loaded params: large 90deg (mode2).\n");
-                // 最短走行API経由で実行（fan_power反映）
-                run_shortest(2, 3);
+                {
+                    const ShortestRunModeParams_t *pm1 = &shortestRunModeParams2;
+                    drive_fan(pm1->fan_power);
+                    for (int i = 0; i < ROUTE_MAX_LEN; i++) path[i] = 0;
+                    path[0] = 501; // L-R90
+                    run();
+                    drive_fan(0);
+                }
                 break;
             case 2: // 180deg大回り
                 apply_case_params_mode2_idx(idx_normal);
                 apply_turn_large180_mode2();
                 printf("Loaded params: large 180deg (mode2).\n");
-                run_shortest(2, 3);
+                {
+                    const ShortestRunModeParams_t *pm2 = &shortestRunModeParams2;
+                    drive_fan(pm2->fan_power);
+                    for (int i = 0; i < ROUTE_MAX_LEN; i++) path[i] = 0;
+                    path[0] = 502; // L-R180
+                    run();
+                    drive_fan(0);
+                }
                 break;
             case 3: // 45deg 入り
                 apply_case_params_mode2_idx(idx_diag);
                 apply_turn_d45in_mode2();
                 printf("Loaded params: diag 45-in (mode2).\n");
-                run_shortest(2, 8);
+                {
+                    const ShortestRunModeParams_t *pm3 = &shortestRunModeParams2;
+                    drive_fan(pm3->fan_power);
+                    for (int i = 0; i < ROUTE_MAX_LEN; i++) path[i] = 0;
+                    path[0] = 701;   // 右45°入り
+                    path[1] = 1000+1; // 斜めS1
+                    run();
+                    drive_fan(0);
+                }
                 break;
             case 4: // 45deg 出
                 apply_case_params_mode2_idx(idx_diag);
                 apply_turn_d45out_mode2();
                 printf("Loaded params: diag 45-out (mode2).\n");
-                run_shortest(2, 8);
+                {
+                    const ShortestRunModeParams_t *pm4 = &shortestRunModeParams2;
+                    drive_fan(pm4->fan_power);
+                    for (int i = 0; i < ROUTE_MAX_LEN; i++) path[i] = 0;
+                    path[0] = 1000+1; // 斜めS1
+                    path[1] = 704;    // 左45°出
+                    path[2] = 1000+1; // 斜めS1
+                    run();
+                    drive_fan(0);
+                }
                 break;
             case 5: // V90
                 apply_case_params_mode2_idx(idx_diag);
                 apply_turn_v90_mode2();
                 printf("Loaded params: diag V90 (mode2).\n");
-                run_shortest(2, 8);
+                {
+                    const ShortestRunModeParams_t *pm5 = &shortestRunModeParams2;
+                    drive_fan(pm5->fan_power);
+                    for (int i = 0; i < ROUTE_MAX_LEN; i++) path[i] = 0;
+                    path[0] = 1000+1; // 斜めS1
+                    path[1] = 802;    // 左V90
+                    path[2] = 1000+1; // 斜めS1
+                    run();
+                    drive_fan(0);
+                }
                 break;
             case 6: // 135deg 入り
                 apply_case_params_mode2_idx(idx_diag);
                 apply_turn_d135in_mode2();
                 printf("Loaded params: diag 135-in (mode2).\n");
-                run_shortest(2, 8);
+                {
+                    const ShortestRunModeParams_t *pm6 = &shortestRunModeParams2;
+                    drive_fan(pm6->fan_power);
+                    for (int i = 0; i < ROUTE_MAX_LEN; i++) path[i] = 0;
+                    path[0] = 901;    // 右135°入り
+                    path[1] = 1000+1; // 斜めS1
+                    run();
+                    drive_fan(0);
+                }
                 break;
             case 7: // 135deg 出
                 apply_case_params_mode2_idx(idx_diag);
                 apply_turn_d135out_mode2();
                 printf("Loaded params: diag 135-out (mode2).\n");
-                run_shortest(2, 8);
+                {
+                    const ShortestRunModeParams_t *pm7 = &shortestRunModeParams2;
+                    drive_fan(pm7->fan_power);
+                    for (int i = 0; i < ROUTE_MAX_LEN; i++) path[i] = 0;
+                    path[0] = 1000+1; // 斜めS1
+                    path[1] = 904;    // 左135°出
+                    path[2] = 1000+1; // 斜めS1
+                    run();
+                    drive_fan(0);
+                }
                 break;
             default:
                 printf("No sub-mode selected.\n");
