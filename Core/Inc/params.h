@@ -36,6 +36,50 @@
 #define KI_VELOCITY 0.0F// 並進速度制御のI項  0.05F 0.04
 #define KD_VELOCITY 45.0F // 並進速度制御のD項  60.0F 100.0
 
+/*
+ * 吸引ファン ON/OFF で使い分ける PID ゲイン（v1最終の値を使用）
+ * control.c の velocity_PID() / distance_PID() が MF.FLAG.SUCTION を参照して切替
+ */
+#ifndef KP_VELOCITY_FAN_ON
+#define KP_VELOCITY_FAN_ON  0.40F
+#endif
+#ifndef KI_VELOCITY_FAN_ON
+#define KI_VELOCITY_FAN_ON  0.55F
+#endif
+#ifndef KD_VELOCITY_FAN_ON
+#define KD_VELOCITY_FAN_ON  0.0F
+#endif
+
+#ifndef KP_VELOCITY_FAN_OFF
+#define KP_VELOCITY_FAN_OFF 0.03F
+#endif
+#ifndef KI_VELOCITY_FAN_OFF
+#define KI_VELOCITY_FAN_OFF 0.30F
+#endif
+#ifndef KD_VELOCITY_FAN_OFF
+#define KD_VELOCITY_FAN_OFF 0.0F
+#endif
+
+#ifndef KP_DISTANCE_FAN_ON
+#define KP_DISTANCE_FAN_ON  28.0F
+#endif
+#ifndef KI_DISTANCE_FAN_ON
+#define KI_DISTANCE_FAN_ON  0.1F
+#endif
+#ifndef KD_DISTANCE_FAN_ON
+#define KD_DISTANCE_FAN_ON  0.0F
+#endif
+
+#ifndef KP_DISTANCE_FAN_OFF
+#define KP_DISTANCE_FAN_OFF 1.5F
+#endif
+#ifndef KI_DISTANCE_FAN_OFF
+#define KI_DISTANCE_FAN_OFF 0.03F
+#endif
+#ifndef KD_DISTANCE_FAN_OFF
+#define KD_DISTANCE_FAN_OFF 0.0F
+#endif
+
 #define KP_ANGLE 0.0F // 角度制御のP項
 #define KI_ANGLE 0.0F // 角度制御のI項
 #define KD_ANGLE 0.0F // 角度制御のD項

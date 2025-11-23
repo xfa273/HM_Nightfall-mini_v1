@@ -85,24 +85,29 @@ void calculate_rotation(void) {
 
 /*並進速度のPID制御*/
 void velocity_PID(void) {
-
-    // P項
-    velocity_error = target_velocity;
+    // 速度フィードバック: 目標速度（distance_PIDで算出） - 実測速度
+    // target_velocity は distance_PID() 内で更新される
+    velocity_error = target_velocity - real_velocity;
 
     if (velocity_error > 10000 || velocity_error < -10000) {
         MF.FLAG.FAILED = 1;
     }
 
-    // I項
+    // I項（単純積分）
     velocity_integral += velocity_error;
 
     // D項
     velocity_error_error = velocity_error - previous_velocity_error;
 
-    // モータ制御量を計算
-    out_translation = KP_VELOCITY * velocity_error +
-                      KI_VELOCITY * velocity_integral +
-                      KD_VELOCITY * velocity_error_error;
+    // 吸引ON/OFFでゲイン切替（v1最終の値を params.h に定義）
+    const float kp_v = MF.FLAG.SUCTION ? KP_VELOCITY_FAN_ON : KP_VELOCITY_FAN_OFF;
+    const float ki_v = MF.FLAG.SUCTION ? KI_VELOCITY_FAN_ON : KI_VELOCITY_FAN_OFF;
+    const float kd_v = MF.FLAG.SUCTION ? KD_VELOCITY_FAN_ON : KD_VELOCITY_FAN_OFF;
+
+    // モータ制御量を計算（純PID）
+    out_translation =   kp_v * velocity_error
+                      + ki_v * velocity_integral
+                      + kd_v * velocity_error_error;
 
     // 並進速度の偏差を保存
     previous_velocity_error = velocity_error;
@@ -110,22 +115,25 @@ void velocity_PID(void) {
 
 /*並進距離のPID制御*/
 void distance_PID(void) {
-
-    // P項
+    // 位置PID（距離誤差から目標速度を生成）
+    // 誤差
     distance_error = target_distance - real_distance;
-
     // I項
     distance_integral += distance_error;
-
     // D項
     distance_error_error = distance_error - previous_distance_error;
 
-    // 目標並進速度を計算
-    target_velocity = KP_DISTANCE * distance_error +
-                      KI_DISTANCE * distance_integral +
-                      KD_DISTANCE * distance_error_error;
+    // 目標速度（プロファイル速度 + 位置PIDの補正）: 吸引ON/OFFでゲイン切替
+    const float kp_d = MF.FLAG.SUCTION ? KP_DISTANCE_FAN_ON : KP_DISTANCE_FAN_OFF;
+    const float ki_d = MF.FLAG.SUCTION ? KI_DISTANCE_FAN_ON : KI_DISTANCE_FAN_OFF;
+    const float kd_d = MF.FLAG.SUCTION ? KD_DISTANCE_FAN_ON : KD_DISTANCE_FAN_OFF;
 
-    // 並進位置の偏差を保存
+    float v_fb = (kp_d * distance_error)
+               + (ki_d * distance_integral)
+               + (kd_d * distance_error_error);
+    target_velocity = velocity_interrupt + v_fb;
+
+    // 誤差履歴更新
     previous_distance_error = distance_error;
 }
 
