@@ -224,44 +224,33 @@ void wall_PID(void) {
     // 制御フラグがあれば制御
     if (MF.FLAG.CTRL) {
 
-        float wall_error = 0; // ADベース（最新の挙動判定用に保持）
-        float wall_error_mm = 0.0f; // 距離ベースの誤差[mm]
+        float wall_error = 0.0f; // ADベース（最新の挙動判定用に保持）
 
-        // 目標距離は左右とも固定値（params.h）を使用
-        const float d_l_target = WALL_TARGET_DIST_L_MM;
-        const float d_r_target = WALL_TARGET_DIST_R_MM;
-        // 現在距離をAD→距離に換算
-        const float d_l_now = sensor_distance_from_l(ad_l);
-        const float d_r_now = sensor_distance_from_r(ad_r);
-        // 距離ベースの壁有無判定
-        const bool r_has = (d_r_now <= WALL_DETECT_DIST_R_MM);
-        const bool l_has = (d_l_now <= WALL_DETECT_DIST_L_MM);
+        // ADベースの壁有無判定（センサ生値を直接使用）
+        const bool r_has = (ad_r > WALL_BASE_R);
+        const bool l_has = (ad_l > WALL_BASE_L);
 
         if (r_has && l_has) {
             // 左右壁が両方ある場合
             wall_error = (ad_l - base_l) - (ad_r - base_r);
             latest_wall_error = wall_error;
-            wall_error_mm = (d_l_now - d_l_target) - (d_r_now - d_r_target);
         } else if (!r_has && !l_has) {
             // 左右壁が両方ない場合
-            wall_error = 0;
+            wall_error = 0.0f;
             latest_wall_error = wall_error;
-            wall_error_mm = 0.0f;
         } else if (r_has && !l_has) {
             // 右壁のみある場合
-            wall_error = -2 * (ad_r - base_r);
-            latest_wall_error = wall_error*0.5;
-            wall_error_mm = -2.0f * (d_r_now - d_r_target);
+            wall_error = -2.0f * (ad_r - base_r);
+            latest_wall_error = wall_error * 0.5f;
         } else if (!r_has && l_has) {
             // 左壁のみある場合
-            wall_error = 2 * (ad_l - base_l);
-            latest_wall_error = wall_error*0.5;
-            wall_error_mm = 2.0f * (d_l_now - d_l_target);
+            wall_error = 2.0f * (ad_l - base_l);
+            latest_wall_error = wall_error * 0.5f;
         }
 
-        // 横壁制御は距離[mm]ベースの誤差で実行（符号を系に合わせて反転）
+        // ADベースの誤差で制御量を計算（符号を系に合わせて反転）
         // 正のkp_wallで「左が近い→右旋回」「右が近い→左旋回」になるようにする
-        wall_control = - (wall_error_mm * kp_wall);
+        wall_control = - (wall_error * kp_wall);
 
         if(fabsf(out_l)<50 && fabsf(out_r)<50){
             wall_control = 0;
