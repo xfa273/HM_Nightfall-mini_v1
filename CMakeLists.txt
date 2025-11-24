@@ -74,6 +74,7 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     Core/Src/distance_params.c
     Core/Src/shortest_run_params_split.c
     Core/Src/test_mode.c
+    Core/Src/vel_estimator.c
 )
 
 # Add include paths

@@ -8,6 +8,7 @@
 #include "global.h"
 #include "interrupt.h"
 #include "logging.h"
+#include "vel_estimator.h"
 
 // 非同期ADC DMA制御用ステート（8相スケジューラ）
 // 0:RL OFF set, 1:RL OFF capture, 2:RL ON set, 3:RL ON capture,
@@ -89,6 +90,26 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 
         // IMU値の取得
         read_IMU();
+
+        // 速度融合（IMU加速度 × エンコーダ）
+        // 初期化は最初の呼び出し時のみ
+        static uint8_t s_velest_inited = 0;
+        if (!s_velest_inited) {
+            velest_init(0.001f, (uint8_t)VELEST_ENC_WINDOW_MS, VELEST_K_BLEND, VELEST_K_BIAS, VELEST_ACC_LPF_ALPHA);
+            s_velest_inited = 1;
+        }
+        // encの瞬時速度（read_encoderで更新された左右平均）
+        float enc_v_inst = real_velocity;   // [mm/s]
+        float a_imu = IMU_acceleration;     // [mm/s^2]
+        velest_tick(a_imu, enc_v_inst);
+        // 融合速度を取得（制御へ適用するかはマクロで切替）
+        float v_fused = velest_get_v();
+        #if defined(VELEST_USE_FOR_CONTROL) && (VELEST_USE_FOR_CONTROL!=0)
+        real_velocity = v_fused;
+        #else
+        // 既定: 制御はエンコーダ速度のまま（安定優先）。ログは融合値を利用。
+        (void)v_fused;
+        #endif
 
         // バッテリー電圧の監視
         if (ad_bat > 3000) { // 3.3*3060/4095*3=7.4[V]で発動

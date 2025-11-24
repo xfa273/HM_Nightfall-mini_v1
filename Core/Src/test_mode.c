@@ -9,6 +9,7 @@
 #include "solver.h"
 #include "sensor_distance.h"
 #include "distance_params.h"
+#include "vel_estimator.h"
 
 // drive.c と同じ条件でPWM反転するための定義（DIR==Lowで反転が既定）
 #ifndef PWM_INVERT_DIR_LEVEL
@@ -106,11 +107,16 @@ void test_mode() {
             printf("Test Mode 2 Encoder Check.\n");
 
             drive_variable_reset();
+            // 計測安定のため、IMUのオフセット取得と速度推定器のリセットを実施
+            IMU_GetOffset();
+            velest_reset();
 
             while (1) {
 
                 printf("speed L R: %.3f %.3f [mm/s] ,  ", encoder_speed_l,
                        encoder_speed_r);
+                printf("v_est: %.3f [mm/s] , v_enc3ms: %.3f [mm/s] , a_lpf: %.3f [mm/s^2] , a_bias: %.3f , imu_acc: %.3f [mm/s^2] ,  ",
+                       velest_get_v(), velest_get_v_enc(), velest_get_a_lpf(), velest_get_a_bias(), IMU_acceleration);
                 printf("distance: %.3f [mm]\n",
                        (encoder_distance_l + encoder_distance_r) * 0.5);
 

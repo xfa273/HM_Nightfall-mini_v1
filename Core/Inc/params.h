@@ -91,6 +91,44 @@
 
 #define KP_IMU 1.0F // IMUの角速度の補正係数
 
+/*============================================================
+    速度融合（IMU加速度 × エンコーダ）用パラメータ
+    - 3ms窓でエンコーダ速度を生成し、IMUで遅れを補う
+============================================================*/
+#ifndef VELEST_ENC_WINDOW_MS
+#define VELEST_ENC_WINDOW_MS   3     // エンコーダ速度の窓長 [ms]
+#endif
+#ifndef VELEST_K_BLEND
+#define VELEST_K_BLEND         0.30F // 速度補正のブレンド係数 K
+#endif
+#ifndef VELEST_K_BIAS
+#define VELEST_K_BIAS          0.001F// IMU加速度バイアス学習係数
+#endif
+#ifndef VELEST_ACC_LPF_ALPHA
+#define VELEST_ACC_LPF_ALPHA   0.20F // IMU加速度LPF係数（1ms周期）
+#endif
+#ifndef VELEST_NEARSTOP_V_THR
+#define VELEST_NEARSTOP_V_THR  80.0F // 近傍停止スナップしきい値 [mm/s]
+#endif
+// LPF後IMU加速度のクランプ（過大値ガード）[mm/s^2]
+#ifndef VELEST_A_LPF_CLAMP
+#define VELEST_A_LPF_CLAMP     20000.0F
+#endif
+// 速度融合値を制御に使うか（0: ログのみ, 1: 制御に適用）
+#ifndef VELEST_USE_FOR_CONTROL
+#define VELEST_USE_FOR_CONTROL  0
+#endif
+// 安全クランプ
+#ifndef VELEST_V_CLAMP
+#define VELEST_V_CLAMP          3000.0F   // 融合速度の上限 [mm/s]
+#endif
+#ifndef VELEST_A_ERR_CLAMP
+#define VELEST_A_ERR_CLAMP      50000.0F  // a_err=e/T の上限 [mm/s^2]
+#endif
+#ifndef VELEST_A_BIAS_CLAMP
+#define VELEST_A_BIAS_CLAMP     200000.0F // 学習バイアスの上限 [mm/s^2]
+#endif
+
 #define FAIL_COUNT_LR  50    // 左右差フェイルセーフ発動までのカウント数[ms]
 #define FAIL_LR_ERROR  10000 // 左右差フェイルセーフ発動のモータ出力左右差
 #define FAIL_COUNT_ACC 20    // 衝突フェイルセーフ発動までのカウント数[ms]

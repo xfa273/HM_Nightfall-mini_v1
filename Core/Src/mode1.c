@@ -7,6 +7,8 @@
 
 #include "global.h"
 #include "sensor_distance.h"
+#include "../Inc/logging.h"
+#include "vel_estimator.h"
 
 //============================================================
 // 前壁追従（match_position連続実行）テスト
@@ -80,9 +82,11 @@ void mode1() {
         switch (mode) {
         case 0: { // テストモード（mode2同様にサブ選択）
 
-            printf("Mode 1-0 Test (sub 0..1).\n");
+            printf("Mode 1-0 Test (sub 0..9).\n");
             printf("  sub0: Front wall follow (continuous)\n");
             printf("  sub1: Front wall follow + print (continuous)\n");
+            printf("  sub8: Straight x4 blocks (search params) + log\n");
+            printf("  sub9: (reserved)\n");
 
             led_flash(5);
 
@@ -95,6 +99,83 @@ void mode1() {
                 break;
             case 1:
                 front_follow_continuous(1);
+                break;
+            case 2:
+            case 3:
+            case 4:
+            case 5:
+            case 6:
+            case 7:
+                printf("[mode1-0-sub%02d] (placeholder)\n", sub);
+                break;
+            case 8: { // 直進テスト（探索走行パラメータ）+ ログ
+                printf("[mode1-0-sub8] Straight test using search-run params (4 blocks) + logging.\n");
+                
+
+                // 探索走行パラメータ（mode1 case2 相当の代表値）
+                acceleration_straight = 1000;  // [mm/s^2]
+                acceleration_straight_dash = 0; // 未使用
+                velocity_turn90 = 300;         // [mm/s]
+                alpha_turn90 = 8850;           // [deg/s^2]
+                acceleration_turn = 0;
+                dist_offset_in  = 10;          // [mm]
+                dist_offset_out = 16.5f;       // [mm]
+                val_offset_in   = 1750;
+                angle_turn_90   = 89.5f;
+                dist_wall_end   = 0;
+
+                // 壁制御はオフ（直進の固有振動調査のため）
+                kp_wall = 0.0f;
+                MF.FLAG.WALL_ALIGN = 0;
+
+                // 事前準備
+                velocity_interrupt = 0;
+                speed_now = 0;
+                led_flash(3);
+                drive_variable_reset();
+                IMU_GetOffset();
+                drive_enable_motor();
+                led_flash(2);
+                get_base();
+                // 推定器をクリアしてから走行開始
+                velest_reset();
+                drive_start();
+
+                // ログ開始（velocityプロファイルに切替）
+                log_init();
+                log_set_profile(LOG_PROFILE_VELOCITY);
+                log_start(HAL_GetTick());
+
+                // 合計4区画: +0.5 (加速) + 1 + 1 + 1 + 0.5 (減速)
+                half_sectionA(0);     // 0.5区画 加速
+                one_sectionU(1);      // 1区画 等速
+                one_sectionU(1);      // 1区画 等速
+                one_sectionU(1);      // 1区画 等速
+                half_sectionD(0);     // 0.5区画 減速停止
+
+                // ログ停止
+                log_stop();
+                drive_stop();
+
+                // センサEnter待ち（右前=速度ログ, 左前=距離ログ）
+                printf("[mode1-case0-sub8] Press RIGHT FRONT for VELOCITY (FR>%u), LEFT FRONT for DISTANCE (FL>%u) ...\n",
+                       (unsigned)WALL_BASE_FR, (unsigned)WALL_BASE_FL);
+                while (1) {
+                    if (ad_fr > WALL_BASE_FR) {
+                        log_print_velocity_all();
+                        break;
+                    } else if (ad_fl > WALL_BASE_FL) {
+                        log_print_distance_all();
+                        break;
+                    }
+                    HAL_Delay(50);
+                }
+
+                led_flash(5);
+                break;
+            }
+            case 9:
+                printf("[mode1-0-sub09] (placeholder)\n");
                 break;
             default:
                 printf("No sub-mode selected.\n");

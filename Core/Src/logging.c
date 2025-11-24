@@ -2,6 +2,7 @@
 #include "interrupt.h"
 #include "logging.h"
 #include "stdio.h"
+#include "vel_estimator.h"
 
 // 現在のログプロファイル（取得内容の切替）
 static volatile LogProfile s_log_profile = LOG_PROFILE_OMEGA;
@@ -167,14 +168,14 @@ void log_capture_tick(void) {
         break;
 
     case LOG_PROFILE_VELOCITY:
-        // 並進速度（主バッファ）
+        // 並進速度（主バッファ）: param2=v_est（融合速度）, param3=enc窓速度, param4=IMU a_lpf
         log_add_entry(
             (uint16_t)log_buffer.count,
-            velocity_interrupt,
-            real_velocity,
-            KP_VELOCITY * velocity_error,
-            KI_VELOCITY * velocity_integral,
-            KD_VELOCITY * velocity_error_error,
+            velocity_interrupt,                 // param1 (target v)
+            velest_get_v(),                     // param2 (v_est: fused)
+            velest_get_v_enc(),                 // param3 (v_enc_windowed)
+            velest_get_a_lpf(),                 // param4 (a_imu_lpf)
+            KD_VELOCITY * velocity_error_error, // param5（既存のD項のまま）
             (float)out_r,
             (float)out_l,
             current_time

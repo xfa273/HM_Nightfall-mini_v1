@@ -55,7 +55,8 @@ void read_IMU(void) {
     real_omega = -omega_z_true * KP_IMU;
     IMU_angle += omega_z_true * 0.001;
     real_angle = IMU_angle;
-    IMU_acceleration = accel_y_true * 1000;
+    // accel_y_true は[g]単位 -> [mm/s^2]へ換算（1g=9806.65 mm/s^2）
+    IMU_acceleration = accel_y_true * 9806.65f;
 }
 
 /*並進の積算計算*/
