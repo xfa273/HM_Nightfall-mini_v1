@@ -173,7 +173,7 @@ void mode1() {
             dist_wall_end = 0;
 
             // 壁制御とケツ当て
-            kp_wall = 0.04;
+            kp_wall = 0.12;
             duty_setposition = 40;
 
             // 壁判断しきい値の係数

@@ -12,7 +12,6 @@
 #include "sensor.h"
 #include "interrupt.h"
 #include "logging.h"
-#include "sensor_distance.h"
 #include <math.h>
 #include <stdlib.h>
 
@@ -1128,7 +1127,7 @@ void match_position(uint16_t target_value) {
         if (w_cmd < -MATCH_POS_OMEGA_MAX) w_cmd = -MATCH_POS_OMEGA_MAX;
         omega_interrupt = w_cmd;
 
-        HAL_Delay(1); // 2ms周期で更新（ISRは1kHz）
+        HAL_Delay(1); // 1ms周期で更新（ISRは1kHz）
         count++;
     }
 

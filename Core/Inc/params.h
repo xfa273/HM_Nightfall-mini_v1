@@ -15,7 +15,7 @@
     走行系
 ------------------------------------------------------------*/
 /*走行パラメータ*/
-#define D_TIRE            13.95F  // タイヤ直径[mm] 13.75F
+#define D_TIRE            13.85F  // タイヤ直径[mm] 13.75F
 #define DIST_HALF_SEC     45     // 迷路の半区間距離[mm]
 #define DIST_D_HALF_SEC   67.279 // 斜めの半区間距離[mm]
 #define DIST_FIRST_SEC    13     // 最初の区画の距離[mm]
@@ -172,13 +172,6 @@
 // 区画中央における前壁センサの目標値（実機で調整）
 #define F_ALIGN_TARGET_FR    1420
 #define F_ALIGN_TARGET_FL    1420
-// 距離換算(LUT)を用いる match_position 専用の目標距離[mm]（v1値を採用）
-#ifndef F_ALIGN_TARGET_FR_MM
-#define F_ALIGN_TARGET_FR_MM    10.0f
-#endif
-#ifndef F_ALIGN_TARGET_FL_MM
-#define F_ALIGN_TARGET_FL_MM    10.0f
-#endif
 // 小鷺田寮: FR3750 FL3790
 // 九州: FR3587 FL3587
 
@@ -186,58 +179,14 @@
 #define F_ALIGN_DETECT_THR   500
 
 // 閉ループ制御ゲイン（実機調整用）
-#define MATCH_POS_KP_TRANS   -0.48F   // [mm/s] / [ADcount]
+#define MATCH_POS_KP_TRANS   -0.4F   // [mm/s] / [ADcount]
 #define MATCH_POS_KP_ROT     0.2F   // [deg/s] / [ADcount]
-// 距離換算(LUT)を用いる match_position 専用のゲイン・許容値（単位: mm）
-#ifndef MATCH_POS_KP_TRANS_MM
-#define MATCH_POS_KP_TRANS_MM   10.0F    // [mm/s]/[mm]（v1最終）
-#endif
-#ifndef MATCH_POS_KP_ROT_MM
-#define MATCH_POS_KP_ROT_MM    0.0F    // [deg/s]/[mm]（v1最終）
-#endif
-
-// 追加: I, D 成分（必要に応じて有効化。既定は0=無効）
-#ifndef MATCH_POS_KI_TRANS_MM
-#define MATCH_POS_KI_TRANS_MM    0.0F    // [mm/s]/([mm]*s)
-#endif
-#ifndef MATCH_POS_KD_TRANS_MM
-#define MATCH_POS_KD_TRANS_MM    1.0F    // [mm/s]/([mm]/s)
-#endif
-#ifndef MATCH_POS_KI_ROT_MM
-#define MATCH_POS_KI_ROT_MM      0.0F    // [deg/s]/([mm]*s)
-#endif
-#ifndef MATCH_POS_KD_ROT_MM
-#define MATCH_POS_KD_ROT_MM      0.0F    // [deg/s]/([mm]/s)
-#endif
-
-// I成分の寄与上限（アンチワインドアップ用）
-#ifndef MATCH_POS_I_VEL_MAX
-#define MATCH_POS_I_VEL_MAX      80.0F   // [mm/s]
-#endif
-#ifndef MATCH_POS_I_OMEGA_MAX
-#define MATCH_POS_I_OMEGA_MAX    120.0F  // [deg/s]
-#endif
-
-// D成分の一次遅れフィルタ係数（0..1、値が大きいほど追従が速い＝ノイズに弱い）
-#ifndef MATCH_POS_D_ALPHA_TRANS
-#define MATCH_POS_D_ALPHA_TRANS  0.2F
-#endif
-#ifndef MATCH_POS_D_ALPHA_ROT
-#define MATCH_POS_D_ALPHA_ROT    0.2F
-#endif
 
 // 飽和・許容値・タイムアウト
 #define MATCH_POS_VEL_MAX     200.0F   // [mm/s]
 #define MATCH_POS_OMEGA_MAX   300.0F   // [deg/s]
 #define MATCH_POS_TOL         100       // [ADcount]
 #define MATCH_POS_TOL_ANGLE   40       // [ADcount]
-// mm版の許容値
-#ifndef MATCH_POS_TOL_MM
-#define MATCH_POS_TOL_MM        1.5F    // [mm]
-#endif
-#ifndef MATCH_POS_TOL_ANGLE_MM
-#define MATCH_POS_TOL_ANGLE_MM  1.5F    // [mm]
-#endif
 #define MATCH_POS_TIMEOUT_MS  20     // [ms]
 // 収束判定：FR/FL が目標±MATCH_POS_TOL 内に連続して入る必要回数（2ms/loop前提）
 #define MATCH_POS_STABLE_COUNT 100      // [loop] ≒ 400ms
