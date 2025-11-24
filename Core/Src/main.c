@@ -29,6 +29,7 @@
 #include "mode3.h"
 #include "mode4.h"
 #include "mode5.h"
+#include "distance_params.h"
 
 /* Some build configurations missed the prototype; ensure it's visible */
 void mode5(void);
@@ -149,6 +150,13 @@ int main(void)
 
     sensor_init();
 
+    // 距離ワープ補正（FL/FR/FSUM）をフラッシュから読み込み・適用
+    if (distance_params_load_and_apply()) {
+        printf("[Boot] Distance warp params loaded from Flash.\n");
+    } else {
+        printf("[Boot] Distance warp params not found (using defaults).\n");
+    }
+
     // 起動直後に割込みが動作し、ad_bat が更新されるのを少し待つ
     HAL_Delay(50);
 
@@ -183,19 +191,13 @@ int main(void)
         switch (mode)
         {
             case 0:
-                printf("Mode 0: Recalibrate sensors and save to Flash.\n");
+                printf("Mode 0.\n");
 
-                led_flash(5);
-                
-                HAL_StatusTypeDef st = sensor_recalibrate_and_save();
-                if (st == HAL_OK) {
-                        printf("Sensor parameters saved to Flash successfully.\n");
-                        buzzer_beep(1200);
-                    } else {
-                        printf("Failed to save sensor parameters. HAL status=%d\n", st);
-                        buzzer_beep(3000);
-                    }
-                
+                while (1) {
+                  HAL_GPIO_WritePin(LED_1_GPIO_Port, LED_1_Pin, GPIO_PIN_SET);
+                  HAL_GPIO_WritePin(LED_2_GPIO_Port, LED_2_Pin, GPIO_PIN_SET);
+                  HAL_GPIO_WritePin(LED_3_GPIO_Port, LED_3_Pin, GPIO_PIN_SET);
+                }
                 break;
 
             case 1:

@@ -7,11 +7,62 @@
 
 #include "global.h"
 #include "solver.h"
+#include "sensor_distance.h"
+#include "distance_params.h"
 
 // drive.c と同じ条件でPWM反転するための定義（DIR==Lowで反転が既定）
 #ifndef PWM_INVERT_DIR_LEVEL
 #define PWM_INVERT_DIR_LEVEL 0
 #endif
+
+//============================================================
+// Front sensors averaging helper (blocking)
+// samples: number of samples, interval_ms: delay between samples
+// out: average FR/FL (uint16)
+//============================================================
+static void sample_front_avg(int samples, int interval_ms, uint16_t *avg_fr, uint16_t *avg_fl)
+{
+    uint32_t sum_fr = 0, sum_fl = 0;
+    for (int i = 0; i < samples; i++) {
+        sum_fr += (uint32_t)ad_fr;
+        sum_fl += (uint32_t)ad_fl;
+        HAL_Delay(interval_ms);
+    }
+    if (avg_fr) *avg_fr = (uint16_t)(sum_fr / (uint32_t)samples);
+    if (avg_fl) *avg_fl = (uint16_t)(sum_fl / (uint32_t)samples);
+}
+
+// Capture helper for case7 (C version)
+static void capture_anchor_point(int idx, const char *label,
+                                 const float y_true[3],
+                                 float x_est_fl[3], float x_est_fr[3], float x_est_fsum[3],
+                                 int samples, int interval_ms)
+{
+    printf("Place front at %s anchor (%.1fmm). Press PUSH to start...\n",
+           label, (double)y_true[idx]);
+    // wait for push (active-low)
+    while (HAL_GPIO_ReadPin(PUSH_IN_1_GPIO_Port, PUSH_IN_1_Pin) != 0) {
+        HAL_Delay(50);
+    }
+    buzzer_enter(900);
+    uint16_t afr = 0, afl = 0;
+    sample_front_avg(samples, interval_ms, &afr, &afl);
+    uint32_t sum = (uint32_t)afr + (uint32_t)afl;
+    if (sum > 0xFFFFu) sum = 0xFFFFu;
+    float est_fl = sensor_distance_from_fl_unwarped(afl);
+    float est_fr = sensor_distance_from_fr_unwarped(afr);
+    float est_fsum = sensor_distance_from_fsum_unwarped((uint16_t)sum);
+    x_est_fl[idx] = est_fl;
+    x_est_fr[idx] = est_fr;
+    x_est_fsum[idx] = est_fsum;
+    printf("[Captured %s] FR=%u -> %.2fmm(est), FL=%u -> %.2fmm(est), SUM=%u -> %.2fmm(est)\n",
+           label, (unsigned)afr, (double)est_fr, (unsigned)afl, (double)est_fl, (unsigned)sum, (double)est_fsum);
+    led_flash(2);
+    // wait for release to avoid immediate next trigger
+    while (HAL_GPIO_ReadPin(PUSH_IN_1_GPIO_Port, PUSH_IN_1_Pin) == 0) {
+        HAL_Delay(30);
+    }
+}
 
 void test_mode() {
 
@@ -68,11 +119,13 @@ void test_mode() {
 
             break;
         case 3:
-            printf("Test Mode 3 Sensor AD Value Check.\n");
+            printf("Test Mode 3 Sensor AD Value Check (+ front distance).\n");
 
             while (1) {
-                printf("R: %d, L: %d, FR: %d, FL: %d, BAT: %d\n", ad_r, ad_l,
-                       ad_fr, ad_fl, ad_bat);
+                float d_fr = sensor_distance_from_fr(ad_fr);
+                float d_fl = sensor_distance_from_fl(ad_fl);
+                printf("R: %d, L: %d, FR: %d (%.1fmm), FL: %d (%.1fmm), BAT: %d\n",
+                       ad_r, ad_l, ad_fr, d_fr, ad_fl, d_fl, ad_bat);
 
                 HAL_Delay(300);
             }
@@ -288,116 +341,125 @@ void test_mode() {
             break;
 
         case 7:
+            printf("Test Mode 7: Front distance 3-point warp calibration.\n");
+            printf("Anchors (mm): %.1f, %.1f, %.1f\n",
+                   (double)SENSOR_WARP_ANCHOR0_MM,
+                   (double)SENSOR_WARP_ANCHOR1_MM,
+                   (double)SENSOR_WARP_ANCHOR2_MM);
 
-            printf("Test Mode 7 Circuit.\n");
-
-            // 直線
-            acceleration_straight = 10888.9;
-            acceleration_straight_dash = 28000;
-            velocity_straight = 5000;
-            // 90°大回りターン
-            velocity_l_turn_90 = 2200;
-            alpha_l_turn_90 = 28500;
-            angle_l_turn_90 = 85.0;
-            dist_l_turn_out_90 = 101;
-            // 壁制御とケツ当て
-            kp_wall = 0.3;
-            duty_setposition = 40;
-
-            velocity_interrupt = 0;
-
-            led_flash(10);
-
-            drive_variable_reset();
-            IMU_GetOffset();
-            drive_enable_motor();
-            led_flash(5);
-            get_base();
-            drive_fan(800);
-            led_flash(5);
-
-            first_sectionA();
-
-            // 1回目の直線
-            run_straight(12, velocity_straight, 0);
-            run_straight(4, velocity_straight, 0);
-            run_straight(12, velocity_l_turn_90, 0);
-
-            // 1回目のターン
-            l_turn_R90();
-
-            // 2回目の直線
-            run_straight(12, velocity_straight, 0);
-            run_straight(2, velocity_straight, 0);
-            run_straight(12, velocity_l_turn_90, 0);
-
-            // 2回目のターン
-            l_turn_R90();
-
-            // 3回目の直線
-            run_straight(12, velocity_straight, 0);
-            run_straight(2, velocity_straight, 0);
-            run_straight(12, velocity_l_turn_90, 0);
-
-            // 3回目のターン
-            l_turn_R90();
-
-            // 4回目の直線
-            run_straight(12, velocity_straight, 0);
-            run_straight(2, velocity_straight, 0);
-            run_straight(12, velocity_l_turn_90, 0);
-
-            // 4回目のターン
-            l_turn_R90();
-
-            // 5回目の直線
-            run_straight(12, velocity_straight, 0);
-            run_straight(2, velocity_straight, 0);
-            run_straight(12, velocity_l_turn_90, 0);
-
-            // 5回目のターン
-            l_turn_R90();
-
-            // 6回目の直線
-            run_straight(12, velocity_straight, 0);
-            run_straight(2, velocity_straight, 0);
-            run_straight(12, velocity_l_turn_90, 0);
-
-            // 6回目のターン
-            l_turn_R90();
-
-            // 7回目の直線
-            run_straight(12, velocity_straight, 0);
-            run_straight(2, velocity_straight, 0);
-            run_straight(12, velocity_l_turn_90, 0);
-
-            // 7回目のターン
-            l_turn_R90();
-
-            // 8回目の直線
-            run_straight(12, velocity_straight, 0);
-            run_straight(2, velocity_straight, 0);
-            run_straight(12, velocity_l_turn_90, 0);
-
-            // 8回目のターン
-            l_turn_R90();
-
-            half_sectionD(0);
-
+            // Safety: stop fan and any motion
             drive_fan(0);
+            velocity_interrupt = 0; omega_interrupt = 0;
+            MF.FLAG.CTRL = 0; // disable wall control
 
-            led_flash(5);
-            drive_stop();
+            const float y_true[3] = {
+                SENSOR_WARP_ANCHOR0_MM,
+                SENSOR_WARP_ANCHOR1_MM,
+                SENSOR_WARP_ANCHOR2_MM
+            };
+            float x_est_fl[3] = {0}, x_est_fr[3] = {0}, x_est_fsum[3] = {0};
+            const int SAMPLES = 400;     // ~2s at 5ms
+            const int INTERVAL = 5;      // ms
 
+            // Capture near/mid/far
+            capture_anchor_point(0, "NEAR", y_true, x_est_fl, x_est_fr, x_est_fsum, SAMPLES, INTERVAL);
+            capture_anchor_point(1, "MID",  y_true, x_est_fl, x_est_fr, x_est_fsum, SAMPLES, INTERVAL);
+            capture_anchor_point(2, "FAR",  y_true, x_est_fl, x_est_fr, x_est_fsum, SAMPLES, INTERVAL);
+
+            // Apply warps
+            sensor_distance_set_warp_fl_3pt(x_est_fl, y_true);
+            sensor_distance_set_warp_fr_3pt(x_est_fr, y_true);
+            sensor_distance_set_warp_front_sum_3pt(x_est_fsum, y_true);
+            printf("Applied 3-point warp for FL/FR/FSUM.\n");
+            buzzer_beep(1200);
+
+            // Persist to Flash
+            HAL_StatusTypeDef stw = distance_params_save(x_est_fl, y_true,
+                                                         x_est_fr, y_true,
+                                                         x_est_fsum, y_true);
+            if (stw == HAL_OK) {
+                printf("Saved distance warp params to Flash (Sector 9).\n");
+                buzzer_beep(1800);
+            } else {
+                printf("Failed to save distance warp params. HAL=%d\n", stw);
+                buzzer_beep(3000);
+            }
+
+            // Quick verification readout loop (optional): press FR to print 10 lines, FL to exit
+            printf("Verification: Press RIGHT FRONT (FR>%u) to print 10 samples, LEFT FRONT (FL>%u) to exit.\n",
+                   (unsigned)WALL_BASE_FR, (unsigned)WALL_BASE_FL);
+            while (1) {
+                if (ad_fr > WALL_BASE_FR) {
+                    for (int i=0;i<10;i++) {
+                        float dfr = sensor_distance_from_fr(ad_fr);
+                        float dfl = sensor_distance_from_fl(ad_fl);
+                        uint32_t s = (uint32_t)ad_fr + (uint32_t)ad_fl;
+                        if (s > 0xFFFFu) s = 0xFFFFu;
+                        float df = sensor_distance_from_fsum((uint16_t)s);
+                        printf("[Now] FR=%u(%.2fmm), FL=%u(%.2fmm), SUM=%u(%.2fmm)\n",
+                               (unsigned)ad_fr, (double)dfr, (unsigned)ad_fl, (double)dfl, (unsigned)s, (double)df);
+                        HAL_Delay(200);
+                    }
+                } else if (ad_fl > WALL_BASE_FL) {
+                    break;
+                }
+                HAL_Delay(50);
+            }
+
+            led_flash(3);
             break;
 
         case 8:
 
-            printf("Test Mode 8 .\n");
+            printf("Test Mode 8: Side Wall Baseline Auto-Calibration (L/R).\n");
+            printf("Place the robot at cell center with walls on BOTH sides.\n");
+            printf("Fan will be stopped to reduce noise. Sampling will start shortly...\n");
 
-            // 新ソルバで経路導出（mode=3, case=3 をデフォルト例として使用）
-            solver_run(3, 3);
+            // 安定化のため少し待つ
+            drive_fan(0);
+            HAL_Delay(300);
 
+            // サンプリング条件
+            const int SAMPLE_COUNT = 600; // 約3秒 @5ms
+            const int SAMPLE_INTERVAL_MS = 5;
+
+            uint32_t sum_l = 0;
+            uint32_t sum_r = 0;
+
+            // 初期値を表示
+            printf("Initial AD: L=%u, R=%u (thresholds L=%u, R=%u)\n",
+                   (unsigned)ad_l, (unsigned)ad_r,
+                   (unsigned)WALL_BASE_L, (unsigned)WALL_BASE_R);
+
+            // 計測
+            for (int i = 0; i < SAMPLE_COUNT; i++) {
+                sum_l += (uint32_t)ad_l;
+                sum_r += (uint32_t)ad_r;
+                HAL_Delay(SAMPLE_INTERVAL_MS);
+            }
+
+            uint16_t avg_l = (uint16_t)(sum_l / (uint32_t)SAMPLE_COUNT);
+            uint16_t avg_r = (uint16_t)(sum_r / (uint32_t)SAMPLE_COUNT);
+
+            // ランタイム基準値に適用
+            base_l = avg_l;
+            base_r = avg_r;
+
+            printf("Measured side baselines -> L=%u, R=%u\n",
+                   (unsigned)base_l, (unsigned)base_r);
+
+            // フラッシュへ保存
+            HAL_StatusTypeDef st2 = sensor_params_save_to_flash();
+            if (st2 == HAL_OK) {
+                printf("Saved to Flash successfully.\n");
+                buzzer_beep(1200);
+            } else {
+                printf("Failed to save to Flash. HAL status=%d\n", st2);
+                buzzer_beep(3000);
+            }
+
+            // 完了合図
+            led_flash(5);
             break;
 
         case 9:

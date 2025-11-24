@@ -8,6 +8,7 @@
 #include "global.h"
 #include "../Inc/shortest_run_params.h"
 #include "../Inc/run.h"
+#include "../Inc/logging.h"
 
 // Helper loaders: apply case/mode parameters to runtime globals (mode3)
 static void apply_case_params_mode3_idx(int idx) {
@@ -105,9 +106,9 @@ void mode3() {
         mode = select_mode(mode);
 
         switch (mode) {
-        case 0: { // 調整モード選択（0..7）
+        case 0: { // 調整モード選択（0..9）
 
-            printf("Mode 3-0 Turn Tuning (sub 0..7).\n");
+            printf("Mode 3-0 Turn/Diagonal/Straight Test (sub 0..9).\n");
 
             led_flash(5);
 
@@ -144,6 +145,7 @@ void mode3() {
                 drive_fan(0);
                 drive_stop();
                 break;
+            /* moved case8/9 below after case7 */
             case 1: // 最短(case1)
                 apply_case_params_mode3_idx(idx_normal);
                 apply_turn_large90_mode3();
@@ -319,6 +321,98 @@ void mode3() {
                 drive_fan(0);
                 drive_stop();
                 break;
+            case 8: { // Straight test using case1 params (index0)
+                // 直進テスト: mode3 の case1（index0）の直線パラメータを使用
+                apply_case_params_mode3_idx(0);
+                kp_wall = 0.0f; // テスト時は壁制御を無効化
+                printf("Loaded params: straight test (mode3, case8 -> case1 params).\n");
+
+                // fan_power を反映（代替案A）
+                drive_fan(shortestRunModeParams3.fan_power);
+
+                // ログ開始（距離プロファイル）
+                log_init();
+                log_set_profile(LOG_PROFILE_DISTANCE);
+                log_start(HAL_GetTick());
+
+                // path を上書きして run()
+                for (int i = 0; i < ROUTE_MAX_LEN; i++) path[i] = 0;
+                // 直進：初期 half_sectionA(S2) + S3 + 最後の half_sectionD(S1) = 合計S6
+                path[0] = 200 + 5; // S3 (半区画×3)
+                path[1] = 0;
+
+                // 実行
+                run();
+
+                // fan停止
+                drive_fan(0);
+
+                // ログ停止
+                log_stop();
+
+                // センサEnter待ち（右前=速度ログ, 左前=距離ログ）
+                printf("[mode3-case8] Press RIGHT FRONT for VELOCITY (FR>%u), LEFT FRONT for DISTANCE (FL>%u) ...\n",
+                       (unsigned)WALL_BASE_FR, (unsigned)WALL_BASE_FL);
+                while (1) {
+                    if (ad_fr > WALL_BASE_FR) {
+                        log_print_velocity_all();
+                        break;
+                    } else if (ad_fl > WALL_BASE_FL) {
+                        log_print_distance_all();
+                        break;
+                    }
+                    HAL_Delay(50);
+                }
+
+                led_flash(5);
+                break;
+            }
+            case 9: { // Straight test using case7 params (index6)
+                // 直進テスト: mode3 の case7（index6）の直線パラメータを使用
+                apply_case_params_mode3_idx(6);
+                kp_wall = 0.0f; // テスト時は壁制御を無効化
+                printf("Loaded params: straight test (mode3, case9 -> case7 params).\n");
+
+                // fan_power を反映（代替案A）
+                drive_fan(shortestRunModeParams3.fan_power);
+
+                // ログ開始（速度プロファイル）
+                log_init();
+                log_set_profile(LOG_PROFILE_VELOCITY);
+                log_start(HAL_GetTick());
+
+                // path を上書きして run()
+                for (int i = 0; i < ROUTE_MAX_LEN; i++) path[i] = 0;
+                // 直進：初期 half_sectionA(S2) + S3 + 最後の half_sectionD(S1) = 合計S6
+                path[0] = 200 + 5; // S3
+                path[1] = 0;
+
+                // 実行
+                run();
+
+                // fan停止
+                drive_fan(0);
+
+                // ログ停止
+                log_stop();
+
+                // センサEnter待ち（右前=速度ログ, 左前=距離ログ）
+                printf("[mode3-case9] Press RIGHT FRONT for VELOCITY (FR>%u), LEFT FRONT for DISTANCE (FL>%u) ...\n",
+                       (unsigned)WALL_BASE_FR, (unsigned)WALL_BASE_FL);
+                while (1) {
+                    if (ad_fr > WALL_BASE_FR) {
+                        log_print_velocity_all();
+                        break;
+                    } else if (ad_fl > WALL_BASE_FL) {
+                        log_print_distance_all();
+                        break;
+                    }
+                    HAL_Delay(50);
+                }
+
+                led_flash(5);
+                break;
+            }
             default:
                 printf("No sub-mode selected.\n");
                 break;

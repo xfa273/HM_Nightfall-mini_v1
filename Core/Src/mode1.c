@@ -6,6 +6,69 @@
  */
 
 #include "global.h"
+#include "sensor_distance.h"
+
+//============================================================
+// 前壁追従（match_position連続実行）テスト
+//  with_print!=0 でFR/FLのAD値と距離[mm]を定期表示
+//  PUSHボタン押下で終了
+//============================================================
+static void front_follow_continuous(int with_print)
+{
+    printf("[FrontFollow] match_position continuous. Press PUSH to exit.\n");
+    led_flash(3);
+
+    // 側壁制御を無効化して前壁のみで合わせる
+    MF.FLAG.CTRL = 0;
+    kp_wall = 0.0f;
+
+    // 走行開始準備
+    drive_variable_reset();
+    IMU_GetOffset();
+    drive_enable_motor();
+    drive_start();
+
+    uint32_t last_print = HAL_GetTick();
+
+    while (1) {
+        // 抜け条件：PUSHボタン
+        if (HAL_GPIO_ReadPin(PUSH_IN_1_GPIO_Port, PUSH_IN_1_Pin) == 0) {
+            buzzer_enter(900);
+            break;
+        }
+
+        // 前壁が見えているときに位置合わせを実行
+        if (ad_fr > F_ALIGN_DETECT_THR && ad_fl > F_ALIGN_DETECT_THR) {
+            match_position(0);
+        } else {
+            // 待機（見えていない間は停止）
+            velocity_interrupt = 0;
+            omega_interrupt = 0;
+            HAL_Delay(50);
+        }
+
+        // 任意の表示
+        if (with_print) {
+            uint32_t now = HAL_GetTick();
+            if (now - last_print >= 200) {
+                float d_fr = sensor_distance_from_fr(ad_fr);
+                float d_fl = sensor_distance_from_fl(ad_fl);
+                printf("FR=%u (%.1fmm), FL=%u (%.1fmm)\n",
+                       (unsigned)ad_fr, d_fr, (unsigned)ad_fl, d_fl);
+                last_print = now;
+            }
+        }
+
+        HAL_Delay(10);
+    }
+
+    // 停止処理
+    velocity_interrupt = 0;
+    omega_interrupt = 0;
+    drive_variable_reset();
+    drive_stop();
+    led_flash(2);
+}
 
 void mode1() {
 
@@ -15,17 +78,31 @@ void mode1() {
         mode = select_mode(mode);
 
         switch (mode) {
-        case 0: // LED全部点灯
+        case 0: { // テストモード（mode2同様にサブ選択）
 
-            printf("Mode 1-0.\n");
+            printf("Mode 1-0 Test (sub 0..1).\n");
+            printf("  sub0: Front wall follow (continuous)\n");
+            printf("  sub1: Front wall follow + print (continuous)\n");
 
-            while (1) {
-                HAL_GPIO_WritePin(LED_1_GPIO_Port, LED_1_Pin, GPIO_PIN_SET);
-                HAL_GPIO_WritePin(LED_2_GPIO_Port, LED_2_Pin, GPIO_PIN_SET);
-                HAL_GPIO_WritePin(LED_3_GPIO_Port, LED_3_Pin, GPIO_PIN_SET);
+            led_flash(5);
+
+            int sub = 0;
+            sub = select_mode(sub);
+
+            switch (sub) {
+            case 0:
+                front_follow_continuous(0);
+                break;
+            case 1:
+                front_follow_continuous(1);
+                break;
+            default:
+                printf("No sub-mode selected.\n");
+                break;
             }
 
             break;
+        }
 
         case 8: // 足立法 ゴール到達で終了 300mm/s
 
@@ -77,7 +154,7 @@ void mode1() {
 
             break;
 
-        case 1: // 足立法全面探索 300mm/s
+        case 1: { // 
 
             printf("Mode 1-1.\n");
 
@@ -96,7 +173,7 @@ void mode1() {
             dist_wall_end = 0;
 
             // 壁制御とケツ当て
-            kp_wall = 0.015;
+            kp_wall = 0.04;
             duty_setposition = 40;
 
             // 壁判断しきい値の係数
@@ -123,6 +200,7 @@ void mode1() {
             led_wait();
 
             break;
+        }
 
         case 2: // 足立法全面探索 300mm/s
 

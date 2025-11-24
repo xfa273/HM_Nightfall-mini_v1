@@ -12,7 +12,9 @@
 #include "sensor.h"
 #include "interrupt.h"
 #include "logging.h"
+#include "sensor_distance.h"
 #include <math.h>
+#include <stdlib.h>
 
 // ==== Motor control params (sign-magnitude) ====
 // 周波数は TIM 設定に従う（本実装では変更しない）
@@ -1091,20 +1093,19 @@ void match_position(uint16_t target_value) {
     omega_interrupt = 0;
     drive_start();
 
-    const float dt = 0.002f; // 2ms刻み
     int stable_count = 0;
     uint32_t count = 0;
 
     while (count < 2000 && ad_fr > WALL_BASE_FR * 1.5 && ad_fl > WALL_BASE_FL * 1.5) {
 
-        // 誤差算出（+は目標より近い/右が強い）
-        float e_fr = (float)((int32_t)ad_fr - (int32_t)F_ALIGN_TARGET_FR);
-        float e_fl = (float)((int32_t)ad_fl - (int32_t)F_ALIGN_TARGET_FL);
-        float e_pos = 0.5f * (e_fr + e_fl);   // 並進：平均を使う
-        float e_ang = (e_fr - e_fl);          // 角度：差分を使う
+        // センサ生値[ADcount]ベースの誤差算出（+は目標より遠い/右が遠い）
+        int e_fr_cnt = (int)ad_fr - (int)F_ALIGN_TARGET_FR; // [ADcount]
+        int e_fl_cnt = (int)ad_fl - (int)F_ALIGN_TARGET_FL; // [ADcount]
+        float e_pos = 0.5f * (float)(e_fr_cnt + e_fl_cnt);  // 並進：平均（正: 遠い→前進）
+        float e_ang = (float)(e_fr_cnt - e_fl_cnt);         // 角度：差分（正: 右が遠い）
 
         // 収束判定（両センサが目標±MATCH_POS_TOL 内に連続して入ったら終了）
-        if (fabsf(e_fr) <= MATCH_POS_TOL && fabsf(e_fl) <= MATCH_POS_TOL) {
+        if ((float)abs(e_fr_cnt) <= (float)MATCH_POS_TOL && (float)abs(e_fl_cnt) <= (float)MATCH_POS_TOL) {
             stable_count++;
         } else {
             stable_count = 0;
@@ -1114,19 +1115,20 @@ void match_position(uint16_t target_value) {
             break;
         }
 
-        // 並進は target_distance を微小更新して distance_PID を活用
-        float v_cmd = -MATCH_POS_KP_TRANS * e_pos; // [mm/s]
+        // 並進は速度FBへ直接指示（velocity_interrupt を更新）
+        // 距離が遠い(+e_pos)ときは前進(+)させる
+        float v_cmd = MATCH_POS_KP_TRANS * e_pos; // [mm/s] / [ADcount]
         if (v_cmd >  MATCH_POS_VEL_MAX) v_cmd =  MATCH_POS_VEL_MAX;
         if (v_cmd < -MATCH_POS_VEL_MAX) v_cmd = -MATCH_POS_VEL_MAX;
-        target_distance += v_cmd * dt; // 目標位置を増減
+        velocity_interrupt = v_cmd;
 
         // 角度は omega_interrupt を直接与えて omega_PID を活用
-        float w_cmd = MATCH_POS_KP_ROT * e_ang; // [deg/s]
+        float w_cmd = MATCH_POS_KP_ROT * e_ang; // [deg/s] / [ADcount]
         if (w_cmd >  MATCH_POS_OMEGA_MAX) w_cmd =  MATCH_POS_OMEGA_MAX;
         if (w_cmd < -MATCH_POS_OMEGA_MAX) w_cmd = -MATCH_POS_OMEGA_MAX;
         omega_interrupt = w_cmd;
 
-        HAL_Delay(2); // 2ms周期で更新（ISRは1kHz）
+        HAL_Delay(1); // 2ms周期で更新（ISRは1kHz）
         count++;
     }
 

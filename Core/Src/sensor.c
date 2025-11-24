@@ -185,10 +185,13 @@ uint8_t get_base() {
     uint8_t res = 1; // 理想的な値を取得できたか
 
     //----制御用の基準を取得----
-    // base_l = ad_l; // 現在の左側のセンサ値で決定
-    // base_r = ad_r; // 現在の右側のセンサ値で決定
-    base_l = WALL_CTRL_BASE_L;
-    base_r = WALL_CTRL_BASE_R;
+    // フラッシュからロード済み/テストモードで計測済みの base_l/base_r が非ゼロならそれを優先
+    // 未設定（0）の場合のみ、コンパイル時マクロにフォールバック
+    if (base_l == 0 || base_r == 0) {
+        base_l = WALL_CTRL_BASE_L;
+        base_r = WALL_CTRL_BASE_R;
+    }
+    // 前壁合成は毎回現在値から算出
     base_f = ad_fl + ad_fr;
 
     // printf("base: %d,%d\n", base_l, base_r);

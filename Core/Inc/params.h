@@ -15,7 +15,7 @@
     走行系
 ------------------------------------------------------------*/
 /*走行パラメータ*/
-#define D_TIRE            13.75F  // タイヤ直径[mm] 13.75F
+#define D_TIRE            13.95F  // タイヤ直径[mm] 13.75F
 #define DIST_HALF_SEC     45     // 迷路の半区間距離[mm]
 #define DIST_D_HALF_SEC   67.279 // 斜めの半区間距離[mm]
 #define DIST_FIRST_SEC    13     // 最初の区画の距離[mm]
@@ -28,13 +28,13 @@
 #define DIFF_SETPOSITION 1500 // スラロームを位置合わせに変更する制御量
 
 /*PIDパラメータ*/
-#define KP_DISTANCE 28.0F // 並進位置制御のP項  28.0F 30.0
-#define KI_DISTANCE 0.05 // 並進位置制御のI項  0.01F 0.04
-#define KD_DISTANCE 7.0F // 並進位置制御のD項  28.0F 150.0
+#define KP_DISTANCE 1.5F // 並進位置制御のP項  28.0F 30.0
+#define KI_DISTANCE 0.03F // 並進位置制御のI項  0.01F 0.04
+#define KD_DISTANCE 0.0F // 並進位置制御のD項  28.0F 150.0
 
-#define KP_VELOCITY 1.9F // 並進速度制御のP項  50.0F 10.0
-#define KI_VELOCITY 0.0F// 並進速度制御のI項  0.05F 0.04
-#define KD_VELOCITY 45.0F // 並進速度制御のD項  60.0F 100.0
+#define KP_VELOCITY 0.03F // 並進速度制御のP項  50.0F 10.0
+#define KI_VELOCITY 0.30F// 並進速度制御のI項  0.05F 0.04
+#define KD_VELOCITY 0.0F // 並進速度制御のD項  60.0F 100.0
 
 /*
  * 吸引ファン ON/OFF で使い分ける PID ゲイン（v1最終の値を使用）
@@ -61,7 +61,7 @@
 #endif
 
 #ifndef KP_DISTANCE_FAN_ON
-#define KP_DISTANCE_FAN_ON  28.0F
+#define KP_DISTANCE_FAN_ON  4.0F
 #endif
 #ifndef KI_DISTANCE_FAN_ON
 #define KI_DISTANCE_FAN_ON  0.1F
@@ -71,10 +71,10 @@
 #endif
 
 #ifndef KP_DISTANCE_FAN_OFF
-#define KP_DISTANCE_FAN_OFF 1.5F
+#define KP_DISTANCE_FAN_OFF 0.5F
 #endif
 #ifndef KI_DISTANCE_FAN_OFF
-#define KI_DISTANCE_FAN_OFF 0.03F
+#define KI_DISTANCE_FAN_OFF 0.02F
 #endif
 #ifndef KD_DISTANCE_FAN_OFF
 #define KD_DISTANCE_FAN_OFF 0.0F
@@ -116,13 +116,19 @@
 #define WALL_DIFF_THR 22   // 壁センサ値の変化量のしきい値
 #define K_SENSOR      1.00F // センサの補正値 0.94F
 
+// センサ距離換算の一括調整係数（全センサ共通、mmスケール）
+// LUTから得た距離[mm]に対して、mm_out = SENSOR_DIST_GAIN * mm_in
+#ifndef SENSOR_DIST_GAIN
+#define SENSOR_DIST_GAIN 1.0F
+#endif
+
 // 壁切れ判定専用しきい値（高速走行向けに独立調整可能）
 // 既定値は探索用と同一。必要に応じて実機に合わせて変更してください。
 #ifndef WALL_END_THR_R
-#define WALL_END_THR_R  250
+#define WALL_END_THR_R  150
 #endif
 #ifndef WALL_END_THR_L
-#define WALL_END_THR_L  250
+#define WALL_END_THR_L  150
 #endif
 
 // 壁切れバッファ距離（ターン前に等速で走る距離）[mm]
@@ -164,8 +170,15 @@
 
 /* 前壁センサを用いた中央合わせ（非接触）用パラメータ */
 // 区画中央における前壁センサの目標値（実機で調整）
-#define F_ALIGN_TARGET_FR    3750
-#define F_ALIGN_TARGET_FL    3790
+#define F_ALIGN_TARGET_FR    1420
+#define F_ALIGN_TARGET_FL    1420
+// 距離換算(LUT)を用いる match_position 専用の目標距離[mm]（v1値を採用）
+#ifndef F_ALIGN_TARGET_FR_MM
+#define F_ALIGN_TARGET_FR_MM    10.0f
+#endif
+#ifndef F_ALIGN_TARGET_FL_MM
+#define F_ALIGN_TARGET_FL_MM    10.0f
+#endif
 // 小鷺田寮: FR3750 FL3790
 // 九州: FR3587 FL3587
 
@@ -173,24 +186,81 @@
 #define F_ALIGN_DETECT_THR   500
 
 // 閉ループ制御ゲイン（実機調整用）
-#define MATCH_POS_KP_TRANS   0.3F   // [mm/s] / [ADcount]
+#define MATCH_POS_KP_TRANS   -0.48F   // [mm/s] / [ADcount]
 #define MATCH_POS_KP_ROT     0.2F   // [deg/s] / [ADcount]
+// 距離換算(LUT)を用いる match_position 専用のゲイン・許容値（単位: mm）
+#ifndef MATCH_POS_KP_TRANS_MM
+#define MATCH_POS_KP_TRANS_MM   10.0F    // [mm/s]/[mm]（v1最終）
+#endif
+#ifndef MATCH_POS_KP_ROT_MM
+#define MATCH_POS_KP_ROT_MM    0.0F    // [deg/s]/[mm]（v1最終）
+#endif
+
+// 追加: I, D 成分（必要に応じて有効化。既定は0=無効）
+#ifndef MATCH_POS_KI_TRANS_MM
+#define MATCH_POS_KI_TRANS_MM    0.0F    // [mm/s]/([mm]*s)
+#endif
+#ifndef MATCH_POS_KD_TRANS_MM
+#define MATCH_POS_KD_TRANS_MM    1.0F    // [mm/s]/([mm]/s)
+#endif
+#ifndef MATCH_POS_KI_ROT_MM
+#define MATCH_POS_KI_ROT_MM      0.0F    // [deg/s]/([mm]*s)
+#endif
+#ifndef MATCH_POS_KD_ROT_MM
+#define MATCH_POS_KD_ROT_MM      0.0F    // [deg/s]/([mm]/s)
+#endif
+
+// I成分の寄与上限（アンチワインドアップ用）
+#ifndef MATCH_POS_I_VEL_MAX
+#define MATCH_POS_I_VEL_MAX      80.0F   // [mm/s]
+#endif
+#ifndef MATCH_POS_I_OMEGA_MAX
+#define MATCH_POS_I_OMEGA_MAX    120.0F  // [deg/s]
+#endif
+
+// D成分の一次遅れフィルタ係数（0..1、値が大きいほど追従が速い＝ノイズに弱い）
+#ifndef MATCH_POS_D_ALPHA_TRANS
+#define MATCH_POS_D_ALPHA_TRANS  0.2F
+#endif
+#ifndef MATCH_POS_D_ALPHA_ROT
+#define MATCH_POS_D_ALPHA_ROT    0.2F
+#endif
 
 // 飽和・許容値・タイムアウト
 #define MATCH_POS_VEL_MAX     200.0F   // [mm/s]
 #define MATCH_POS_OMEGA_MAX   300.0F   // [deg/s]
 #define MATCH_POS_TOL         100       // [ADcount]
 #define MATCH_POS_TOL_ANGLE   40       // [ADcount]
+// mm版の許容値
+#ifndef MATCH_POS_TOL_MM
+#define MATCH_POS_TOL_MM        1.5F    // [mm]
+#endif
+#ifndef MATCH_POS_TOL_ANGLE_MM
+#define MATCH_POS_TOL_ANGLE_MM  1.5F    // [mm]
+#endif
 #define MATCH_POS_TIMEOUT_MS  20     // [ms]
 // 収束判定：FR/FL が目標±MATCH_POS_TOL 内に連続して入る必要回数（2ms/loop前提）
 #define MATCH_POS_STABLE_COUNT 100      // [loop] ≒ 400ms
+
+//============================================================
+// 距離ワープ補正（3点アンカー）デフォルト（test_mode case7で使用）
+// 近・中・遠の3点。実機で調整したい場合はここを編集してください。
+#ifndef SENSOR_WARP_ANCHOR0_MM
+#define SENSOR_WARP_ANCHOR0_MM  0.0f
+#endif
+#ifndef SENSOR_WARP_ANCHOR1_MM
+#define SENSOR_WARP_ANCHOR1_MM  26.0f
+#endif
+#ifndef SENSOR_WARP_ANCHOR2_MM
+#define SENSOR_WARP_ANCHOR2_MM  113.0f
+#endif
 
 /*------------------------------------------------------------
     探索系
 ------------------------------------------------------------*/
 //----ゴール座標----
-#define GOAL_X    7 // 7
-#define GOAL_Y    7 // 7
+#define GOAL_X    1 // 7
+#define GOAL_Y    0 // 7
 #define MAZE_SIZE 16
 #define START_X   0
 #define START_Y   0
@@ -204,18 +274,18 @@
 #endif
 
 #ifndef GOAL2_X
-#define GOAL2_X 7
-#define GOAL2_Y 8
+#define GOAL2_X 0
+#define GOAL2_Y 0
 #endif
 
 #ifndef GOAL3_X
-#define GOAL3_X 8
-#define GOAL3_Y 7
+#define GOAL3_X 0
+#define GOAL3_Y 0
 #endif
 
 #ifndef GOAL4_X
-#define GOAL4_X 8
-#define GOAL4_Y 8
+#define GOAL4_X 0
+#define GOAL4_Y 0
 #endif
 
 #ifndef GOAL5_X

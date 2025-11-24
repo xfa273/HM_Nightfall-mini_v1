@@ -286,7 +286,7 @@ void adachi(void) {
             led_write(0, 1);
 
             // スラローム右90°
-            turn_R90(1);
+            turn_R90(0);
 
             turn_dir(DIR_TURN_R90); // 内部位置情報でも右回転処理
 
@@ -350,7 +350,7 @@ void adachi(void) {
             led_write(1, 0);
 
             // スラローム左90°
-            turn_L90(1);
+            turn_L90(0);
 
             turn_dir(DIR_TURN_L90); // 内部位置情報でも左回転処理
 
