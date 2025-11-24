@@ -149,8 +149,8 @@ void omega_PID(void) {
     // I項
     omega_integral += omega_error;
 
-    // D項
-    omega_error_error = angle_error - previous_omega_error;
+    // D項（角速度誤差の差分）
+    omega_error_error = omega_error - previous_omega_error;
 
     // モータ制御量を計算
 
@@ -186,8 +186,20 @@ void angle_PID(void) {
 /*壁のPID制御*/
 void wall_PID(void) {
 
+    // Priority-2: low-pass filter state for wall error
+    static uint8_t s_prev_ctrl = 0;
+    static float wall_err_f = 0.0f;
+    // Priority-3: slew-rate limit state for wall control
+    static float wall_ctrl_prev = 0.0f;
+
     // 制御フラグがあれば制御
     if (MF.FLAG.CTRL) {
+
+        // Reset filter on rising edge of CTRL enable
+        if (!s_prev_ctrl) {
+            wall_err_f = 0.0f;
+            wall_ctrl_prev = 0.0f;
+        }
 
         float wall_error = 0;
         uint16_t wall_thr_r;
@@ -227,16 +239,39 @@ void wall_PID(void) {
             latest_wall_error = wall_error*0.5;
         }
 
-        wall_control = wall_error * kp_wall;
+        // Priority-2: first-order low-pass filter for wall_error
+        float alpha = WALL_LPF_ALPHA;
+        if (alpha < 0.0f) alpha = 0.0f;
+        if (alpha > 1.0f) alpha = 1.0f;
+        wall_err_f = wall_err_f + alpha * (wall_error - wall_err_f);
 
-        if(fabsf(out_l)<50 && fabsf(out_r)<50){
-            wall_control = 0;
+        // Priority-1: deadband + proper saturation (no minimum-force injection)
+        float wc = wall_err_f * kp_wall;
+
+        // Deadband around zero
+        if (fabsf(wc) < WALL_CTRL_MIN) {
+            wc = 0.0f;
         }
 
-        if (wall_control > 0) {
-            wall_control = max(wall_control, WALL_CTRL_MAX);
+        // Proper clamp to ±WALL_CTRL_MAX
+        if (wc >  WALL_CTRL_MAX) wc =  WALL_CTRL_MAX;
+        if (wc < -WALL_CTRL_MAX) wc = -WALL_CTRL_MAX;
+
+        // Disable at near-stop output (no slew, hard reset)
+        int near_stop = (fabsf(out_l) < 50 && fabsf(out_r) < 50) ? 1 : 0;
+        if (near_stop) {
+            wc = 0.0f;
+            wall_ctrl_prev = 0.0f;
+            wall_control = 0.0f;
         } else {
-            wall_control = min(wall_control, -WALL_CTRL_MAX);
+            // Priority-3: apply slew rate limiting per 1ms step
+            float delta = wc - wall_ctrl_prev;
+            float lim = WALL_CTRL_SLEW_MAX;
+            if (delta >  lim) delta =  lim;
+            if (delta < -lim) delta = -lim;
+            float wc_slewed = wall_ctrl_prev + delta;
+            wall_control = wc_slewed;
+            wall_ctrl_prev = wc_slewed;
         }
 
         previous_ad_r = ad_r;
@@ -245,7 +280,12 @@ void wall_PID(void) {
     } else {
         // 制御フラグがなければ制御値0
         wall_control = 0;
+        wall_err_f = 0.0f;
+        wall_ctrl_prev = 0.0f;
     }
+
+    // Update CTRL state
+    s_prev_ctrl = MF.FLAG.CTRL ? 1 : 0;
 }
 
 /*斜めの制御*/

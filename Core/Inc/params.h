@@ -158,7 +158,16 @@
 /*制御閾値*/
 #define CTRL_BASE_L   1     // 左制御閾値
 #define CTRL_BASE_R   1     // 右制御閾値
-#define WALL_CTRL_MAX 0.002 // 制御量上限値
+#define WALL_CTRL_MAX 100 // 制御量上限値
+#ifndef WALL_CTRL_MIN
+#define WALL_CTRL_MIN 0.2F  // 制御量デッドバンド（絶対値がこの値未満なら0）
+#endif
+#ifndef WALL_LPF_ALPHA
+#define WALL_LPF_ALPHA 0.1F // 壁誤差の一次LPF係数（1ms周期） 0.1~0.2推奨
+#endif
+#ifndef WALL_CTRL_SLEW_MAX
+#define WALL_CTRL_SLEW_MAX 5.0F // 壁制御のスルーレート上限[deg/s per 1ms]
+#endif
 #define KP_DEFAULT    0.1F  // 比例制御係数
 #define KP_TURN_AP    0.3F  // スラロームのオフセット区間用比例制御係数
 
