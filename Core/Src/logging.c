@@ -164,6 +164,22 @@ void log_capture_tick(void) {
             (float)out_l,
             current_time
         );
+        // 角度（副バッファ）
+        if (log_buffer2.logging_active && log_buffer2.count < MAX_LOG_ENTRIES) {
+            uint16_t pos2 = log_buffer2.head;
+            log_buffer2.entries[pos2].count = (uint16_t)log_buffer2.count;
+            // フィールド名は共通だが、角度系を格納する
+            log_buffer2.entries[pos2].target_omega = target_angle; // 目標角度
+            log_buffer2.entries[pos2].actual_omega = real_angle;   // 実角度
+            log_buffer2.entries[pos2].p_term_omega = KP_ANGLE * angle_error;
+            log_buffer2.entries[pos2].i_term_omega = KI_ANGLE * angle_integral;
+            log_buffer2.entries[pos2].d_term_omega = KD_ANGLE * angle_error_error;
+            log_buffer2.entries[pos2].motor_out_r = (float)out_r;
+            log_buffer2.entries[pos2].motor_out_l = (float)out_l;
+            log_buffer2.entries[pos2].timestamp = current_time;
+            log_buffer2.head = (pos2 + 1) % MAX_LOG_ENTRIES;
+            log_buffer2.count++;
+        }
         break;
 
     case LOG_PROFILE_VELOCITY:

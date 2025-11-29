@@ -129,6 +129,11 @@ void mode2() {
                 const ShortestRunModeParams_t *pm0 = &shortestRunModeParams2;
                 drive_fan(pm0->fan_power);
 
+                // ログ開始（角速度/角度）
+                log_init();
+                log_set_profile(LOG_PROFILE_OMEGA);
+                log_start(HAL_GetTick());
+
                 // path を上書きして run()
                 for (int i = 0; i < ROUTE_MAX_LEN; i++) path[i] = 0;
                 // 初期加速(first_sectionA)の直後にS3を入れてから右小回り
@@ -141,6 +146,23 @@ void mode2() {
 
                 // fan停止
                 drive_fan(0);
+
+                // ログ停止
+                log_stop();
+
+                // センサEnter待ち（右前=角速度ログ, 左前=角度ログ）
+                printf("[mode2-case0-sub0] Press RIGHT FRONT for OMEGA (FR>%u), LEFT FRONT for ANGLE (FL>%u) ...\n",
+                       (unsigned)WALL_BASE_FR, (unsigned)WALL_BASE_FL);
+                while (1) {
+                    if (ad_fr > WALL_BASE_FR) {
+                        log_print_omega_all();
+                        break;
+                    } else if (ad_fl > WALL_BASE_FL) {
+                        log_print_angle_all();
+                        break;
+                    }
+                    HAL_Delay(50);
+                }
                 break;
             /* case8/9 moved below to keep 0..9 ascending order */
             case 1: // 90deg大回り
@@ -150,12 +172,26 @@ void mode2() {
                 {
                     const ShortestRunModeParams_t *pm1 = &shortestRunModeParams2;
                     drive_fan(pm1->fan_power);
+                    // ログ開始（角速度/角度）
+                    log_init();
+                    log_set_profile(LOG_PROFILE_OMEGA);
+                    log_start(HAL_GetTick());
                     for (int i = 0; i < ROUTE_MAX_LEN; i++) path[i] = 0;
                     // 初期加速後に S3、その後 大回り90
                     path[0] = 200 + 3; // S3 (半区画×3)
                     path[1] = 501; // L-R90
                     run();
                     drive_fan(0);
+                    // ログ停止
+                    log_stop();
+                    // センサEnter待ち（右前=角速度ログ, 左前=角度ログ）
+                    printf("[mode2-case0-sub1] Press RIGHT FRONT for OMEGA (FR>%u), LEFT FRONT for ANGLE (FL>%u) ...\n",
+                           (unsigned)WALL_BASE_FR, (unsigned)WALL_BASE_FL);
+                    while (1) {
+                        if (ad_fr > WALL_BASE_FR) { log_print_omega_all(); break; }
+                        else if (ad_fl > WALL_BASE_FL) { log_print_angle_all(); break; }
+                        HAL_Delay(50);
+                    }
                 }
                 break;
             case 2: // 180deg大回り
@@ -165,12 +201,26 @@ void mode2() {
                 {
                     const ShortestRunModeParams_t *pm2 = &shortestRunModeParams2;
                     drive_fan(pm2->fan_power);
+                    // ログ開始（角速度/角度）
+                    log_init();
+                    log_set_profile(LOG_PROFILE_OMEGA);
+                    log_start(HAL_GetTick());
                     for (int i = 0; i < ROUTE_MAX_LEN; i++) path[i] = 0;
                     // 初期加速後に S3、その後 大回り180
                     path[0] = 200 + 3; // S3 (半区画×3)
                     path[1] = 502; // L-R180
                     run();
                     drive_fan(0);
+                    // ログ停止
+                    log_stop();
+                    // センサEnter待ち（右前=角速度ログ, 左前=角度ログ）
+                    printf("[mode2-case0-sub2] Press RIGHT FRONT for OMEGA (FR>%u), LEFT FRONT for ANGLE (FL>%u) ...\n",
+                           (unsigned)WALL_BASE_FR, (unsigned)WALL_BASE_FL);
+                    while (1) {
+                        if (ad_fr > WALL_BASE_FR) { log_print_omega_all(); break; }
+                        else if (ad_fl > WALL_BASE_FL) { log_print_angle_all(); break; }
+                        HAL_Delay(50);
+                    }
                 }
                 break;
             case 3: // 45deg 入り
