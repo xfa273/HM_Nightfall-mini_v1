@@ -131,8 +131,8 @@ void mode2() {
 
                 // path を上書きして run()
                 for (int i = 0; i < ROUTE_MAX_LEN; i++) path[i] = 0;
-                // 初期加速(first_sectionA)の直後にS1を入れてから右小回り
-                path[0] = 201; // S1
+                // 初期加速(first_sectionA)の直後にS3を入れてから右小回り
+                path[0] = 200 + 3; // S3 (半区画×3)
                 path[1] = 300; // 右小回り
                 path[2] = 0;
 
@@ -151,8 +151,8 @@ void mode2() {
                     const ShortestRunModeParams_t *pm1 = &shortestRunModeParams2;
                     drive_fan(pm1->fan_power);
                     for (int i = 0; i < ROUTE_MAX_LEN; i++) path[i] = 0;
-                    // 初期加速後に S1、その後 大回り90
-                    path[0] = 201; // S1
+                    // 初期加速後に S3、その後 大回り90
+                    path[0] = 200 + 3; // S3 (半区画×3)
                     path[1] = 501; // L-R90
                     run();
                     drive_fan(0);
@@ -166,8 +166,8 @@ void mode2() {
                     const ShortestRunModeParams_t *pm2 = &shortestRunModeParams2;
                     drive_fan(pm2->fan_power);
                     for (int i = 0; i < ROUTE_MAX_LEN; i++) path[i] = 0;
-                    // 初期加速後に S1、その後 大回り180
-                    path[0] = 201; // S1
+                    // 初期加速後に S3、その後 大回り180
+                    path[0] = 200 + 3; // S3 (半区画×3)
                     path[1] = 502; // L-R180
                     run();
                     drive_fan(0);
@@ -181,8 +181,8 @@ void mode2() {
                     const ShortestRunModeParams_t *pm3 = &shortestRunModeParams2;
                     drive_fan(pm3->fan_power);
                     for (int i = 0; i < ROUTE_MAX_LEN; i++) path[i] = 0;
-                    // 初期加速後に S1、その後 45°入り→斜めS1
-                    path[0] = 201;    // S1
+                    // 初期加速後に S3、その後 45°入り→斜めS1
+                    path[0] = 200 + 3; // S3 (半区画×3)
                     path[1] = 701;    // 右45°入り
                     path[2] = 1000+1; // 斜めS1
                     run();
@@ -197,8 +197,8 @@ void mode2() {
                     const ShortestRunModeParams_t *pm4 = &shortestRunModeParams2;
                     drive_fan(pm4->fan_power);
                     for (int i = 0; i < ROUTE_MAX_LEN; i++) path[i] = 0;
-                    // 初期加速後に S1、その後 斜めS1 → 45°出 → 斜めS1
-                    path[0] = 201;     // S1
+                    // 初期加速後に S3、その後 斜めS1 → 45°出 → 斜めS1
+                    path[0] = 200 + 3;  // S3 (半区画×3)
                     path[1] = 1000+1;  // 斜めS1
                     path[2] = 704;     // 左45°出
                     path[3] = 1000+1;  // 斜めS1
@@ -214,8 +214,8 @@ void mode2() {
                     const ShortestRunModeParams_t *pm5 = &shortestRunModeParams2;
                     drive_fan(pm5->fan_power);
                     for (int i = 0; i < ROUTE_MAX_LEN; i++) path[i] = 0;
-                    // 初期加速後に S1、その後 斜めS1 → V90 → 斜めS1
-                    path[0] = 201;     // S1
+                    // 初期加速後に S3、その後 斜めS1 → V90 → 斜めS1
+                    path[0] = 200 + 3;  // S3 (半区画×3)
                     path[1] = 1000+1;  // 斜めS1
                     path[2] = 802;     // 左V90
                     path[3] = 1000+1;  // 斜めS1
@@ -231,8 +231,8 @@ void mode2() {
                     const ShortestRunModeParams_t *pm6 = &shortestRunModeParams2;
                     drive_fan(pm6->fan_power);
                     for (int i = 0; i < ROUTE_MAX_LEN; i++) path[i] = 0;
-                    // 初期加速後に S1、その後 135°入り→斜めS1
-                    path[0] = 201;     // S1
+                    // 初期加速後に S3、その後 135°入り→斜めS1
+                    path[0] = 200 + 3;  // S3 (半区画×3)
                     path[1] = 901;     // 右135°入り
                     path[2] = 1000+1;  // 斜めS1
                     run();
@@ -247,8 +247,8 @@ void mode2() {
                     const ShortestRunModeParams_t *pm7 = &shortestRunModeParams2;
                     drive_fan(pm7->fan_power);
                     for (int i = 0; i < ROUTE_MAX_LEN; i++) path[i] = 0;
-                    // 初期加速後に S1、その後 斜めS1 → 135°出 → 斜めS1
-                    path[0] = 201;     // S1
+                    // 初期加速後に S3、その後 斜めS1 → 135°出 → 斜めS1
+                    path[0] = 200 + 3;  // S3 (半区画×3)
                     path[1] = 1000+1;  // 斜めS1
                     path[2] = 904;     // 左135°出
                     path[3] = 1000+1;  // 斜めS1
