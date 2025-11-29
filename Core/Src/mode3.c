@@ -138,6 +138,8 @@ void mode3() {
                 led_flash(5);
 
                 half_sectionA(velocity_turn90);
+                // 追加: ターン前にS3直進（200+3）
+                run_straight(3, velocity_turn90, 0);
                 turn_R90(0);
                 half_sectionD(0);
 
@@ -164,6 +166,8 @@ void mode3() {
                 led_flash(5);
 
                 half_sectionA(velocity_l_turn_90);
+                // 追加: ターン前にS3直進（200+3）
+                run_straight(3, velocity_l_turn_90, 0);
                 l_turn_R90();
                 half_sectionD(0);
 
@@ -189,6 +193,8 @@ void mode3() {
                 led_flash(5);
 
                 half_sectionA(velocity_l_turn_180);
+                // 追加: ターン前にS3直進（200+3）
+                run_straight(3, velocity_l_turn_180, 0);
                 l_turn_R180(0);
                 half_sectionD(0);
 
@@ -214,6 +220,8 @@ void mode3() {
                 led_flash(5);
                     
                 half_sectionA(velocity_turn45in);
+                // 追加: ターン前にS3直進（200+3）
+                run_straight(3, velocity_turn45in, 0);
                 turn_R45_In();
                 run_diagonal(1,0);
 
@@ -238,6 +246,8 @@ void mode3() {
                 drive_fan(shortestRunModeParams3.fan_power);
                 led_flash(5);
 
+                // 追加: ターン前にS3直進（200+3）
+                run_straight(3, velocity_turn45out, 0);
                 run_diagonal(1,velocity_turn45out);
                 turn_L45_Out();
                 run_diagonal(1,0);
@@ -263,6 +273,8 @@ void mode3() {
                 drive_fan(shortestRunModeParams3.fan_power);
                 led_flash(5);
 
+                // 追加: ターン前にS3直進（200+3）
+                run_straight(3, velocity_turnV90, 0);
                 run_diagonal(1,velocity_turnV90);
                 turn_LV90();
                 run_diagonal(1,0);
@@ -289,6 +301,8 @@ void mode3() {
                 led_flash(5);
                     
                 half_sectionA(velocity_turn135in);
+                // 追加: ターン前にS3直進（200+3）
+                run_straight(3, velocity_turn135in, 0);
                 turn_R135_In();
                 run_diagonal(1,0);
 
@@ -313,6 +327,8 @@ void mode3() {
                 drive_fan(shortestRunModeParams3.fan_power);
                 led_flash(5);
 
+                // 追加: ターン前にS3直進（200+3）
+                run_straight(3, velocity_turn135out, 0);
                 run_diagonal(1,velocity_turn135out);
                 turn_L135_Out();
                 run_diagonal(1,0);
