@@ -261,8 +261,8 @@ void one_sectionD(void) {
         MF.FLAG.F_WALL_STOP = 1;
     }
 
-    // driveA 内で壁切れ追従（探索のみ一時SCND=1でアーム）
-    driveA(DIST_HALF_SEC * 2.0f, speed_now, speed_out, WALL_END_BUFFER_MM);
+    // driveA 内で壁切れ追従（探索のみ一時SCND=1でアーム）。追従距離は DIST_HALF_SEC + dist_wall_end。
+    driveA(DIST_HALF_SEC * 2.0f, speed_now, speed_out, dist_wall_end);
 
     MF.FLAG.F_WALL_STOP = 0;
     MF.FLAG.CTRL = 0;
@@ -289,8 +289,8 @@ void one_sectionU(uint8_t CTRL) {
     MF.FLAG.CTRL = 1;
 
     const float v_const = speed_now; // 等速維持
-    // driveA 内部で dist_wallend>0 をトリガにアーム（SCNDを一時的に有効化）
-    driveA(DIST_HALF_SEC * 2.0f, speed_now, v_const, WALL_END_BUFFER_MM);
+    // driveA 内部で dist_wallend>0 をトリガにアーム（SCNDを一時的に有効化）。追従距離は DIST_HALF_SEC + dist_wall_end。
+    driveA(DIST_HALF_SEC * 2.0f, speed_now, v_const, dist_wall_end);
 
     MF.FLAG.CTRL = 0;
     speed_now = v_const;
@@ -1077,11 +1077,9 @@ void driveA(float dist, float spd_in, float spd_out, float dist_wallend) {
                 MF.FLAG.R_WALL_END = 0;
                 MF.FLAG.L_WALL_END = 0;
 
-                // 追従距離: 半区画 + バッファ
+                // 追従距離: 半区画 + dist_wallend（per-case）。クリップ無し。
                 float follow_mm = (float)DIST_HALF_SEC + dist_wallend;
                 if (follow_mm < 0.0f) follow_mm = 0.0f;
-                float cap_mm = (float)DIST_HALF_SEC + WALL_END_EXTEND_MAX_MM;
-                if (follow_mm > cap_mm) follow_mm = cap_mm;
 
                 dist_end = real_distance + follow_mm;
 
@@ -1115,8 +1113,6 @@ void driveA(float dist, float spd_in, float spd_out, float dist_wallend) {
 
                     float follow_mm = (float)DIST_HALF_SEC + dist_wallend;
                     if (follow_mm < 0.0f) follow_mm = 0.0f;
-                    float cap_mm = (float)DIST_HALF_SEC + WALL_END_EXTEND_MAX_MM;
-                    if (follow_mm > cap_mm) follow_mm = cap_mm;
 
                     dist_end = real_distance + follow_mm;
 
@@ -1143,8 +1139,6 @@ void driveA(float dist, float spd_in, float spd_out, float dist_wallend) {
 
                     float follow_mm = (float)DIST_HALF_SEC + dist_wallend;
                     if (follow_mm < 0.0f) follow_mm = 0.0f;
-                    float cap_mm = (float)DIST_HALF_SEC + WALL_END_EXTEND_MAX_MM;
-                    if (follow_mm > cap_mm) follow_mm = cap_mm;
 
                     dist_end = real_distance + follow_mm;
 
