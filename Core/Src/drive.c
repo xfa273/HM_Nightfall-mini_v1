@@ -249,7 +249,7 @@ void one_sectionA(void) {
 // 戻り値：なし
 //+++++++++++++++++++++++++++++++++++++++++++++++
 void one_sectionD(void) {
-    // 探索では壁切れ検知を行わず、単純に1区画分を一定減速度で走行する
+    // 探索向け: 単一の連続走行で減速し、必要なら壁切れ追従（半区画+バッファ）を動的に行う
     float v0 = speed_now;
     float accel_lin = (MF.FLAG.SCND || acceled) ? acceleration_straight_dash : acceleration_straight; // [mm/s^2]
     float speed_out = sqrtf(fmaxf(0.0f, v0 * v0 - 2.0f * accel_lin * (DIST_HALF_SEC * 2.0f)));
@@ -261,8 +261,8 @@ void one_sectionD(void) {
         MF.FLAG.F_WALL_STOP = 1;
     }
 
-    // 1区画(=2.0 blocks)で終端速度まで減速
-    run_straight(2.0f, speed_out, 0);
+    // driveA 内で壁切れ追従（探索のみ一時SCND=1でアーム）
+    driveA(DIST_HALF_SEC * 2.0f, speed_now, speed_out, WALL_END_BUFFER_MM);
 
     MF.FLAG.F_WALL_STOP = 0;
     MF.FLAG.CTRL = 0;
@@ -285,11 +285,12 @@ void one_section(void) {}
 //+++++++++++++++++++++++++++++++++++++++++++++++
 void one_sectionU(uint8_t CTRL) {
     (void)CTRL;
-    // 探索では壁切れ検知を行わず、指定距離（1区画）を等速で走行
+    // 探索向け: 単一の連続走行で等速のまま1区画進み、必要なら壁切れ追従（半区画+バッファ）
     MF.FLAG.CTRL = 1;
 
     const float v_const = speed_now; // 等速維持
-    run_straight(2.0f, v_const, 0);
+    // driveA 内部で dist_wallend>0 をトリガにアーム（SCNDを一時的に有効化）
+    driveA(DIST_HALF_SEC * 2.0f, speed_now, v_const, WALL_END_BUFFER_MM);
 
     MF.FLAG.CTRL = 0;
     speed_now = v_const;
@@ -1030,14 +1031,29 @@ void match_position(uint16_t target_value) {
 //+++++++++++++++++++++++++++++++++++++++++++++++
 void driveA(float dist, float spd_in, float spd_out, float dist_wallend) {
 
-    (void)dist_wallend;
+    // printf("driveA: %.2f, %.2f, %.2f, dwe=%.2f\n", dist, spd_in, spd_out, dist_wallend);
 
-    // printf("driveA: %.2f, %.2f, %.2f\n", dist, spd_in, spd_out);
+    // 目標終端距離・速度（動的に更新する可能性あり）
+    float dist_end = dist;
+    float v_target = spd_out;
 
-    // 加速度を設定
-    acceleration_interrupt = (spd_out * spd_out - spd_in * spd_in) / (2 * dist);
+    // 探索時のみ: 壁切れ追従をアーム（detect_wall_end のゲート条件に合わせ、WALL_END=1, SCND を一時的にON）
+    const bool arm_wallend_init = (dist_wallend > 0.0f);
+    bool arm_wallend = arm_wallend_init;
+    uint8_t prev_scnd = MF.FLAG.SCND;
+    uint8_t prev_wallend = MF.FLAG.WALL_END;
+    if (arm_wallend) {
+        MF.FLAG.WALL_END = 1;
+        MF.FLAG.R_WALL_END = 0;
+        MF.FLAG.L_WALL_END = 0;
+        if (!MF.FLAG.SCND) {
+            // 探索中に限り一時的にSCND=1を立て、検知ゲートを通す
+            MF.FLAG.SCND = 1;
+        }
+    }
 
-    // printf("acceleration_interrupt: %.2f\n", acceleration_interrupt);
+    // 加速度を設定（以後、壁切れで終端距離を動的変更した場合は都度更新）
+    acceleration_interrupt = (v_target * v_target - spd_in * spd_in) / (2 * dist_end);
 
     // 回転角度カウントをリセット
     real_angle = 0;
@@ -1051,26 +1067,112 @@ void driveA(float dist, float spd_in, float spd_out, float dist_wallend) {
 
     drive_start();
 
-    // 実際の距離が目標距離になるまで走行
+    // 実際の距離が目標距離になるまで走行（途中で壁切れを検知したら、終端距離・加速度を滑らかに張り替える）
     if (acceleration_interrupt > 0) {
 
-        while (real_distance < dist) {
+        while (real_distance < dist_end && !MF.FLAG.FAILED) {
+            // 動的壁切れ追従
+            if (arm_wallend && (MF.FLAG.R_WALL_END || MF.FLAG.L_WALL_END)) {
+                // 消費
+                MF.FLAG.R_WALL_END = 0;
+                MF.FLAG.L_WALL_END = 0;
+
+                // 追従距離: 半区画 + バッファ
+                float follow_mm = (float)DIST_HALF_SEC + dist_wallend;
+                if (follow_mm < 0.0f) follow_mm = 0.0f;
+                float cap_mm = (float)DIST_HALF_SEC + WALL_END_EXTEND_MAX_MM;
+                if (follow_mm > cap_mm) follow_mm = cap_mm;
+
+                dist_end = real_distance + follow_mm;
+
+                // 現在の目標速度から v_target まで等加速度で接続
+                float v_now = velocity_interrupt;
+                float remain = dist_end - real_distance;
+                if (remain > 1e-3f) {
+                    acceleration_interrupt = (v_target * v_target - v_now * v_now) / (2.0f * remain);
+                } else {
+                    acceleration_interrupt = 0.0f;
+                }
+
+                // 1回検知で十分。以降は解除
+                arm_wallend = false;
+                MF.FLAG.WALL_END = prev_wallend; // 元に戻す（通常0）
+                MF.FLAG.SCND = prev_scnd;        // SCND復帰
+            }
+
             background_replan_tick();
         }
 
-    } else if (acceleration_interrupt <= 0) {
+    } else { // 等速または減速
 
         if (MF.FLAG.F_WALL_STOP) {
-            while (real_distance < dist && velocity_interrupt > 0 &&
-                   (ad_fl + ad_fr) < thr_f_wall) {
+            while (real_distance < dist_end && velocity_interrupt > 0 &&
+                   (ad_fl + ad_fr) < thr_f_wall && !MF.FLAG.FAILED) {
+                // 動的壁切れ追従
+                if (arm_wallend && (MF.FLAG.R_WALL_END || MF.FLAG.L_WALL_END)) {
+                    MF.FLAG.R_WALL_END = 0;
+                    MF.FLAG.L_WALL_END = 0;
+
+                    float follow_mm = (float)DIST_HALF_SEC + dist_wallend;
+                    if (follow_mm < 0.0f) follow_mm = 0.0f;
+                    float cap_mm = (float)DIST_HALF_SEC + WALL_END_EXTEND_MAX_MM;
+                    if (follow_mm > cap_mm) follow_mm = cap_mm;
+
+                    dist_end = real_distance + follow_mm;
+
+                    float v_now = velocity_interrupt;
+                    float remain = dist_end - real_distance;
+                    if (remain > 1e-3f) {
+                        acceleration_interrupt = (v_target * v_target - v_now * v_now) / (2.0f * remain);
+                    } else {
+                        acceleration_interrupt = 0.0f;
+                    }
+
+                    arm_wallend = false;
+                    MF.FLAG.WALL_END = prev_wallend;
+                    MF.FLAG.SCND = prev_scnd;
+                }
+
                 background_replan_tick();
-            };
+            }
         } else {
-            while (real_distance < dist && velocity_interrupt > 0) {
+            while (real_distance < dist_end && velocity_interrupt > 0 && !MF.FLAG.FAILED) {
+                if (arm_wallend && (MF.FLAG.R_WALL_END || MF.FLAG.L_WALL_END)) {
+                    MF.FLAG.R_WALL_END = 0;
+                    MF.FLAG.L_WALL_END = 0;
+
+                    float follow_mm = (float)DIST_HALF_SEC + dist_wallend;
+                    if (follow_mm < 0.0f) follow_mm = 0.0f;
+                    float cap_mm = (float)DIST_HALF_SEC + WALL_END_EXTEND_MAX_MM;
+                    if (follow_mm > cap_mm) follow_mm = cap_mm;
+
+                    dist_end = real_distance + follow_mm;
+
+                    float v_now = velocity_interrupt;
+                    float remain = dist_end - real_distance;
+                    if (remain > 1e-3f) {
+                        acceleration_interrupt = (v_target * v_target - v_now * v_now) / (2.0f * remain);
+                    } else {
+                        acceleration_interrupt = 0.0f;
+                    }
+
+                    arm_wallend = false;
+                    MF.FLAG.WALL_END = prev_wallend;
+                    MF.FLAG.SCND = prev_scnd;
+                }
                 background_replan_tick();
-            };
+            }
         }
     }
+
+    // 終了時にフラグを復帰（未検知でarm_wallendが残っている場合）
+    if (arm_wallend_init) {
+        MF.FLAG.WALL_END = prev_wallend;
+        MF.FLAG.SCND = prev_scnd;
+        MF.FLAG.R_WALL_END = 0;
+        MF.FLAG.L_WALL_END = 0;
+    }
+
     // 割込み内の変数をリセット
     drive_variable_reset();
 
