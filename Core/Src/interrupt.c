@@ -75,30 +75,31 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
     }
 
     if (htim->Instance == htim5.Instance) {
-        // TIM5の割り込み処理 1kHz（制御系・IMU・エンコーダ等。センサ読み取りはTIM6へ移設）
+        // TIM5: 基本1kHz。常時1kHzで制御ブロックを実行する。
 
-        // 前壁補正の判定
+        // 前壁補正の判定（1kHz維持）
         if (ad_fr > WALL_BASE_FR * 1.1 && ad_fl > WALL_BASE_FL * 1.1) {
             MF.FLAG.F_WALL = 1;
         } else {
             MF.FLAG.F_WALL = 0;
         }
 
-        // エンコーダ値の取得
-        read_encoder();
-
-        // IMU値の取得
-        read_IMU();
-
-        // バッテリー電圧の監視
-        if (ad_bat > 3000) { // 3.3*3060/4095*3=7.4[V]で発動
-            // バッテリーOK
+        // バッテリー電圧の監視（1kHz維持）
+        if (ad_bat > 3000) {
+            // OK
         } else {
-            // バッテリー消耗
+            // Low
         }
 
-        // 横壁の立ち下がりによる壁切れ検知（探索用の壁判断とは独立）
+        // 横壁の立ち下がりによる壁切れ検知（1kHz維持）
         detect_wall_end();
+
+        // 制御周期をセット（常時1ms）
+        g_ctrl_dt = 0.001f;
+
+        // エンコーダ/IMUの取得
+        read_encoder();
+        read_IMU();
 
         if (MF.FLAG.OVERRIDE == 0) {
 
@@ -118,10 +119,11 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
             // angle_PID();
             omega_PID();
 
+            // モータ出力更新
             drive_motor();
         }
 
-        // 1kHz周期でのみログを取得
+        // ログ取得は1kHz固定
         if (MF.FLAG.GET_LOG_1) {
             log_capture_tick();
         }

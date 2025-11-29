@@ -182,6 +182,9 @@ void adachi(void) {
 
     s_no_path_exit = false;
 
+    // 探索時のみ制御周期を0.5kHzに間引く
+    // MF.FLAG.SEARCH_HALF_RATE = 1;
+
     drive_start();
 
 
@@ -374,6 +377,10 @@ void adachi(void) {
     half_sectionD(0); // 半区画分減速しながら走行し停止
 
     drive_stop();
+
+    // 探索終了: 制御周期を通常(1kHz)へ戻す
+    MF.FLAG.SEARCH_HALF_RATE = 0;
+    g_ctrl_dt = 0.001f;
 
     led_flash(2);
 

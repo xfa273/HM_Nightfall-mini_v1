@@ -24,20 +24,23 @@ void read_encoder(void) {
 
     encoder_speed_r = -encoder_speed_r; // 右の速度の符号を補正
 
-    // 速度の換算 →[mm/s]
-    // 注意: 新機体はエンコーダがホイール側搭載のため減速比は不要
+    // 速度の換算 → [mm/s]
+    // 新機体はエンコーダがホイール側搭載のため減速比は不要
     // Cpr_wheel = 400[PPR] × 4[逓倍] = 1600[count/rev]
-    // 係数K = 1000[ms→s] × (1/Cpr_wheel) = 1000*(1/(400*4)) = 0.625
-    encoder_speed_r = encoder_speed_r * 0.625 * D_TIRE * 3.1415;
-    encoder_speed_l = encoder_speed_l * 0.625 * D_TIRE * 3.1415;
+    // rev/s = (counts / g_ctrl_dt) * (1 / Cpr_wheel)
+    // mm/s  = rev/s * (π * D_TIRE)
+    const float Cpr_wheel = 1600.0f;
+    const float scale = (D_TIRE * 3.1415f) / (Cpr_wheel * g_ctrl_dt);
+    encoder_speed_r = encoder_speed_r * scale;
+    encoder_speed_l = encoder_speed_l * scale;
 
     // 回転方向を補正
     encoder_speed_r = DIR_ENC_R * encoder_speed_r;
     encoder_speed_l = DIR_ENC_L * encoder_speed_l;
 
-    // 走行距離カウンタを加算
-    encoder_distance_r += encoder_speed_r * 0.001;
-    encoder_distance_l += encoder_speed_l * 0.001;
+    // 走行距離カウンタを加算（可変制御周期）
+    encoder_distance_r += encoder_speed_r * g_ctrl_dt;
+    encoder_distance_l += encoder_speed_l * g_ctrl_dt;
 
     // 並進のPID制御用に格納
     real_velocity = (encoder_speed_r + encoder_speed_l) * 0.5;
@@ -53,7 +56,7 @@ void read_IMU(void) {
     // 時計回りが正
     IMU_DataUpdate();
     real_omega = -omega_z_true * KP_IMU;
-    IMU_angle += omega_z_true * 0.001;
+    IMU_angle += omega_z_true * g_ctrl_dt;
     real_angle = IMU_angle;
     IMU_acceleration = accel_y_true * 1000;
 }
@@ -61,16 +64,16 @@ void read_IMU(void) {
 /*並進の積算計算*/
 void calculate_translation(void) {
     // 設定された加速度から並進速度を計算
-    velocity_interrupt += acceleration_interrupt * 0.001;
+    velocity_interrupt += acceleration_interrupt * g_ctrl_dt;
 
     // 並進速度から目標位置を計算
-    target_distance += velocity_interrupt * 0.001;
+    target_distance += velocity_interrupt * g_ctrl_dt;
 }
 
 /*回転の積算計算*/
 void calculate_rotation(void) {
     // 設定された角加速度から角速度を計算
-    omega_interrupt += alpha_interrupt * 0.001;
+    omega_interrupt += alpha_interrupt * g_ctrl_dt;
 
     /*
     omega_interrupt += wall_control * 0.01;
@@ -80,7 +83,7 @@ void calculate_rotation(void) {
     */
 
     // 角速度から角度を計算
-    target_angle += omega_interrupt * 0.001;
+    target_angle += omega_interrupt * g_ctrl_dt;
 }
 
 /*並進速度のPID制御*/
@@ -264,9 +267,9 @@ void wall_PID(void) {
             wall_ctrl_prev = 0.0f;
             wall_control = 0.0f;
         } else {
-            // Priority-3: apply slew rate limiting per 1ms step
+            // Priority-3: apply slew rate limiting per variable step
             float delta = wc - wall_ctrl_prev;
-            float lim = WALL_CTRL_SLEW_MAX;
+            float lim = WALL_CTRL_SLEW_MAX * (g_ctrl_dt / 0.001f);
             if (delta >  lim) delta =  lim;
             if (delta < -lim) delta = -lim;
             float wc_slewed = wall_ctrl_prev + delta;

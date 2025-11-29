@@ -7,6 +7,82 @@
 
 #include "global.h"
 #include "sensor_distance.h"
+#include "../Inc/logging.h"
+
+// 探索走行（mode1 標準）の基本パラメータを適用
+static void apply_explore_params_mode1_basic(void)
+{
+    // 直線
+    acceleration_straight = 1000;
+    acceleration_straight_dash = 0; // run()は使わず one_sectionU 系で走るため0でOK
+    // ターン
+    velocity_turn90 = 300;
+    alpha_turn90 = 8850;
+    acceleration_turn = 0;
+    dist_offset_in = 10;   // 8
+    dist_offset_out = 16.5; // 15.5
+    val_offset_in = 1750;
+    angle_turn_90 = 89.5;
+    // 壁切れ後の距離
+    dist_wall_end = 0;
+
+    // 壁制御とケツ当て
+    kp_wall = 0.015f; // 探索時の既定
+    duty_setposition = 40;
+
+    // 壁判断しきい値の係数
+    sensor_kx = 1.0f;
+
+    MF.FLAG.WALL_ALIGN = 0;
+}
+
+// 探索パラメータでの直進テスト＋ログ出力（距離/速度プロファイルを選択）
+static void straight_test_explore_params(LogProfile profile)
+{
+    // パラメータを探索仕様に設定し、テストでは壁制御は切る
+    apply_explore_params_mode1_basic();
+    kp_wall = 0.0f; // mode2 case8 と同様、テスト時は壁制御を無効化
+
+    // 走行準備
+    led_flash(4);
+    drive_variable_reset();
+    IMU_GetOffset();
+    drive_enable_motor();
+    get_base();
+
+    // ログ開始
+    log_init();
+    log_set_profile(profile);
+    log_start(HAL_GetTick());
+
+    // 直進シナリオ: 初期 half_sectionA + S3 + 最後 half_sectionD
+
+    speed_now = 0;
+    half_sectionA(0);
+    one_sectionU(0);
+    one_sectionU(0);
+    one_sectionU(0);
+    half_sectionD(0);
+
+    // ログ停止
+    log_stop();
+
+    // CSV出力の選択（FR=速度, FL=距離）
+    printf("[mode1 straight-test] Press RIGHT FRONT for VELOCITY (FR>%u), LEFT FRONT for DISTANCE (FL>%u) ...\n",
+           (unsigned)WALL_BASE_FR, (unsigned)WALL_BASE_FL);
+    while (1) {
+        if (ad_fr > WALL_BASE_FR) {
+            log_print_velocity_all();
+            break;
+        } else if (ad_fl > WALL_BASE_FL) {
+            log_print_distance_all();
+            break;
+        }
+        HAL_Delay(50);
+    }
+
+    led_flash(3);
+}
 
 //============================================================
 // 前壁追従（match_position連続実行）テスト
@@ -80,9 +156,11 @@ void mode1() {
         switch (mode) {
         case 0: { // テストモード（mode2同様にサブ選択）
 
-            printf("Mode 1-0 Test (sub 0..1).\n");
+            printf("Mode 1-0 Test (sub 0..3).\n");
             printf("  sub0: Front wall follow (continuous)\n");
             printf("  sub1: Front wall follow + print (continuous)\n");
+            printf("  sub2: Straight test (explore params) + DISTANCE log\n");
+            printf("  sub3: Straight test (explore params) + VELOCITY log\n");
 
             led_flash(5);
 
@@ -96,6 +174,12 @@ void mode1() {
             case 1:
                 front_follow_continuous(1);
                 break;
+            case 2:
+                straight_test_explore_params(LOG_PROFILE_DISTANCE);
+                break;
+            case 3:
+                straight_test_explore_params(LOG_PROFILE_VELOCITY);
+                break;
             default:
                 printf("No sub-mode selected.\n");
                 break;
@@ -104,9 +188,7 @@ void mode1() {
             break;
         }
 
-        case 8: // 足立法 ゴール到達で終了 300mm/s
-
-            printf("Mode 1-8 (Goal Stop).\n");
+        case 8: { // 直進テスト or 足立法（ゴール到達で終了）
 
             // 直線
             acceleration_straight = 1000;
@@ -123,13 +205,11 @@ void mode1() {
             dist_wall_end = 0;
 
             // 壁制御とケツ当て
-            kp_wall = 0.015;
+            kp_wall = 0.12;
             duty_setposition = 40;
 
             // 壁判断しきい値の係数
             sensor_kx = 1.0;
-
-            MF.FLAG.WALL_ALIGN = 0;
 
             velocity_interrupt = 0;
 
@@ -153,6 +233,7 @@ void mode1() {
             led_wait();
 
             break;
+        }
 
         case 1: { // 
 

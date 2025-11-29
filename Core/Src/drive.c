@@ -249,105 +249,23 @@ void one_sectionA(void) {
 // 戻り値：なし
 //+++++++++++++++++++++++++++++++++++++++++++++++
 void one_sectionD(void) {
-    // 既知区間からの減速 1区画。2mm刻みで一定減速度を保ちつつ壁切れ検知を監視する。
+    // 探索では壁切れ検知を行わず、単純に1区画分を一定減速度で走行する
     float v0 = speed_now;
-    // 目標終端速度（従来式）
     float accel_lin = (MF.FLAG.SCND || acceled) ? acceleration_straight_dash : acceleration_straight; // [mm/s^2]
     float speed_out = sqrtf(fmaxf(0.0f, v0 * v0 - 2.0f * accel_lin * (DIST_HALF_SEC * 2.0f)));
 
     MF.FLAG.CTRL = 1;
 
+    // 前壁停止は維持
     if (ad_fl > WALL_BASE_FL || ad_fr > WALL_BASE_FR) {
         MF.FLAG.F_WALL_STOP = 1;
     }
 
-    // 壁切れ検知をアーム（探索でも検出できるようSCNDを一時有効化）
-    uint8_t prev_scnd = MF.FLAG.SCND;
-    MF.FLAG.R_WALL_END = 0;
-    MF.FLAG.L_WALL_END = 0;
-    MF.FLAG.WALL_END   = 1;
-    MF.FLAG.SCND       = 1;
-
-    // 全距離に対する一定減速度 a_const を算出（負）
-    const float total_mm = (DIST_HALF_SEC * 2.0f);
-    const float a_const = (speed_out * speed_out - v0 * v0) / (2.0f * total_mm); // 期待上は -accel_lin
-
-    float remaining_blocks = 2.0f; // 1区画
-    const float step_blocks = (2.0f / DIST_HALF_SEC); // 2mm相当
-    const float step_mm = step_blocks * DIST_HALF_SEC;
-    bool triggered = false;
-
-    while (remaining_blocks > 0.0f) {
-        float step = (remaining_blocks < step_blocks) ? remaining_blocks : step_blocks;
-        // 次ステップの目標速度（一定減速度）
-        float v_in = speed_now; // run_straight が更新していく現在速度
-        float v2 = v_in * v_in + 2.0f * a_const * (step * DIST_HALF_SEC);
-        if (v2 < 0.0f) v2 = 0.0f;
-        float v_next = sqrtf(v2);
-
-        run_straight(step, v_next, 0);
-
-        if (MF.FLAG.R_WALL_END || MF.FLAG.L_WALL_END) {
-            // 消費（クリア）
-            MF.FLAG.R_WALL_END = 0;
-            MF.FLAG.L_WALL_END = 0;
-            triggered = true;
-            break;
-        }
-        remaining_blocks -= step;
-    }
-
-    // 検出アーム解除とSCND復帰
-    MF.FLAG.WALL_END = 0;
-    MF.FLAG.SCND = prev_scnd;
-
-    if (triggered) {
-        // 検出後は「半区画 + dist_wall_end」でターン速度(velocity_turn90)まで減速する
-        float v_init = speed_now;                 // 検出直後の現在速度
-        float v_target = velocity_turn90;         // 探索の小回りターン入口速度
-        if (v_target < 0.0f) v_target = 0.0f;     // 念のためクランプ
-        if (v_target > v_init) v_target = v_init; // 減速のみ（加速はしない）
-        float follow_mm = (float)DIST_HALF_SEC + dist_wall_end;
-        if (follow_mm > 0.0f) {
-            // 一定減速度 a_follow を算出（v_target^2 = v_init^2 + 2*a*follow_mm）
-            float a_follow = (v_target * v_target - v_init * v_init) / (2.0f * follow_mm);
-
-            float remaining_follow_blocks = follow_mm / DIST_HALF_SEC;
-            const float step_blocks_f = (2.0f / DIST_HALF_SEC); // 2mm
-
-            while (remaining_follow_blocks > 0.0f) {
-                float step_b = (remaining_follow_blocks < step_blocks_f) ? remaining_follow_blocks : step_blocks_f;
-                float step_mm_f = step_b * DIST_HALF_SEC;
-                float v_in = speed_now;
-                // v_out^2 = v_in^2 + 2*a*ds
-                float v2 = v_in * v_in + 2.0f * a_follow * step_mm_f;
-                if (v2 < 0.0f) v2 = 0.0f;
-                float v_out = sqrtf(v2);
-                // 最終ステップはターゲットに合わせ込み
-                if (step_b == remaining_follow_blocks) {
-                    v_out = v_target;
-                }
-                run_straight(step_b, v_out, 0);
-                remaining_follow_blocks -= step_b;
-            }
-        }
-    } else {
-        // 未検知: 残り距離があれば一定減速度で完走（理論上 remaining_blocks は0）
-        while (remaining_blocks > 0.0f) {
-            float step = (remaining_blocks < step_blocks) ? remaining_blocks : step_blocks;
-            float v_in = speed_now;
-            float v2 = v_in * v_in + 2.0f * a_const * (step * DIST_HALF_SEC);
-            if (v2 < 0.0f) v2 = 0.0f;
-            float v_next = sqrtf(v2);
-            run_straight(step, v_next, 0);
-            remaining_blocks -= step;
-        }
-    }
+    // 1区画(=2.0 blocks)で終端速度まで減速
+    run_straight(2.0f, speed_out, 0);
 
     MF.FLAG.F_WALL_STOP = 0;
-
     MF.FLAG.CTRL = 0;
-
     get_wall_info();
 }
 
@@ -367,57 +285,14 @@ void one_section(void) {}
 //+++++++++++++++++++++++++++++++++++++++++++++++
 void one_sectionU(uint8_t CTRL) {
     (void)CTRL;
-    // 壁制御ONのまま、1区画を2mm刻みで走行しながら壁切れ検知を監視する
+    // 探索では壁切れ検知を行わず、指定距離（1区画）を等速で走行
     MF.FLAG.CTRL = 1;
 
     const float v_const = speed_now; // 等速維持
-
-    // 壁切れ検知のアーム（探索中でも検出できるようにSCNDを一時的に有効化）
-    uint8_t prev_scnd = MF.FLAG.SCND;
-    MF.FLAG.R_WALL_END = 0;
-    MF.FLAG.L_WALL_END = 0;
-    MF.FLAG.WALL_END   = 1;
-    MF.FLAG.SCND       = 1; // detect_wall_end() のゲート条件を満たすため一時的に有効化
-
-    // 1区画 = 半区画2つ分 = blocksで2.0
-    float remaining_blocks = 2.0f;
-    const float step_blocks = (2.0f / DIST_HALF_SEC); // 2mm相当で刻む
-    bool triggered = false;
-
-    while (remaining_blocks > 0.0f) {
-        float step = (remaining_blocks < step_blocks) ? remaining_blocks : step_blocks;
-        run_straight(step, v_const, 0);
-        if (MF.FLAG.R_WALL_END || MF.FLAG.L_WALL_END) {
-            // 消費（クリア）
-            MF.FLAG.R_WALL_END = 0;
-            MF.FLAG.L_WALL_END = 0;
-            triggered = true;
-            break;
-        }
-        remaining_blocks -= step;
-    }
-
-    // 検出アーム解除とSCND復帰
-    MF.FLAG.WALL_END = 0;
-    MF.FLAG.SCND = prev_scnd;
-
-    if (triggered) {
-        // 検出後は「半区画 + dist_wall_end」を等速で追従
-        float follow_mm = (float)DIST_HALF_SEC + dist_wall_end;
-        if (follow_mm > 0.0f) {
-            float extra_blocks = follow_mm / DIST_HALF_SEC;
-            run_straight(extra_blocks, v_const, 0);
-        }
-    } else {
-        // 未検知の場合、残りがあれば従来通り1区画分を完了
-        if (remaining_blocks > 0.0f) {
-            run_straight(remaining_blocks, v_const, 0);
-        }
-    }
+    run_straight(2.0f, v_const, 0);
 
     MF.FLAG.CTRL = 0;
     speed_now = v_const;
-
     get_wall_info();
 }
 

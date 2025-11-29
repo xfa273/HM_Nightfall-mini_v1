@@ -49,7 +49,7 @@ typedef union { // 共用体の宣言
         uint64_t WALL_END : 1;      // B20: 壁切れ探しフラグ
         uint64_t CTRL_DIAGONAL : 1; // B21: 斜め制御フラグ
         uint64_t WALL_ALIGN : 1;    // B22: 壁揃えフラグ
-        uint64_t SPARE_08 : 1;      // B23:
+        uint64_t SEARCH_HALF_RATE : 1;      // B23: 探索時のみ制御/エンコーダを0.5kHzに
         uint64_t SPARE_09 : 1;      // B24:
         uint64_t SPARE_10 : 1;      // B25:
         uint64_t SPARE_11 : 1;      // B26:
@@ -63,11 +63,12 @@ typedef union { // 共用体の宣言
 
 #ifdef MAIN_C_ // main.cからこのファイルが呼ばれている場合
 /*グローバル変数の定義*/
-volatile mouse_flags MF; // マウスステータスをまとめた共用・構造体
-
+volatile mouse_flags MF;
+volatile float g_ctrl_dt;
 #else // main.c以外からこのファイルが呼ばれている場合
 /*グローバル変数の宣言*/
 extern volatile mouse_flags MF;
+extern volatile float g_ctrl_dt;
 #endif
 #include <limits.h>
 #include <stdbool.h>

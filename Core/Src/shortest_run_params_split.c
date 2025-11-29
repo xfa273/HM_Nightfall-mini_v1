@@ -63,8 +63,8 @@ const ShortestRunModeParams_t shortestRunModeParams2 = {
 const ShortestRunCaseParams_t shortestRunCaseParamsMode2[9] = {
     // case1 (index 0): independent (initially same as former case3)
     {
-        .acceleration_straight = 1000.0f, .acceleration_straight_dash = 2000.0f,
-        .velocity_straight = 500.0f, .kp_wall = 0.05f,
+        .acceleration_straight = 1000.0f, .acceleration_straight_dash = 1000.0f,
+        .velocity_straight = 300.0f, .kp_wall = 0.12f,
         .straight_weight = 0, .diagonal_weight = 0
     },
     // case2 (index 1): independent (initially same as former case4)

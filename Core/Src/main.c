@@ -133,6 +133,9 @@ int main(void)
   MX_TIM6_Init();
   /* USER CODE BEGIN 2 */
 
+    // 既定の制御周期を1kHz(1ms)に設定
+    g_ctrl_dt = 0.001f;
+
     // setbuf(stdout, NULL); // printf用
 
     // (disabled) 起動直後のIMU WHO_AM_Iプローブ出力
