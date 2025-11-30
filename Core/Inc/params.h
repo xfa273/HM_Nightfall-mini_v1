@@ -91,8 +91,8 @@
 #define KI_ANGLE 0.0F // 角度制御のI項
 #define KD_ANGLE 0.0F // 角度制御のD項
 
-#define KP_OMEGA 1.1F  // 角速度制御のP項 1.84F
-#define KI_OMEGA 0.015F // 角速度制御のI項 0.075F
+#define KP_OMEGA 1.0F  // 角速度制御のP項 1.84F
+#define KI_OMEGA 0.012F // 角速度制御のI項 0.075F
 #define KD_OMEGA 0.0F  // 角速度制御のD項 0.16F
 #define FF_OMEGA 0.0F // 角速度制御のFF項 0.043F
 
