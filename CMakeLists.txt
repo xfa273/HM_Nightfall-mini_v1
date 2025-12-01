@@ -73,6 +73,7 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     Core/Src/sensor_distance.c
     Core/Src/distance_params.c
     Core/Src/shortest_run_params_split.c
+    Core/Src/search_run_params_split.c
     Core/Src/test_mode.c
 )
 

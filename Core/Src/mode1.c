@@ -8,80 +8,50 @@
 #include "global.h"
 #include "sensor_distance.h"
 #include "../Inc/logging.h"
+#include "../Inc/search_run_params.h"
 
-// 探索走行（mode1 標準）の基本パラメータを適用
-static void apply_explore_params_mode1_basic(void)
+
+
+//============================================================
+// 探索走行パラメータ適用ヘルパー関数
+//============================================================
+static void apply_search_params(int case_index)
 {
-    // 直線
-    acceleration_straight = 1000;
-    acceleration_straight_dash = 0; // run()は使わず one_sectionU 系で走るため0でOK
-    // ターン
-    velocity_turn90 = 300;
-    alpha_turn90 = 8850;
-    acceleration_turn = 0;
-    dist_offset_in = 10;   // 8
-    dist_offset_out = 16.5; // 15.5
-    val_offset_in = 1750;
-    angle_turn_90 = 89.5;
-    // 壁切れ後の距離
-    dist_wall_end = 0;
-
-    // 壁制御とケツ当て
-    kp_wall = 0.015f; // 探索時の既定
-    duty_setposition = 40;
-
-    // 壁判断しきい値の係数
-    sensor_kx = 1.0f;
-
-    MF.FLAG.WALL_ALIGN = 0;
-}
-
-// 探索パラメータでの直進テスト＋ログ出力（距離/速度プロファイルを選択）
-static void straight_test_explore_params(LogProfile profile)
-{
-    // パラメータを探索仕様に設定し、テストでは壁制御は切る
-    apply_explore_params_mode1_basic();
-    kp_wall = 0.0f; // mode2 case8 と同様、テスト時は壁制御を無効化
-
-    // 走行準備
-    led_flash(4);
-    drive_variable_reset();
-    IMU_GetOffset();
-    drive_enable_motor();
-    get_base();
-
-    // ログ開始
-    log_init();
-    log_set_profile(profile);
-    log_start(HAL_GetTick());
-
-    // 直進シナリオ: 初期 half_sectionA + S3 + 最後 half_sectionD
-
-    speed_now = 0;
-    half_sectionA(0);
-    one_sectionU(0);
-    one_sectionU(0);
-    one_sectionU(0);
-    half_sectionD(0);
-
-    // ログ停止
-    log_stop();
-
-    // CSV出力の選択（FR=速度, FL=距離）
-    printf("[mode1 straight-test] Press RIGHT FRONT for VELOCITY (FR>%u), LEFT FRONT for DISTANCE (FL>%u) ...\n",
-           (unsigned)WALL_BASE_FR, (unsigned)WALL_BASE_FL);
-    while (1) {
-        if (ad_fr > WALL_BASE_FR) {
-            log_print_velocity_all();
-            break;
-        } else if (ad_fl > WALL_BASE_FL) {
-            log_print_distance_all();
-            break;
-        }
-        HAL_Delay(50);
+    if (case_index < 0 || case_index >= 2) {
+        printf("Error: Invalid case_index %d\n", case_index);
+        return;
     }
 
-    led_flash(3);
+    const SearchRunParams_t *params = &searchRunParams[case_index];
+
+    // 直線パラメータ
+    acceleration_straight = params->acceleration_straight;
+    acceleration_straight_dash = params->acceleration_straight_dash;
+
+    // ターンパラメータ
+    velocity_turn90 = params->velocity_turn90;
+    alpha_turn90 = params->alpha_turn90;
+    acceleration_turn = params->acceleration_turn;
+    dist_offset_in = params->dist_offset_in;
+    dist_offset_out = params->dist_offset_out;
+    val_offset_in = params->val_offset_in;
+    angle_turn_90 = params->angle_turn_90;
+
+    // 壁切れ後の追従距離
+    dist_wall_end = params->dist_wall_end;
+
+    // 壁制御パラメータ
+    kp_wall = params->kp_wall;
+    duty_setposition = params->duty_setposition;
+
+    // センサパラメータ
+    sensor_kx = params->sensor_kx;
+
+    // フラグ
+    MF.FLAG.WALL_ALIGN = params->wall_align_enable;
+
+    printf("Applied search params case %d (velocity: %.0f mm/s)\n", 
+           case_index + 1, params->velocity_turn90);
 }
 
 //============================================================
@@ -154,13 +124,7 @@ void mode1() {
         mode = select_mode(mode);
 
         switch (mode) {
-        case 0: { // テストモード（mode2同様にサブ選択）
-
-            printf("Mode 1-0 Test (sub 0..3).\n");
-            printf("  sub0: Front wall follow (continuous)\n");
-            printf("  sub1: Front wall follow + print (continuous)\n");
-            printf("  sub2: Straight test (explore params) + DISTANCE log\n");
-            printf("  sub3: Straight test (explore params) + VELOCITY log\n");
+        case 0: { // テストモード
 
             led_flash(5);
 
@@ -169,345 +133,35 @@ void mode1() {
 
             switch (sub) {
             case 0:
-                front_follow_continuous(0);
+
                 break;
             case 1:
-                front_follow_continuous(1);
+
                 break;
             case 2:
-                straight_test_explore_params(LOG_PROFILE_DISTANCE);
+
                 break;
             case 3:
-                straight_test_explore_params(LOG_PROFILE_VELOCITY);
+
                 break;
             default:
-                printf("No sub-mode selected.\n");
+
                 break;
             }
 
             break;
         }
 
-        case 8: { // 直進テスト or 足立法（ゴール到達で終了）
 
-            // 直線
-            acceleration_straight = 1000;
-            acceleration_straight_dash = 0; // 5000
-            // ターン
-            velocity_turn90 = 300;
-            alpha_turn90 = 8850;
-            acceleration_turn = 0;
-            dist_offset_in = 10;   // 8
-            dist_offset_out = 16.5; // 15.5
-            val_offset_in = 1750;
-            angle_turn_90 = 89.5;
-            // 壁切れ後の距離
-            dist_wall_end = 0;
+        case 1: { // 標準速度で ゴール探索→全面探索
 
-            // 壁制御とケツ当て
-            kp_wall = 0.12;
-            duty_setposition = 40;
-
-            // 壁判断しきい値の係数
-            sensor_kx = 1.0;
+            printf("Mode 1-1: Standard speed (Goal->Full).\n");
+            
+            // パラメータ適用（標準速度）
+            apply_search_params(0);
 
             velocity_interrupt = 0;
 
-            led_flash(10);
-
-            drive_variable_reset();
-            IMU_GetOffset();
-            drive_enable_motor();
-
-            led_flash(2);
-
-            get_base();
-
-            drive_start();
-
-            // ゴール到達で終了モード
-            set_search_mode(SEARCH_MODE_GOAL);
-
-            adachi();
-
-            led_wait();
-
-            break;
-        }
-
-        case 1: { // 
-
-            printf("Mode 1-1.\n");
-
-            // 直線
-            acceleration_straight = 1000;
-            acceleration_straight_dash = 1500; // 5000
-            // ターン
-            velocity_turn90 = 300;
-            alpha_turn90 = 8850;
-            acceleration_turn = 0;
-            dist_offset_in = 10;   // 8
-            dist_offset_out = 16.5; // 15.5
-            val_offset_in = 1750;
-            angle_turn_90 = 89.5;
-            // 壁切れ後の距離
-            dist_wall_end = 0;
-
-            // 壁制御とケツ当て
-            kp_wall = 0.12;
-            duty_setposition = 40;
-
-            // 壁判断しきい値の係数
-            sensor_kx = 1.0;
-
-            MF.FLAG.WALL_ALIGN = 1;
-
-            velocity_interrupt = 0;
-
-            led_flash(10);
-
-            drive_variable_reset();
-            IMU_GetOffset();
-            drive_enable_motor();
-
-            led_flash(2);
-
-            get_base();
-
-            drive_start();
-
-            adachi();
-
-            led_wait();
-
-            break;
-        }
-
-        case 2: // 足立法全面探索 300mm/s
-
-            printf("Mode 1-2.\n");
-
-            // 直線
-            acceleration_straight = 1000;
-            acceleration_straight_dash = 0; // 5000
-            // ターン
-            velocity_turn90 = 300;
-            alpha_turn90 = 8850;
-            acceleration_turn = 0;
-            dist_offset_in = 10;   // 8
-            dist_offset_out = 16.5; // 15.5
-            val_offset_in = 1750;
-            angle_turn_90 = 89.5;
-            // 壁切れ後の距離
-            dist_wall_end = 0;
-
-            // 壁制御とケツ当て
-            kp_wall = 0.015;
-            duty_setposition = 40;
-
-            // 壁判断しきい値の係数
-            sensor_kx = 1.0;
-
-            MF.FLAG.WALL_ALIGN = 0;
-
-            velocity_interrupt = 0;
-
-            led_flash(10);
-
-            drive_variable_reset();
-            IMU_GetOffset();
-            drive_enable_motor();
-
-            led_flash(2);
-
-            get_base();
-
-            drive_start();
-
-            adachi();
-
-            led_wait();
-
-            break;
-
-        case 3: // 足立法全面探索 300mm/s しきい値高め
-
-            printf("Mode 1-3.\n");
-
-            // 直線
-            acceleration_straight = 1000;
-            acceleration_straight_dash = 0; // 5000
-            // ターン
-            velocity_turn90 = 300;
-            alpha_turn90 = 8850;
-            acceleration_turn = 0;
-            dist_offset_in = 10;   // 8
-            dist_offset_out = 16.5; // 15.5
-            val_offset_in = 1750;
-            angle_turn_90 = 89.5;
-            // 壁切れ後の距離
-            dist_wall_end = 0;
-
-            // 壁制御とケツ当て
-            kp_wall = 0.015;
-            duty_setposition = 40;
-
-            // 壁判断しきい値の係数
-            sensor_kx = 1.1;
-
-            MF.FLAG.WALL_ALIGN = 0;
-
-            velocity_interrupt = 0;
-
-            led_flash(10);
-
-            drive_variable_reset();
-            IMU_GetOffset();
-            drive_enable_motor();
-
-            led_flash(2);
-
-            get_base();
-
-            drive_start();
-
-            adachi();
-
-            led_wait();
-
-            break;
-
-        case 4: // // 足立法全面探索 300mm/s  しきい値低め
-            printf("Mode 1-4.\n");
-
-            // 直線
-            acceleration_straight = 1000;
-            acceleration_straight_dash = 0; // 5000
-            // ターン
-            velocity_turn90 = 300;
-            alpha_turn90 = 8850;
-            acceleration_turn = 0;
-            dist_offset_in = 10;   // 8
-            dist_offset_out = 16.5; // 15.5
-            val_offset_in = 1750;
-            angle_turn_90 = 89.5;
-            // 壁切れ後の距離
-            dist_wall_end = 0;
-
-            // 壁制御とケツ当て
-            kp_wall = 0.015;
-            duty_setposition = 40;
-
-            // 壁判断しきい値の係数
-            sensor_kx = 0.9;
-
-            MF.FLAG.WALL_ALIGN = 0;
-
-            velocity_interrupt = 0;
-
-            led_flash(10);
-
-            drive_variable_reset();
-            IMU_GetOffset();
-            drive_enable_motor();
-
-            led_flash(2);
-
-            get_base();
-
-            drive_start();
-
-            adachi();
-
-            led_wait();
-
-            break;
-
-        case 5: // 吸引探索 600mm/s
-
-            printf("Mode 1-5.\n");
-
-            MF.FLAG.RUNNING = 1;
-
-            // 直線
-            acceleration_straight = 4000;
-            acceleration_straight_dash = 0; // 5000
-            // ターン
-            velocity_turn90 = 300;
-            alpha_turn90 = 8850;
-            acceleration_turn = 0;
-            dist_offset_in = 10;   // 8
-            dist_offset_out = 16.5; // 15.5
-            val_offset_in = 1750;
-            angle_turn_90 = 89.5;
-            // 壁切れ後の距離
-            dist_wall_end = 0;
-
-            // 壁制御とケツ当て
-            kp_wall = 0.05;
-            duty_setposition = 40;
-
-            // 壁判断しきい値の係数
-            sensor_kx = 1.0;
-
-            MF.FLAG.WALL_ALIGN = 0;
-
-            velocity_interrupt = 0;
-
-            led_flash(10);
-
-            drive_variable_reset();
-            IMU_GetOffset();
-            drive_enable_motor();
-
-            led_flash(2);
-
-            get_base();
-
-            drive_fan(300);
-            led_flash(3);
-
-            drive_start();
-
-            adachi();
-
-            drive_fan(0);
-
-            led_wait();
-
-            break;
-
-        case 6: // まずゴール探索→保存→全面探索（300mm/s）
-
-            printf("Mode 1-6 (Goal->Save->Full Explore).\n");
-
-            // ===== 走行パラメータ（case 2 と同一） =====
-            // 直線
-            acceleration_straight = 1000;
-            acceleration_straight_dash = 0; // 5000
-            // ターン
-            velocity_turn90 = 300;
-            alpha_turn90 = 8850;
-            acceleration_turn = 0;
-            dist_offset_in = 10;   // 8
-            dist_offset_out = 16.5; // 15.5
-            val_offset_in = 1750;
-            angle_turn_90 = 89.5;
-            // 壁切れ後の距離
-            dist_wall_end = 0;
-
-            // 壁制御とケツ当て
-            kp_wall = 0.015;
-            duty_setposition = 40;
-
-            // 壁判断しきい値の係数
-            sensor_kx = 1.0;
-
-            MF.FLAG.WALL_ALIGN = 0;
-
-            velocity_interrupt = 0;
-
-            // ===== 事前準備 =====
             led_flash(10);
 
             drive_variable_reset();
@@ -528,10 +182,10 @@ void mode1() {
 
             // ===== 第2フェーズ: 全面探索 =====
             led_flash(2);
+            drive_variable_reset();
             get_base();
             drive_start();
             set_search_mode(SEARCH_MODE_FULL);
-            // フル探索に切り替えた直後の「最初の停止での保存」を1回抑制
             g_suppress_first_stop_save = true;
             search_end = false;
             adachi();
@@ -539,38 +193,47 @@ void mode1() {
             led_wait();
 
             break;
+        }
 
-        case 7: // ゴール探索→保存→スタートへ復帰（300mm/s）
+        case 2: // 標準速度で 最初から全面探索
 
-            printf("Mode 1-7 (Goal->Save->Return to Start).\n");
+            printf("Mode 1-2: Standard speed (Full from start).\n");
 
-            // ===== 走行パラメータ（case 2 と同一） =====
-            // 直線
-            acceleration_straight = 1000;
-            acceleration_straight_dash = 0; // 5000
-            // ターン
-            velocity_turn90 = 300;
-            alpha_turn90 = 8850;
-            acceleration_turn = 0;
-            dist_offset_in = 10;   // 8
-            dist_offset_out = 16.5; // 15.5
-            val_offset_in = 1750;
-            angle_turn_90 = 89.5;
-            // 壁切れ後の距離
-            dist_wall_end = 0;
-
-            // 壁制御とケツ当て
-            kp_wall = 0.015;
-            duty_setposition = 40;
-
-            // 壁判断しきい値の係数
-            sensor_kx = 1.0;
-
-            MF.FLAG.WALL_ALIGN = 0;
+            // パラメータ適用（標準速度）
+            apply_search_params(0);
 
             velocity_interrupt = 0;
 
-            // ===== 事前準備 =====
+            led_flash(10);
+
+            drive_variable_reset();
+            IMU_GetOffset();
+            drive_enable_motor();
+
+            led_flash(2);
+
+            get_base();
+
+            drive_start();
+            
+            // 最初から全面探索
+            set_search_mode(SEARCH_MODE_FULL);
+            search_end = false;
+            adachi();
+
+            led_wait();
+
+            break;
+
+        case 3: // 標準速度で ゴール探索→スタートへ帰り探索
+
+            printf("Mode 1-3: Standard speed (Goal->Return to Start).\n");
+
+            // パラメータ適用（標準速度）
+            apply_search_params(0);
+
+            velocity_interrupt = 0;
+
             led_flash(10);
 
             drive_variable_reset();
@@ -583,31 +246,221 @@ void mode1() {
             get_base();
             drive_start();
             set_search_mode(SEARCH_MODE_GOAL);
-            g_goal_is_start = false; // ゴールセルを到達判定
-            goal_x = GOAL_X; goal_y = GOAL_Y; // 念のため明示
+            g_goal_is_start = false;
+            goal_x = GOAL_X; goal_y = GOAL_Y;
             search_end = false;
             adachi();
 
-            // ゴール到達後に一度だけ安全に保存（Uターン時に保存済みなら二重保存を避ける）
+            // ゴール到達後に一度だけ安全に保存
             if (save_count == 0) {
                 if (try_store_map_safely()) {
-                    save_count = 1; // 以後の自動保存を抑制
+                    save_count = 1;
                 }
             }
 
             // ===== 第2フェーズ: スタートへ復帰（スタート到達で終了） =====
             led_flash(2);
+            drive_variable_reset();
             get_base();
             drive_start();
             set_search_mode(SEARCH_MODE_GOAL);
-            MF.FLAG.GOALED = 0; // 復路ではゴール判定フラグに依存しない
-            g_goal_is_start = true; // スタート座標を到達判定に使用
-            goal_x = START_X; goal_y = START_Y; // 経路導出もスタートへ
+            MF.FLAG.GOALED = 0;
+            g_goal_is_start = true;
+            goal_x = START_X; goal_y = START_Y;
             search_end = false;
             adachi();
 
             // 後処理
-            g_goal_is_start = false; // 後続モードへの影響を避ける
+            g_goal_is_start = false;
+
+            led_wait();
+
+            break;
+
+        case 4: // 標準速度で ゴール探索→ゴール到達で終了
+            printf("Mode 1-4: Standard speed (Goal only).\n");
+
+            // パラメータ適用（標準速度）
+            apply_search_params(0);
+
+            velocity_interrupt = 0;
+
+            led_flash(10);
+
+            drive_variable_reset();
+            IMU_GetOffset();
+            drive_enable_motor();
+
+            led_flash(2);
+
+            get_base();
+
+            drive_start();
+            
+            // ゴール到達で終了モード
+            set_search_mode(SEARCH_MODE_GOAL);
+            search_end = false;
+            adachi();
+
+            led_wait();
+
+            break;
+
+        case 5: // 低速で ゴール探索→全面探索
+
+            printf("Mode 1-5: Low speed (Goal->Full).\n");
+
+            MF.FLAG.RUNNING = 1;
+
+            // パラメータ適用（低速）
+            apply_search_params(1);
+
+            velocity_interrupt = 0;
+
+            led_flash(10);
+
+            drive_variable_reset();
+            IMU_GetOffset();
+            drive_enable_motor();
+
+            led_flash(2);
+
+            // ===== 第1フェーズ: ゴール到達で終了 =====
+            get_base();
+            drive_start();
+            set_search_mode(SEARCH_MODE_GOAL);
+            search_end = false;
+            adachi();
+
+            // 一旦マップ保存
+            store_map_in_eeprom();
+
+            // ===== 第2フェーズ: 全面探索 =====
+            led_flash(2);
+            drive_variable_reset();
+            get_base();
+            drive_start();
+            set_search_mode(SEARCH_MODE_FULL);
+            g_suppress_first_stop_save = true;
+            search_end = false;
+            adachi();
+
+            led_wait();
+
+            break;
+
+        case 6: // 低速で 最初から全面探索
+
+            printf("Mode 1-6: Low speed (Full from start).\n");
+
+            MF.FLAG.RUNNING = 1;
+
+            // パラメータ適用（低速）
+            apply_search_params(1);
+
+            velocity_interrupt = 0;
+
+            led_flash(10);
+
+            drive_variable_reset();
+            IMU_GetOffset();
+            drive_enable_motor();
+
+            led_flash(2);
+
+            get_base();
+
+            drive_start();
+            
+            // 最初から全面探索
+            set_search_mode(SEARCH_MODE_FULL);
+            search_end = false;
+            adachi();
+
+            led_wait();
+
+            break;
+
+        case 7: // 低速で ゴール探索→スタートへ帰り探索
+
+            printf("Mode 1-7: Low speed (Goal->Return to Start).\n");
+
+            MF.FLAG.RUNNING = 1;
+
+            // パラメータ適用（低速）
+            apply_search_params(1);
+
+            velocity_interrupt = 0;
+
+            led_flash(10);
+
+            drive_variable_reset();
+            IMU_GetOffset();
+            drive_enable_motor();
+
+            led_flash(2);
+
+            // ===== 第1フェーズ: ゴール到達で終了 =====
+            get_base();
+            drive_start();
+            set_search_mode(SEARCH_MODE_GOAL);
+            g_goal_is_start = false;
+            goal_x = GOAL_X; goal_y = GOAL_Y;
+            search_end = false;
+            adachi();
+
+            // ゴール到達後に一度だけ安全に保存
+            if (save_count == 0) {
+                if (try_store_map_safely()) {
+                    save_count = 1;
+                }
+            }
+
+            // ===== 第2フェーズ: スタートへ復帰（スタート到達で終了） =====
+            led_flash(2);
+            drive_variable_reset();
+            get_base();
+            drive_start();
+            set_search_mode(SEARCH_MODE_GOAL);
+            MF.FLAG.GOALED = 0;
+            g_goal_is_start = true;
+            goal_x = START_X; goal_y = START_Y;
+            search_end = false;
+            adachi();
+
+            // 後処理
+            g_goal_is_start = false;
+
+            led_wait();
+
+            break;
+
+        case 8: // 低速で ゴール探索→ゴール到達で終了
+            printf("Mode 1-8: Low speed (Goal only).\n");
+
+            MF.FLAG.RUNNING = 1;
+
+            // パラメータ適用（低速）
+            apply_search_params(1);
+
+            velocity_interrupt = 0;
+
+            led_flash(10);
+
+            drive_variable_reset();
+            IMU_GetOffset();
+            drive_enable_motor();
+
+            led_flash(2);
+
+            get_base();
+
+            drive_start();
+            
+            // ゴール到達で終了モード
+            set_search_mode(SEARCH_MODE_GOAL);
+            search_end = false;
+            adachi();
 
             led_wait();
 
