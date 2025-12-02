@@ -69,8 +69,9 @@ void search_init(void) {
     mouse.dir = 0; // マウスの向きの初期化
     search_end = false;
     save_count = 0;
-    g_search_mode = SEARCH_MODE_FULL; // デフォルトは全面探索
-    g_suppress_first_stop_save = false; // 初期状態では抑制しない
+    g_search_mode = SEARCH_MODE_FULL; 
+    g_suppress_first_stop_save = false;
+    g_second_phase_search = false;
     g_goal_is_start = false; // 初期状態ではスタートをゴール扱いしない
 }
 
@@ -195,6 +196,14 @@ void adachi(void) {
 
     //====前に壁が無い想定で問答無用で前進====
     speed_now = 0;
+    
+    // 第2フェーズ探索の場合は区画後端まで後退してから開始
+    if (g_second_phase_search) {
+        reverse_distance(DIST_FIRST_SEC);
+
+        g_second_phase_search = false;  // フラグをリセット
+    }
+    
     first_sectionA();
     half_sectionU();
     // adv_pos();
@@ -273,10 +282,10 @@ void adachi(void) {
                     rotate_R90();
                     half_sectionA(1);
                 }else{
-                    one_sectionU(1);
+                    one_sectionU(1.0f, speed_now);
                 }
             } else {
-                one_sectionU(1);
+                one_sectionU(1.0f, speed_now);
             }
 
             led_write(0, 0);
@@ -450,8 +459,13 @@ void conf_route() {
     if (g_search_mode == SEARCH_MODE_GOAL) {
         // ゴールに到達したら終了（複数ゴール対応）
         // 復路(g_goal_is_start=true)ではスタート到達だけを判定対象にし、ゴール座標は無視
-        if ((g_goal_is_start && mouse.x == START_X && mouse.y == START_Y) ||
-            (!g_goal_is_start && is_in_goal_cells(mouse.x, mouse.y))) {
+        if (g_goal_is_start && mouse.x == START_X && mouse.y == START_Y) {
+            search_end = true;
+            return;
+        }
+        
+        // 往路では複数ゴールのいずれかに到達したら終了
+        if (!g_goal_is_start && is_in_goal_cells(mouse.x, mouse.y)) {
             search_end = true;
             return;
         }

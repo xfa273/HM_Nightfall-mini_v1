@@ -100,6 +100,9 @@ bool g_suppress_first_stop_save;
 /* GOALモード時の到達判定にスタート座標を用いるフラグ（trueでSTART_X/START_Yを到達判定に含める） */
 bool g_goal_is_start;
 
+/* 第2フェーズ探索フラグ（ゴール区画からの再開始を示す） */
+bool g_second_phase_search;
+
 #else // main.c以外からこのファイルが呼ばれている場合
 /*グローバル変数の宣言*/
 extern uint16_t map[MAZE_SIZE][MAZE_SIZE];         // マップ格納配列
@@ -141,6 +144,9 @@ extern bool g_suppress_first_stop_save;
 
 /* GOALモード時に開始座標を到達判定に含めるフラグ */
 extern bool g_goal_is_start;
+
+/* 第2フェーズ探索フラグ（ゴール区画からの再開始を示す） */
+extern bool g_second_phase_search;
 
 #endif
 

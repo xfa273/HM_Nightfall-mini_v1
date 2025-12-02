@@ -124,7 +124,9 @@ void mode1() {
         mode = select_mode(mode);
 
         switch (mode) {
-        case 0: { // テストモード
+        case 0: { // 探索走行テスト調整モード
+
+            printf("Mode 1-0 Search Test (sub 0..3).\n");
 
             led_flash(5);
 
@@ -133,19 +135,167 @@ void mode1() {
 
             switch (sub) {
             case 0:
-
+                printf("[Test] Reserved (not implemented).\n");
                 break;
-            case 1:
 
+            case 1: { // 標準速度 小回りターン
+                printf("Mode 1-0-1: Standard speed turn test.\n");
+                
+                // 標準速度パラメータ適用
+                apply_search_params(0);
+                
+                // 壁制御・補正無効化
+                float kp_wall_backup = kp_wall;
+                float dist_wall_end_backup = dist_wall_end;
+                kp_wall = 0.0f;           // 横壁制御無効
+                dist_wall_end = 0.0f;     // 壁切れ補正無効
+                MF.FLAG.CTRL = 0;         // 制御系無効化
+                
+                // モーター・センサ初期化
+                drive_variable_reset();
+                IMU_GetOffset();
+                drive_enable_motor();
+                
+                // ログ開始
+                log_init();
+                log_set_profile(LOG_PROFILE_OMEGA);
+                log_start(HAL_GetTick());
+                
+                // 探索走行シーケンス実行
+                drive_start();
+                half_sectionA(1);
+                turn_R90(0);       
+                half_sectionD(0);      
+                drive_stop();
+                
+                // ログ停止
+                log_stop();
+                
+                // パラメータ復元
+                kp_wall = kp_wall_backup;
+                dist_wall_end = dist_wall_end_backup;
+                
+                // センサ入力待ち
+                printf("[mode1-case0-sub1] Press RIGHT FRONT for OMEGA (FR>%u), LEFT FRONT for ANGLE (FL>%u) ...\n",
+                       (unsigned)WALL_BASE_FR, (unsigned)WALL_BASE_FL);
+                while (1) {
+                    if (ad_fr > WALL_BASE_FR) {
+                        log_print_omega_all();
+                        break;
+                    } else if (ad_fl > WALL_BASE_FL) {
+                        log_print_angle_all();
+                        break;
+                    }
+                    HAL_Delay(50);
+                }
                 break;
-            case 2:
-
+            }
+            
+            case 2: { // 低速 小回りターン
+                printf("Mode 1-0-2: Low speed turn test.\n");
+                
+                // 低速パラメータ適用
+                apply_search_params(1);
+                
+                // 壁制御・補正無効化
+                float kp_wall_backup = kp_wall;
+                float dist_wall_end_backup = dist_wall_end;
+                kp_wall = 0.0f;           // 横壁制御無効
+                dist_wall_end = 0.0f;     // 壁切れ補正無効
+                MF.FLAG.CTRL = 0;         // 制御系無効化
+                
+                // モーター・センサ初期化
+                drive_variable_reset();
+                IMU_GetOffset();
+                drive_enable_motor();
+                
+                // ログ開始
+                log_init();
+                log_set_profile(LOG_PROFILE_OMEGA);
+                log_start(HAL_GetTick());
+                
+                // 探索走行シーケンス実行
+                drive_start();
+                half_sectionA(1);
+                turn_R90(0);       
+                half_sectionD(0);      
+                drive_stop();
+                
+                // ログ停止
+                log_stop();
+                
+                // パラメータ復元
+                kp_wall = kp_wall_backup;
+                dist_wall_end = dist_wall_end_backup;
+                
+                // センサ入力待ち
+                printf("[mode1-case0-sub2] Press RIGHT FRONT for OMEGA (FR>%u), LEFT FRONT for ANGLE (FL>%u) ...\n",
+                       (unsigned)WALL_BASE_FR, (unsigned)WALL_BASE_FL);
+                while (1) {
+                    if (ad_fr > WALL_BASE_FR) {
+                        log_print_omega_all();
+                        break;
+                    } else if (ad_fl > WALL_BASE_FL) {
+                        log_print_angle_all();
+                        break;
+                    }
+                    HAL_Delay(50);
+                }
                 break;
-            case 3:
-
+            }
+            
+            case 3: { // 直進3区画
+                printf("Mode 1-0-3: Straight 3-section test.\n");
+                
+                // 標準速度パラメータ適用
+                apply_search_params(0);
+                
+                // 壁制御・補正無効化
+                float kp_wall_backup = kp_wall;
+                float dist_wall_end_backup = dist_wall_end;
+                kp_wall = 0.0f;           // 横壁制御無効
+                dist_wall_end = 0.0f;     // 壁切れ補正無効
+                MF.FLAG.CTRL = 0;         // 制御系無効化
+                
+                // モーター・センサ初期化
+                drive_variable_reset();
+                IMU_GetOffset();
+                drive_enable_motor();
+                
+                // ログ開始
+                log_init();
+                log_set_profile(LOG_PROFILE_VELOCITY);
+                log_start(HAL_GetTick());
+                
+                // 探索走行シーケンス実行
+                drive_start();
+                first_sectionA();     // 最初の加速区画
+                one_sectionU(1.0f, speed_now);        // 2区画目
+                one_sectionU(1.0f, speed_now);        // 3区画目
+                drive_stop();
+                
+                // ログ停止
+                log_stop();
+                
+                // パラメータ復元
+                kp_wall = kp_wall_backup;
+                dist_wall_end = dist_wall_end_backup;
+                
+                // センサ入力待ち（直進なのでVELOCITYログのみ）
+                printf("[mode1-case0-sub3] Press RIGHT FRONT for VELOCITY log (FR>%u) ...\n",
+                       (unsigned)WALL_BASE_FR);
+                while (1) {
+                    if (ad_fr > WALL_BASE_FR) {
+                        log_print_all();
+                        break;
+                    }
+                    HAL_Delay(50);
+                }
                 break;
+            }
+            
             default:
-
+                printf("Invalid sub mode.\n");
                 break;
             }
 
@@ -187,6 +337,7 @@ void mode1() {
             drive_start();
             set_search_mode(SEARCH_MODE_FULL);
             g_suppress_first_stop_save = true;
+            g_second_phase_search = true;  // 第2フェーズフラグ設定
             search_end = false;
             adachi();
 
@@ -268,6 +419,7 @@ void mode1() {
             g_goal_is_start = true;
             goal_x = START_X; goal_y = START_Y;
             search_end = false;
+            g_second_phase_search = true;  // 第2フェーズフラグ設定
             adachi();
 
             // 後処理
@@ -342,6 +494,7 @@ void mode1() {
             drive_start();
             set_search_mode(SEARCH_MODE_FULL);
             g_suppress_first_stop_save = true;
+            g_second_phase_search = true;  // 第2フェーズフラグ設定
             search_end = false;
             adachi();
 
@@ -426,6 +579,7 @@ void mode1() {
             g_goal_is_start = true;
             goal_x = START_X; goal_y = START_Y;
             search_end = false;
+            g_second_phase_search = true;  // 第2フェーズフラグ設定
             adachi();
 
             // 後処理

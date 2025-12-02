@@ -390,11 +390,12 @@ void driveWallEnd(float, float, float);
 void first_sectionA(void);     // 最初の一区画
 void half_sectionA(uint16_t);  // 加速半区画
 void half_sectionD(uint16_t);  // 減速半区画
-void half_sectionAD(uint16_t); // 加速斜め半区画
-void half_sectionDD(uint16_t); // 減速斜め半区画
+void half_sectionD(uint16_t val);
+void half_sectionDD(uint16_t val);
 void half_sectionU(void);
-void one_section(void);     // 加減速一区画
-void one_sectionU(uint8_t); // 等速一区画
+void reverse_distance(float distance_mm);
+void one_sectionU(float section, float spd_out);
+void diag_sectionU(float section, float spd_out); // 等速一区画
 void one_sectionA(void);
 void one_sectionD(void);
 void run_straight(float, float, float); // 指定区画を指定速度で走行

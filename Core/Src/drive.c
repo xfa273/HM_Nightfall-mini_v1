@@ -155,31 +155,13 @@ void half_sectionAD(uint16_t val) {
 // 戻り値：なし
 //+++++++++++++++++++++++++++++++++++++++++++++++
 void half_sectionD(uint16_t val) {
-    float speed_out;
-
-    if (val > 1) {
-        speed_out = val;
-    } else {
-        if (MF.FLAG.SCND && acceleration_straight_dash > 0 && val) {
-            speed_out = sqrt(speed_now * speed_now -
-                             2 * acceleration_straight_dash * DIST_HALF_SEC);
-        } else {
-            speed_out = 0;
-        }
-    }
+    float speed_out = 0;  // 減速停止
+    (void)val;
 
     MF.FLAG.CTRL = 1;
-
     driveA(DIST_HALF_SEC, speed_now, speed_out, 0);
-
     MF.FLAG.CTRL = 0;
     speed_now = speed_out;
-
-    if (!val) {
-        velocity_interrupt = 0;
-    }
-
-    // get_wall_info();
 }
 
 //+++++++++++++++++++++++++++++++++++++++++++++++
@@ -285,8 +267,9 @@ void one_section(void) {}
 // 引数：なし
 // 戻り値：なし
 //+++++++++++++++++++++++++++++++++++++++++++++++
-void one_sectionU(uint8_t CTRL) {
-    (void)CTRL;
+void one_sectionU(float section, float spd_out) {
+    (void)section;
+    (void)spd_out;
     // 探索向け: 単一の連続走行で等速のまま1区画進み、必要なら壁切れ追従（半区画+バッファ）
     MF.FLAG.CTRL = 1;
 
@@ -354,6 +337,38 @@ void rotate_R90(void) {
 void rotate_L90(void) {
     driveR(-ANGLE_ROTATE_90_L);
     // drive_stop();
+}
+
+//+++++++++++++++++++++++++++++++++++++++++++++++
+// reverse_distance
+// 指定距離だけ後退する
+// 引数：後退距離[mm]
+// 戻り値：なし
+//+++++++++++++++++++++++++++++++++++++++++++++++
+void reverse_distance(float distance_mm) {
+    // 割込み内の変数をリセット
+    drive_variable_reset();
+
+    // 走行距離カウントをリセット
+    real_distance = 0;
+    encoder_distance_r = 0;
+    encoder_distance_l = 0;
+
+    // 設定距離だけ後進
+    velocity_interrupt = -60;
+    drive_start();
+    while(real_distance > - distance_mm){}
+    drive_stop();
+
+    // 割込み内の変数をリセット
+    drive_variable_reset();
+
+    // 走行距離カウントをリセット
+    real_distance = 0;
+    encoder_distance_r = 0;
+    encoder_distance_l = 0;
+
+    speed_now = 0;  // 後退後は停止状態
 }
 
 //+++++++++++++++++++++++++++++++++++++++++++++++
@@ -1980,7 +1995,7 @@ void test_run(void) {
             log_start(HAL_GetTick());
             
             half_sectionA(0);
-            one_sectionU(0);
+            one_sectionU(1.0f, speed_now);
             half_sectionD(0);
             log_stop();
 
@@ -2033,9 +2048,9 @@ void test_run(void) {
             log_start(HAL_GetTick());
             
             half_sectionA(0);
-            one_sectionU(0);
-            one_sectionU(0);
-            one_sectionU(0);
+            one_sectionU(1.0f, speed_now);
+            one_sectionU(1.0f, speed_now);
+            one_sectionU(1.0f, speed_now);
             half_sectionD(0);
             log_stop();
 
