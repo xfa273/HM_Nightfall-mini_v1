@@ -638,7 +638,7 @@ void detect_wall_end(void) {
     if (s_prev_r && !r_has) {
         if (gate_on) {
             MF.FLAG.R_WALL_END = 1; // 最終フラグ: 消費側で明示的にクリア
-            buzzer_interrupt(2000); // 確認用（SUCTION時は抑制）
+            buzzer_interrupt(900); // 確認用（SUCTION時は抑制）
         }
     }
 
@@ -646,7 +646,7 @@ void detect_wall_end(void) {
     if (s_prev_l && !l_has) {
         if (gate_on) {
             MF.FLAG.L_WALL_END = 1; // 最終フラグ: 消費側で明示的にクリア
-            buzzer_interrupt(2400);
+            buzzer_interrupt(900);
         }
     }
 

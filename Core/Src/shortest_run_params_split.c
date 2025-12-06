@@ -3,14 +3,13 @@
 // ========================= Mode 2 =========================
 const ShortestRunModeParams_t shortestRunModeParams2 = {
     // 90deg
-    .velocity_turn90    = 300.0f,
-    .alpha_turn90       = 8850.0f,
-    .acceleration_turn  = 0.0f,
-    .dist_offset_in     = 10.0f,
-    .dist_offset_out    = 19.0f,
-    .val_offset_in      = 1750.0f,
-    .angle_turn_90      = 89.5f,
-    .dist_wall_end      = 1.0f,
+    .velocity_turn90 = 300.0f,
+    .alpha_turn90 = 8820.0f,
+    .acceleration_turn = 0.0f,
+    .dist_offset_in = 10.0f,
+    .dist_offset_out = 18.0f,
+    .val_offset_in = 1750.0f,
+    .angle_turn_90 = 89.0f,
     // Large 90deg
     .velocity_l_turn_90 = 500.0f,
     .alpha_l_turn_90    = 4700.0f,  // 4250
@@ -497,8 +496,8 @@ const ShortestRunModeParams_t shortestRunModeParams6 = {
 const ShortestRunCaseParams_t shortestRunCaseParamsMode6[9] = {
     // case1 (index 0) - mode5と同じ値
     {
-        .acceleration_straight = 11111.11f, .acceleration_straight_dash = 13000.0f,
-        .velocity_straight = 1100.0f, .kp_wall = 0.50f,
+        .acceleration_straight = 11111.11f, .acceleration_straight_dash = 16000.0f,
+        .velocity_straight = 3000.0f, .kp_wall = 0.50f,
         .straight_weight = 0, .diagonal_weight = 0
     },
     // case2 (index 1)

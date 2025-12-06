@@ -149,23 +149,23 @@
 // 壁切れ判定専用しきい値（高速走行向けに独立調整可能）
 // 既定値は探索用と同一。必要に応じて実機に合わせて変更してください。
 #ifndef WALL_END_THR_R
-#define WALL_END_THR_R  150
+#define WALL_END_THR_R  100
 #endif
 #ifndef WALL_END_THR_L
-#define WALL_END_THR_L  150
+#define WALL_END_THR_L  100
 #endif
 
 // 壁切れバッファ距離（ターン前に等速で走る距離）[mm]
 // 例: 20mm。小回り時は半区間(DIST_HALF_SEC)を追加で短縮・追従する実装のため、
 // この値は「基本バッファ」として機能します。
 #ifndef WALL_END_BUFFER_MM
-#define WALL_END_BUFFER_MM  0.0F
+#define WALL_END_BUFFER_MM  40.0F
 #endif
 
 // 壁切れ未検知時の最大延長距離（本来の距離に追加して等速で探す上限）[mm]
 // 例: 20mm。未検知でも暴走しないよう上限を設けるための値です。
 #ifndef WALL_END_EXTEND_MAX_MM
-#define WALL_END_EXTEND_MAX_MM  0.0F
+#define WALL_END_EXTEND_MAX_MM  40.0F
 #endif
 
 #define WALL_CTRL_BASE_L 1941 // 壁制御の基準値（左） 2135
