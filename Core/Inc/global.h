@@ -10,6 +10,7 @@
 
 #include "main.h"
 #include "params.h"
+#include <stdbool.h>
 
 /*------------------------------------------------------------
     共用・構造体の定義
@@ -65,10 +66,16 @@ typedef union { // 共用体の宣言
 /*グローバル変数の定義*/
 volatile mouse_flags MF;
 volatile float g_ctrl_dt;
+
+/* テスト動作フラグ: trueの場合、センサ補正（壁切れ、前壁、横壁）を無効化 */
+bool g_test_mode_run;
 #else // main.c以外からこのファイルが呼ばれている場合
 /*グローバル変数の宣言*/
 extern volatile mouse_flags MF;
 extern volatile float g_ctrl_dt;
+
+/* テスト動作フラグ: trueの場合、センサ補正（壁切れ、前壁、横壁）を無効化 */
+extern bool g_test_mode_run;
 #endif
 #include <limits.h>
 #include <stdbool.h>

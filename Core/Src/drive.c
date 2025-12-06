@@ -151,17 +151,21 @@ void half_sectionAD(uint16_t val) {
 //+++++++++++++++++++++++++++++++++++++++++++++++
 // half_sectionD
 // 半区画分減速しながら走行し停止する
-// 引数：なし
+// 引数：val（0=補正なし、1=前壁センサによる補正あり）
 // 戻り値：なし
 //+++++++++++++++++++++++++++++++++++++++++++++++
 void half_sectionD(uint16_t val) {
+    (void)val;           // ← 未使用を明示（コンパイラ警告回避）
+    
     float speed_out = 0;  // 減速停止
-    (void)val;
 
+    // 従来通りの動作（補正なし）
     MF.FLAG.CTRL = 1;
     driveA(DIST_HALF_SEC, speed_now, speed_out, 0);
     MF.FLAG.CTRL = 0;
     speed_now = speed_out;
+
+    return;
 }
 
 //+++++++++++++++++++++++++++++++++++++++++++++++
@@ -389,7 +393,8 @@ void turn_R90(uint8_t fwall) {
     MF.FLAG.SLALOM_R = 1;
     MF.FLAG.CTRL = 1;
 
-    if (fwall) {
+    // テスト動作フラグが立っている場合は前壁補正を無効化
+    if (fwall && !g_test_mode_run) {
         if (MF.FLAG.F_WALL) {
             driveFWall(dist_offset_in, speed_now, velocity_turn90);
         } else {
@@ -419,8 +424,8 @@ void turn_L90(uint8_t fwall) {
     MF.FLAG.SLALOM_L = 1;
     MF.FLAG.CTRL = 1;
 
-    if (fwall) {
-
+    // テスト動作フラグが立っている場合は前壁補正を無効化
+    if (fwall && !g_test_mode_run) {
         if (MF.FLAG.F_WALL) {
             driveFWall(dist_offset_in, speed_now, velocity_turn90);
         } else {

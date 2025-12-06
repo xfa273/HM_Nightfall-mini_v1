@@ -119,33 +119,35 @@ void mode4() {
             const int idx_normal = 2; // case3
             const int idx_diag   = 7; // case8
 
+            // テスト動作フラグを設定（センサ補正を無効化）
+            g_test_mode_run = true;
+
             switch (sub) {
             case 0: // 通常ターン
                 apply_case_params_mode4_idx(idx_normal);
                 apply_turn_normal_mode4();
                 printf("Loaded params: normal turn (mode4).\n");
-
-                velocity_interrupt = 0;
-
-                led_flash(10);
-
-                drive_variable_reset();
-                IMU_GetOffset();
-                drive_enable_motor();
-
-                led_flash(5);
-                drive_fan(shortestRunModeParams4.fan_power);
-                led_flash(5);
-
-                half_sectionA(velocity_turn90);
-                // 追加: ターン前にS3直進（200+3）
-                run_straight(3, velocity_turn90, 0);
-                turn_R90(0);
-                half_sectionD(0);
-
-                led_flash(5);
-                drive_fan(0);
-                drive_stop();
+                {
+                    const ShortestRunModeParams_t *pm0 = &shortestRunModeParams4;
+                    drive_fan(pm0->fan_power);
+                    log_init();
+                    log_set_profile(LOG_PROFILE_OMEGA);
+                    log_start(HAL_GetTick());
+                    for (int i = 0; i < ROUTE_MAX_LEN; i++) path[i] = 0;
+                    path[0] = 200 + 3; // S3
+                    path[1] = 300; // 右小回り
+                    path[2] = 0;
+                    run();
+                    drive_fan(0);
+                    log_stop();
+                    printf("[mode4-case0-sub0] Press RIGHT FRONT for OMEGA (FR>%u), LEFT FRONT for ANGLE (FL>%u) ...\n",
+                           (unsigned)WALL_BASE_FR, (unsigned)WALL_BASE_FL);
+                    while (1) {
+                        if (ad_fr > WALL_BASE_FR) { log_print_omega_all(); break; }
+                        else if (ad_fl > WALL_BASE_FL) { log_print_angle_all(); break; }
+                        HAL_Delay(50);
+                    }
+                }
                 break;
             case 8: { // Straight test using case1 params (index0)
                 // 直進テスト: mode4 の case1（index0）の直線パラメータを使用
@@ -243,195 +245,192 @@ void mode4() {
                 apply_case_params_mode4_idx(idx_normal);
                 apply_turn_large90_mode4();
                 printf("Loaded params: large 90deg (mode4).\n");
-
-                velocity_interrupt = 0;
-
-                led_flash(10);
-
-                drive_variable_reset();
-                IMU_GetOffset();
-                drive_enable_motor();
-
-                led_flash(5);
-                drive_fan(shortestRunModeParams4.fan_power);
-                led_flash(5);
-
-                half_sectionA(velocity_l_turn_90);
-                // 追加: ターン前にS3直進（200+3）
-                run_straight(3, velocity_l_turn_90, 0);
-                l_turn_R90();
-                half_sectionD(0);
-
-                led_flash(5);
-                drive_fan(0);
-                drive_stop();
+                {
+                    const ShortestRunModeParams_t *pm1 = &shortestRunModeParams4;
+                    drive_fan(pm1->fan_power);
+                    log_init();
+                    log_set_profile(LOG_PROFILE_OMEGA);
+                    log_start(HAL_GetTick());
+                    for (int i = 0; i < ROUTE_MAX_LEN; i++) path[i] = 0;
+                    path[0] = 200 + 3; // S3
+                    path[1] = 501; // L-R90
+                    run();
+                    drive_fan(0);
+                    log_stop();
+                    printf("[mode4-case0-sub1] Press RIGHT FRONT for OMEGA (FR>%u), LEFT FRONT for ANGLE (FL>%u) ...\n",
+                           (unsigned)WALL_BASE_FR, (unsigned)WALL_BASE_FL);
+                    while (1) {
+                        if (ad_fr > WALL_BASE_FR) { log_print_omega_all(); break; }
+                        else if (ad_fl > WALL_BASE_FL) { log_print_angle_all(); break; }
+                        HAL_Delay(50);
+                    }
+                }
                 break;
             case 2: // 180deg大回り
                 apply_case_params_mode4_idx(idx_normal);
                 apply_turn_large180_mode4();
                 printf("Loaded params: large 180deg (mode4).\n");
-
-                velocity_interrupt = 0;
-
-                led_flash(10);
-
-                drive_variable_reset();
-                IMU_GetOffset();
-                drive_enable_motor();
-
-                led_flash(5);
-                drive_fan(shortestRunModeParams4.fan_power);
-                led_flash(5);
-
-                half_sectionA(velocity_l_turn_180);
-                // 追加: ターン前にS3直進（200+3）
-                run_straight(3, velocity_l_turn_180, 0);
-                l_turn_R180(0);
-                half_sectionD(0);
-
-                led_flash(5);
-                drive_fan(0);
-                drive_stop();
+                {
+                    const ShortestRunModeParams_t *pm2 = &shortestRunModeParams4;
+                    drive_fan(pm2->fan_power);
+                    log_init();
+                    log_set_profile(LOG_PROFILE_OMEGA);
+                    log_start(HAL_GetTick());
+                    for (int i = 0; i < ROUTE_MAX_LEN; i++) path[i] = 0;
+                    path[0] = 200 + 3; // S3
+                    path[1] = 502; // L-R180
+                    run();
+                    drive_fan(0);
+                    log_stop();
+                    printf("[mode4-case0-sub2] Press RIGHT FRONT for OMEGA (FR>%u), LEFT FRONT for ANGLE (FL>%u) ...\n",
+                           (unsigned)WALL_BASE_FR, (unsigned)WALL_BASE_FL);
+                    while (1) {
+                        if (ad_fr > WALL_BASE_FR) { log_print_omega_all(); break; }
+                        else if (ad_fl > WALL_BASE_FL) { log_print_angle_all(); break; }
+                        HAL_Delay(50);
+                    }
+                }
                 break;
             case 3: // 45deg 入り
                 apply_case_params_mode4_idx(idx_diag);
                 apply_turn_d45in_mode4();
                 printf("Loaded params: diag 45-in (mode4).\n");
-
-                velocity_interrupt = 0;
-
-                led_flash(10);
-
-                drive_variable_reset();
-                IMU_GetOffset();
-                drive_enable_motor();
-
-                led_flash(5);
-                drive_fan(shortestRunModeParams4.fan_power);
-                led_flash(5);
-                    
-                half_sectionA(velocity_turn45in);
-                // 追加: ターン前にS3直進（200+3）
-                run_straight(3, velocity_turn45in, 0);
-                turn_R45_In();
-                run_diagonal(1,0);
-
-                led_flash(5);
-                drive_fan(0);
-                drive_stop();
+                {
+                    const ShortestRunModeParams_t *pm3 = &shortestRunModeParams4;
+                    drive_fan(pm3->fan_power);
+                    log_init();
+                    log_set_profile(LOG_PROFILE_OMEGA);
+                    log_start(HAL_GetTick());
+                    for (int i = 0; i < ROUTE_MAX_LEN; i++) path[i] = 0;
+                    path[0] = 200 + 3; // S3
+                    path[1] = 901; // 右45°入
+                    path[2] = 1000 + 1; // 斜めS1
+                    run();
+                    drive_fan(0);
+                    log_stop();
+                    printf("[mode4-case0-sub3] Press RIGHT FRONT for OMEGA (FR>%u), LEFT FRONT for ANGLE (FL>%u) ...\n",
+                           (unsigned)WALL_BASE_FR, (unsigned)WALL_BASE_FL);
+                    while (1) {
+                        if (ad_fr > WALL_BASE_FR) { log_print_omega_all(); break; }
+                        else if (ad_fl > WALL_BASE_FL) { log_print_angle_all(); break; }
+                        HAL_Delay(50);
+                    }
+                }
                 break;
             case 4: // 45deg 出
                 apply_case_params_mode4_idx(idx_diag);
                 apply_turn_d45out_mode4();
                 printf("Loaded params: diag 45-out (mode4).\n");
-
-                velocity_interrupt = 0;
-
-                led_flash(10);
-
-                drive_variable_reset();
-                IMU_GetOffset();
-                drive_enable_motor();
-
-                led_flash(5);
-                drive_fan(shortestRunModeParams4.fan_power);
-                led_flash(5);
-
-                // 追加: ターン前にS3直進（200+3）
-                run_straight(3, velocity_turn45out, 0);
-                run_diagonal(1,velocity_turn45out);
-                turn_L45_Out();
-                run_diagonal(1,0);
-
-                led_flash(5);
-                drive_fan(0);
-                drive_stop();
+                {
+                    const ShortestRunModeParams_t *pm4 = &shortestRunModeParams4;
+                    drive_fan(pm4->fan_power);
+                    log_init();
+                    log_set_profile(LOG_PROFILE_OMEGA);
+                    log_start(HAL_GetTick());
+                    for (int i = 0; i < ROUTE_MAX_LEN; i++) path[i] = 0;
+                    path[0] = 200 + 3; // S3
+                    path[1] = 1000 + 1; // 斜めS1
+                    path[2] = 904; // 左45°出
+                    path[3] = 1000 + 1; // 斜めS1
+                    run();
+                    drive_fan(0);
+                    log_stop();
+                    printf("[mode4-case0-sub4] Press RIGHT FRONT for OMEGA (FR>%u), LEFT FRONT for ANGLE (FL>%u) ...\n",
+                           (unsigned)WALL_BASE_FR, (unsigned)WALL_BASE_FL);
+                    while (1) {
+                        if (ad_fr > WALL_BASE_FR) { log_print_omega_all(); break; }
+                        else if (ad_fl > WALL_BASE_FL) { log_print_angle_all(); break; }
+                        HAL_Delay(50);
+                    }
+                }
                 break;
             case 5: // V90
                 apply_case_params_mode4_idx(idx_diag);
                 apply_turn_v90_mode4();
                 printf("Loaded params: diag V90 (mode4).\n");
-
-                velocity_interrupt = 0;
-
-                led_flash(10);
-
-                drive_variable_reset();
-                IMU_GetOffset();
-                drive_enable_motor();
-
-                led_flash(5);
-                drive_fan(shortestRunModeParams4.fan_power);
-                led_flash(5);
-
-                // 追加: ターン前にS3直進（200+3）
-                run_straight(3, velocity_turnV90, 0);
-                run_diagonal(1,velocity_turnV90);
-                turn_RV90();
-                run_diagonal(1,0);
-
-                led_flash(5);
-                drive_fan(0);
-                drive_stop();
+                {
+                    const ShortestRunModeParams_t *pm5 = &shortestRunModeParams4;
+                    drive_fan(pm5->fan_power);
+                    log_init();
+                    log_set_profile(LOG_PROFILE_OMEGA);
+                    log_start(HAL_GetTick());
+                    for (int i = 0; i < ROUTE_MAX_LEN; i++) path[i] = 0;
+                    path[0] = 200 + 3; // S3
+                    path[1] = 1000 + 1; // 斜めS1
+                    path[2] = 701; // 右V90
+                    path[3] = 1000 + 1; // 斜めS1
+                    run();
+                    drive_fan(0);
+                    log_stop();
+                    printf("[mode4-case0-sub5] Press RIGHT FRONT for OMEGA (FR>%u), LEFT FRONT for ANGLE (FL>%u) ...\n",
+                           (unsigned)WALL_BASE_FR, (unsigned)WALL_BASE_FL);
+                    while (1) {
+                        if (ad_fr > WALL_BASE_FR) { log_print_omega_all(); break; }
+                        else if (ad_fl > WALL_BASE_FL) { log_print_angle_all(); break; }
+                        HAL_Delay(50);
+                    }
+                }
                 break;
             case 6: // 135deg 入り
                 apply_case_params_mode4_idx(idx_diag);
                 apply_turn_d135in_mode4();
                 printf("Loaded params: diag 135-in (mode4).\n");
-
-                velocity_interrupt = 0;
-
-                led_flash(10);
-
-                drive_variable_reset();
-                IMU_GetOffset();
-                drive_enable_motor();
-
-                led_flash(5);
-                drive_fan(shortestRunModeParams4.fan_power);
-                led_flash(5);
-
-                run_diagonal(1,velocity_turn135in);
-                // 追加: ターン前にS3直進（200+3）
-                run_straight(3, velocity_turn135in, 0);
-                turn_R135_In();
-                run_diagonal(1,0);
-
-                led_flash(5);
-                drive_fan(0);
-                drive_stop();
+                {
+                    const ShortestRunModeParams_t *pm6 = &shortestRunModeParams4;
+                    drive_fan(pm6->fan_power);
+                    log_init();
+                    log_set_profile(LOG_PROFILE_OMEGA);
+                    log_start(HAL_GetTick());
+                    for (int i = 0; i < ROUTE_MAX_LEN; i++) path[i] = 0;
+                    path[0] = 200 + 3; // S3
+                    path[1] = 903; // 右135°入
+                    path[2] = 1000 + 1; // 斜めS1
+                    run();
+                    drive_fan(0);
+                    log_stop();
+                    printf("[mode4-case0-sub6] Press RIGHT FRONT for OMEGA (FR>%u), LEFT FRONT for ANGLE (FL>%u) ...\n",
+                           (unsigned)WALL_BASE_FR, (unsigned)WALL_BASE_FL);
+                    while (1) {
+                        if (ad_fr > WALL_BASE_FR) { log_print_omega_all(); break; }
+                        else if (ad_fl > WALL_BASE_FL) { log_print_angle_all(); break; }
+                        HAL_Delay(50);
+                    }
+                }
                 break;
             case 7: // 135deg 出
                 apply_case_params_mode4_idx(idx_diag);
                 apply_turn_d135out_mode4();
                 printf("Loaded params: diag 135-out (mode4).\n");
-
-                velocity_interrupt = 0;
-
-                led_flash(10);
-
-                drive_variable_reset();
-                IMU_GetOffset();
-                drive_enable_motor();
-
-                led_flash(5);
-                drive_fan(shortestRunModeParams4.fan_power);
-                led_flash(5);
-
-                // 追加: ターン前にS3直進（200+3）
-                run_straight(3, velocity_turn135out, 0);
-                run_diagonal(1,velocity_turn135out);
-                turn_L135_Out();
-                run_diagonal(1,0);
-
-                led_flash(5);
-                drive_fan(0);
-                drive_stop();
+                {
+                    const ShortestRunModeParams_t *pm7 = &shortestRunModeParams4;
+                    drive_fan(pm7->fan_power);
+                    log_init();
+                    log_set_profile(LOG_PROFILE_OMEGA);
+                    log_start(HAL_GetTick());
+                    for (int i = 0; i < ROUTE_MAX_LEN; i++) path[i] = 0;
+                    path[0] = 200 + 3; // S3
+                    path[1] = 1000 + 1; // 斜めS1
+                    path[2] = 904; // 左135°出
+                    path[3] = 1000 + 1; // 斜めS1
+                    run();
+                    drive_fan(0);
+                    log_stop();
+                    printf("[mode4-case0-sub7] Press RIGHT FRONT for OMEGA (FR>%u), LEFT FRONT for ANGLE (FL>%u) ...\n",
+                           (unsigned)WALL_BASE_FR, (unsigned)WALL_BASE_FL);
+                    while (1) {
+                        if (ad_fr > WALL_BASE_FR) { log_print_omega_all(); break; }
+                        else if (ad_fl > WALL_BASE_FL) { log_print_angle_all(); break; }
+                        HAL_Delay(50);
+                    }
+                }
                 break;
             default:
                 printf("No sub-mode selected.\n");
                 break;
             }
+
+            // テスト動作フラグをリセット
+            g_test_mode_run = false;
 
             // 動作内容はユーザー側で実装予定のため、ここでは読み込みのみ
             break;

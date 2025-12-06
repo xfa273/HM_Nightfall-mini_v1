@@ -307,7 +307,7 @@ void adachi(void) {
             break;
         //----180回転----
         case 0x22:
-            half_sectionD(0); // 半区間分減速しながら走行し停止
+            half_sectionD(1); // 半区間分減速しながら走行し停止（前壁センサ補正あり）
 
             if (MF.FLAG.GOALED && save_count == 0) {
                 if (g_search_mode == SEARCH_MODE_FULL && g_suppress_first_stop_save) {

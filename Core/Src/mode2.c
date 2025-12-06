@@ -119,6 +119,9 @@ void mode2() {
             const int idx_normal = 2; // case3
             const int idx_diag   = 7; // case8
 
+            // テスト動作フラグを設定（センサ補正を無効化）
+            g_test_mode_run = true;
+
             switch (sub) {
             case 0: // 通常ターン
                 apply_case_params_mode2_idx(idx_normal);
@@ -404,6 +407,9 @@ void mode2() {
                 printf("No sub-mode selected.\n");
                 break;
             }
+
+            // テスト動作フラグをリセット
+            g_test_mode_run = false;
 
             // 動作内容はユーザー側で実装予定のため、ここでは読み込みのみ
             break;

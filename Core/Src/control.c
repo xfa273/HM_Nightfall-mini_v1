@@ -155,12 +155,14 @@ void omega_PID(void) {
     // D項（角速度誤差の差分）
     omega_error_error = omega_error - previous_omega_error;
 
-    // モータ制御量を計算
+    // 吸引ON/OFFでゲイン切替
+    const float kp_o = MF.FLAG.SUCTION ? KP_OMEGA_FAN_ON : KP_OMEGA_FAN_OFF;
+    const float ki_o = MF.FLAG.SUCTION ? KI_OMEGA_FAN_ON : KI_OMEGA_FAN_OFF;
+    const float kd_o = MF.FLAG.SUCTION ? KD_OMEGA_FAN_ON : KD_OMEGA_FAN_OFF;
 
-    out_rotate = KP_OMEGA * omega_error + KI_OMEGA * omega_integral +
-                 KD_OMEGA * omega_error_error;
-    // out_rotate = omega_interrupt * 0.5 + KP_OMEGA * omega_error +
-    // KI_OMEGA *omega_integral + KD_OMEGA *omega_error_error;
+    // モータ制御量を計算
+    out_rotate = kp_o * omega_error + ki_o * omega_integral +
+                 kd_o * omega_error_error;
 
     // 角速度の偏差を保存
     previous_omega_error = omega_error;
@@ -250,6 +252,11 @@ void wall_PID(void) {
 
         // Priority-1: deadband + proper saturation (no minimum-force injection)
         float wc = wall_err_f * kp_wall;
+
+        // テスト動作フラグが立っている場合は横壁制御を無効化
+        if (g_test_mode_run) {
+            wc = 0.0f;
+        }
 
         // Deadband around zero
         if (fabsf(wc) < WALL_CTRL_MIN) {

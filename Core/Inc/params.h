@@ -91,9 +91,26 @@
 #define KI_ANGLE 0.0F // 角度制御のI項
 #define KD_ANGLE 0.0F // 角度制御のD項
 
-#define KP_OMEGA 1.0F  // 角速度制御のP項 1.84F
-#define KI_OMEGA 0.012F // 角速度制御のI項 0.075F
-#define KD_OMEGA 0.0F  // 角速度制御のD項 0.16F
+#ifndef KP_OMEGA_FAN_ON
+#define KP_OMEGA_FAN_ON  1.9F  // 角速度制御のP項（ファンON）
+#endif
+#ifndef KI_OMEGA_FAN_ON
+#define KI_OMEGA_FAN_ON  0.022F // 角速度制御のI項（ファンON）
+#endif
+#ifndef KD_OMEGA_FAN_ON
+#define KD_OMEGA_FAN_ON  0.6F  // 角速度制御のD項（ファンON）
+#endif
+
+#ifndef KP_OMEGA_FAN_OFF
+#define KP_OMEGA_FAN_OFF 0.8F  // 角速度制御のP項（ファンOFF）
+#endif
+#ifndef KI_OMEGA_FAN_OFF
+#define KI_OMEGA_FAN_OFF 0.011F // 角速度制御のI項（ファンOFF）
+#endif
+#ifndef KD_OMEGA_FAN_OFF
+#define KD_OMEGA_FAN_OFF 0.0F  // 角速度制御のD項（ファンOFF）
+#endif
+
 #define FF_OMEGA 0.0F // 角速度制御のFF項 0.043F
 
 #define KP_IMU 1.0F // IMUの角速度の補正係数

@@ -153,17 +153,22 @@ void log_capture_tick(void) {
 
     case LOG_PROFILE_OMEGA:
         // 角速度（主バッファ）
-        log_add_entry(
-            (uint16_t)log_buffer.count,
-            omega_interrupt,
-            real_omega,
-            KP_OMEGA * omega_error,
-            KI_OMEGA * omega_integral,
-            KD_OMEGA * omega_error_error,
-            (float)out_r,
-            (float)out_l,
-            current_time
-        );
+        {
+            const float kp_o = MF.FLAG.SUCTION ? KP_OMEGA_FAN_ON : KP_OMEGA_FAN_OFF;
+            const float ki_o = MF.FLAG.SUCTION ? KI_OMEGA_FAN_ON : KI_OMEGA_FAN_OFF;
+            const float kd_o = MF.FLAG.SUCTION ? KD_OMEGA_FAN_ON : KD_OMEGA_FAN_OFF;
+            log_add_entry(
+                (uint16_t)log_buffer.count,
+                omega_interrupt,
+                real_omega,
+                kp_o * omega_error,
+                ki_o * omega_integral,
+                kd_o * omega_error_error,
+                (float)out_r,
+                (float)out_l,
+                current_time
+            );
+        }
         // 角度（副バッファ）
         if (log_buffer2.logging_active && log_buffer2.count < MAX_LOG_ENTRIES) {
             uint16_t pos2 = log_buffer2.head;

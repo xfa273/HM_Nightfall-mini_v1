@@ -97,6 +97,10 @@ void run(void) {
             if (disable_wall_cut_on_S1) {
                 buffer_mm = 0.0f;
             }
+            // テスト動作フラグが立っている場合は壁切れ補正を無効化
+            if (g_test_mode_run) {
+                buffer_mm = 0.0f;
+            }
             if (buffer_mm > straight_mm) buffer_mm = straight_mm; // 過剰保護
 
             // バッファを除いた距離で従来の加減速（v_nextで収束）
