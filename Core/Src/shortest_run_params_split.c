@@ -405,19 +405,19 @@ const ShortestRunCaseParams_t shortestRunCaseParamsMode5[9] = {
     // case1 (index 0)
     {
         .acceleration_straight = 11111.11f, .acceleration_straight_dash = 13000.0f,
-        .velocity_straight = 1200.0f, .kp_wall = 0.1f,
+        .velocity_straight = 1200.0f, .kp_wall = 0.5f,
         .straight_weight = 0, .diagonal_weight = 0
     },
     // case2 (index 1)
     {
         .acceleration_straight = 11111.11f, .acceleration_straight_dash = 13000.0f,
-        .velocity_straight = 1200.0f, .kp_wall = 0.1f,
+        .velocity_straight = 1200.0f, .kp_wall = 0.5f,
         .straight_weight = 2, .diagonal_weight = 0
     },
     // case3 (index 2)
     {
-        .acceleration_straight = 11111.11f, .acceleration_straight_dash = 20000.0f,
-        .velocity_straight = 4000.0f, .kp_wall = 0.05f,
+        .acceleration_straight = 11111.11f, .acceleration_straight_dash = 13000.0f,
+        .velocity_straight = 2000.0f, .kp_wall = 1.0f,
         .straight_weight = 2, .diagonal_weight = 0
     },
     // case4 (index 3)
@@ -468,54 +468,94 @@ const ShortestRunCaseParams_t shortestRunCaseParamsMode5[9] = {
 
 // ========================= Mode 6 =========================
 const ShortestRunModeParams_t shortestRunModeParams6 = {
-    .velocity_turn90    = 1400.0f,
-    .alpha_turn90       = 50000.0f,
+    // 90deg
+    .velocity_turn90    = 1000.0f,
+    .alpha_turn90       = 74000.0f,
     .acceleration_turn  = 0.0f,
-    .dist_offset_in     = 10.0f,
-    .dist_offset_out    = 58.0f,
-    .val_offset_in      = 1050.0f,
-    .angle_turn_90      = 80.5f,
-    .dist_wall_end      = 12.0f,
-    .velocity_l_turn_90 = 2000.0f,
-    .alpha_l_turn_90    = 19200.0f,
-    .angle_l_turn_90    = 89.5f,
-    .dist_l_turn_in_90  = 0.0f,
-    .dist_l_turn_out_90 = 67.0f,
-    .velocity_l_turn_180= 2000.0f,
-    .alpha_l_turn_180   = 20500.0f,
-    .angle_l_turn_180   = 179.0f,
-    .dist_l_turn_in_180 = 0.0f,
-    .dist_l_turn_out_180= 138.0f,
-    .fan_power          = 200,
+    .dist_offset_in     = 4.0f,
+    .dist_offset_out    = 21.5f,
+    .val_offset_in      = 15.0f,
+    .angle_turn_90      = 82.6f,
+    .dist_wall_end      = 1.0f,
+    // Large 90deg
+    .velocity_l_turn_90 = 1400.0f,
+    .alpha_l_turn_90    = 30700.0f,
+    .angle_l_turn_90    = 87.6f,
+    .dist_l_turn_in_90  = 2.0f,
+    .dist_l_turn_out_90 = 17.5f,
+    // Large 180deg
+    .velocity_l_turn_180= 1400.0f,
+    .alpha_l_turn_180   = 32450.0f,
+    .angle_l_turn_180   = 174.3f,
+    .dist_l_turn_in_180 = 5.0f,
+    .dist_l_turn_out_180= 47.0f,
+    .fan_power          = 1000,
     .makepath_type_case3 = 0,
     .makepath_type_case47= 1
 };
 
-const ShortestRunCaseParams_t shortestRunCaseParamsMode6[5] = {
+const ShortestRunCaseParams_t shortestRunCaseParamsMode6[9] = {
+    // case1 (index 0) - mode5と同じ値
     {
-        .acceleration_straight = 10888.9f, .acceleration_straight_dash = 25000.0f,
-        .velocity_straight = 4000.0f, .kp_wall = 0.13f,
+        .acceleration_straight = 11111.11f, .acceleration_straight_dash = 13000.0f,
+        .velocity_straight = 1100.0f, .kp_wall = 0.50f,
         .straight_weight = 0, .diagonal_weight = 0
     },
+    // case2 (index 1)
     {
-        .acceleration_straight = 10888.9f, .acceleration_straight_dash = 25000.0f,
-        .velocity_straight = 4000.0f, .kp_wall = 0.05f,
+        .acceleration_straight = 11111.11f, .acceleration_straight_dash = 13000.0f,
+        .velocity_straight = 1100.0f, .kp_wall = 0.50f,
         .straight_weight = 2, .diagonal_weight = 0
     },
+    // case3 (index 2)
     {
-        .acceleration_straight = 10888.9f, .acceleration_straight_dash = 25000.0f,
+        .acceleration_straight = 11111.11f, .acceleration_straight_dash = 13000.0f,
+        .velocity_straight = 2000.0f, .kp_wall = 1.0f,
+        .straight_weight = 2, .diagonal_weight = 0
+    },
+    // case4 (index 3)
+    {
+        .acceleration_straight = 11111.11f, .acceleration_straight_dash = 23000.0f,
         .velocity_straight = 4500.0f, .kp_wall = 0.05f,
         .straight_weight = 2, .diagonal_weight = 0
     },
+    // case5 (index 4)
     {
-        .acceleration_straight = 10888.9f, .acceleration_straight_dash = 25000.0f,
+        .acceleration_straight = 11111.11f, .acceleration_straight_dash = 26000.0f,
         .velocity_straight = 4800.0f, .kp_wall = 0.05f,
         .straight_weight = 2, .diagonal_weight = 0
     },
+    // case6 (index 5)
     {
-        .acceleration_straight = 10888.9f, .acceleration_straight_dash = 28000.0f,
-        .velocity_straight = 5000.0f, .kp_wall = 0.05f,
-        .straight_weight = 2, .diagonal_weight = 0
+        .acceleration_straight = 11111.11f, .acceleration_straight_dash = 28000.0f,
+        .velocity_straight = 5000.0f, .kp_wall = 0.05f, .kp_diagonal = 0.05f,
+        .straight_weight = 2, .diagonal_weight = 0,
+        .acceleration_d_straight = 6000.0f, .acceleration_d_straight_dash = 12000.0f,
+        .velocity_d_straight = 3000.0f
+    },
+    // case7 (index 6)
+    {
+        .acceleration_straight = 11111.11f, .acceleration_straight_dash = 30000.0f,
+        .velocity_straight = 5200.0f, .kp_wall = 0.05f, .kp_diagonal = 0.05f,
+        .straight_weight = 2, .diagonal_weight = 0,
+        .acceleration_d_straight = 7000.0f, .acceleration_d_straight_dash = 14000.0f,
+        .velocity_d_straight = 3500.0f
+    },
+    // case8 (index 7): diagonal-use
+    {
+        .acceleration_straight = 11111.11f, .acceleration_straight_dash = 20000.0f,
+        .velocity_straight = 4000.0f, .kp_wall = 0.05f, .kp_diagonal = 0.05f,
+        .straight_weight = 2, .diagonal_weight = 2,
+        .acceleration_d_straight = 6000.0f, .acceleration_d_straight_dash = 12000.0f,
+        .velocity_d_straight = 3000.0f
+    },
+    // case9 (index 8): diagonal-use
+    {
+        .acceleration_straight = 11111.11f, .acceleration_straight_dash = 23000.0f,
+        .velocity_straight = 4500.0f, .kp_wall = 0.05f, .kp_diagonal = 0.05f,
+        .straight_weight = 2, .diagonal_weight = 2,
+        .acceleration_d_straight = 7000.0f, .acceleration_d_straight_dash = 14000.0f,
+        .velocity_d_straight = 3500.0f
     },
 };
 
