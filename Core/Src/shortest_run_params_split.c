@@ -1,4 +1,5 @@
 #include "../Inc/shortest_run_params.h"
+#include "../Inc/solver_params.h"
 
 // ========================= Mode 2 =========================
 const ShortestRunModeParams_t shortestRunModeParams2 = {
@@ -67,37 +68,37 @@ const ShortestRunCaseParams_t shortestRunCaseParamsMode2[9] = {
     {
         .acceleration_straight = 1000.0f, .acceleration_straight_dash = 1000.0f,
         .velocity_straight = 500.0f, .kp_wall = 0.12f,
-        .straight_weight = 0, .diagonal_weight = 0
+        .solver_profile = SOLVER_PROFILE_STANDARD
     },
     // case2 (index 1): independent (initially same as former case4)
     {
         .acceleration_straight = 1000.0f, .acceleration_straight_dash = 2000.0f,
         .velocity_straight = 500.0f, .kp_wall = 0.12f,
-        .straight_weight = 2, .diagonal_weight = 0
+        .solver_profile = SOLVER_PROFILE_STRAIGHT_STRONG
     },
     // case3 (index 2)
     {
         .acceleration_straight = 1000.0f, .acceleration_straight_dash = 3000.0f,
         .velocity_straight = 3000.0f, .kp_wall = 0.05f,
-        .straight_weight = 2, .diagonal_weight = 0
+        .solver_profile = SOLVER_PROFILE_STRAIGHT_STRONG
     },
     // case4 (index 3)
     {
         .acceleration_straight = 1000.0f, .acceleration_straight_dash = 3000.0f,
         .velocity_straight = 4000.0f, .kp_wall = 0.05f,
-        .straight_weight = 2, .diagonal_weight = 0
+        .solver_profile = SOLVER_PROFILE_STRAIGHT_STRONG
     },
     // case5 (index 4)
     {
         .acceleration_straight = 1000.0f, .acceleration_straight_dash = 3500.0f,
         .velocity_straight = 4000.0f, .kp_wall = 0.05f,
-        .straight_weight = 2, .diagonal_weight = 0
+        .solver_profile = SOLVER_PROFILE_STRAIGHT_STRONG
     },
     // case6 (index 5)
     {
         .acceleration_straight = 1000.0f, .acceleration_straight_dash = 2000.0f,
         .velocity_straight = 1000.0f, .kp_wall = 0.05f, .kp_diagonal = 0.2f,
-        .straight_weight = 2, .diagonal_weight = 2,
+        .solver_profile = SOLVER_PROFILE_STANDARD,
         .acceleration_d_straight = 1000.0f, .acceleration_d_straight_dash = 2000.0f,
         .velocity_d_straight = 1000.0f
     },
@@ -105,7 +106,7 @@ const ShortestRunCaseParams_t shortestRunCaseParamsMode2[9] = {
     {
         .acceleration_straight = 1000.0f, .acceleration_straight_dash = 3500.0f,
         .velocity_straight = 4000.0f, .kp_wall = 0.05f, .kp_diagonal = 0.05f,
-        .straight_weight = 2, .diagonal_weight = 2,
+        .solver_profile = SOLVER_PROFILE_STANDARD,
         .acceleration_d_straight = 1000.0f, .acceleration_d_straight_dash = 3000.0f,
         .velocity_d_straight = 3000.0f
     },
@@ -113,7 +114,7 @@ const ShortestRunCaseParams_t shortestRunCaseParamsMode2[9] = {
     {
         .acceleration_straight = 1000.0f, .acceleration_straight_dash = 2000.0f,
         .velocity_straight = 1000.0f, .kp_wall = 0.05f, .kp_diagonal = 0.2f,
-        .straight_weight = 2, .diagonal_weight = 2,
+        .solver_profile = SOLVER_PROFILE_STANDARD,
         .acceleration_d_straight = 1000.0f, .acceleration_d_straight_dash = 2000.0f,
         .velocity_d_straight = 1000.0f
     },
@@ -121,7 +122,7 @@ const ShortestRunCaseParams_t shortestRunCaseParamsMode2[9] = {
     {
         .acceleration_straight = 1000.0f, .acceleration_straight_dash = 3500.0f,
         .velocity_straight = 4000.0f, .kp_wall = 0.05f, .kp_diagonal = 0.05f,
-        .straight_weight = 2, .diagonal_weight = 2,
+        .solver_profile = SOLVER_PROFILE_STANDARD,
         .acceleration_d_straight = 1000.0f, .acceleration_d_straight_dash = 3000.0f,
         .velocity_d_straight = 3000.0f
     },
@@ -195,37 +196,37 @@ const ShortestRunCaseParams_t shortestRunCaseParamsMode3[9] = {
     {
         .acceleration_straight = 4000.0f, .acceleration_straight_dash = 4000.0f,
         .velocity_straight = 1000.0f, .kp_wall = 0.05f,
-        .straight_weight = 0, .diagonal_weight = 0
+        .solver_profile = SOLVER_PROFILE_STANDARD
     },
     // case2 (index 1): independent (initially same as former case4)
     {
         .acceleration_straight = 4000.0f, .acceleration_straight_dash = 4000.0f,
         .velocity_straight = 1000.0f, .kp_wall = 0.05f,
-        .straight_weight = 2, .diagonal_weight = 0
+        .solver_profile = SOLVER_PROFILE_STRAIGHT_STRONG
     },
     // case3 (index 2)
     {
         .acceleration_straight = 4000.0f, .acceleration_straight_dash = 6000.0f,
         .velocity_straight = 3000.0f, .kp_wall = 0.05f,
-        .straight_weight = 2, .diagonal_weight = 0
+        .solver_profile = SOLVER_PROFILE_STRAIGHT_STRONG
     },
     // case4 (index 3)
     {
         .acceleration_straight = 4000.0f, .acceleration_straight_dash = 8000.0f,
         .velocity_straight = 3000.0f, .kp_wall = 0.05f,
-        .straight_weight = 2, .diagonal_weight = 0
+        .solver_profile = SOLVER_PROFILE_STRAIGHT_STRONG
     },
     // case5 (index 4)
     {
         .acceleration_straight = 4000.0f, .acceleration_straight_dash = 14000.0f,
         .velocity_straight = 3000.0f, .kp_wall = 0.05f,
-        .straight_weight = 2, .diagonal_weight = 0
+        .solver_profile = SOLVER_PROFILE_STRAIGHT_STRONG
     },
     // case6 (index 5)
     {
         .acceleration_straight = 4000.0f, .acceleration_straight_dash = 17000.0f,
         .velocity_straight = 4000.0f, .kp_wall = 0.05f, .kp_diagonal = 0.05f,
-        .straight_weight = 2, .diagonal_weight = 0,
+        .solver_profile = SOLVER_PROFILE_STRAIGHT_STRONG,
         .acceleration_d_straight = 4000.0f, .acceleration_d_straight_dash = 8000.0f,
         .velocity_d_straight = 2500.0f
     },
@@ -233,7 +234,7 @@ const ShortestRunCaseParams_t shortestRunCaseParamsMode3[9] = {
     {
         .acceleration_straight = 4000.0f, .acceleration_straight_dash = 20000.0f,
         .velocity_straight = 4000.0f, .kp_wall = 0.05f, .kp_diagonal = 0.05f,
-        .straight_weight = 2, .diagonal_weight = 0,
+        .solver_profile = SOLVER_PROFILE_STRAIGHT_STRONG,
         .acceleration_d_straight = 4000.0f, .acceleration_d_straight_dash = 8000.0f,
         .velocity_d_straight = 2500.0f
     },
@@ -241,7 +242,7 @@ const ShortestRunCaseParams_t shortestRunCaseParamsMode3[9] = {
     {
         .acceleration_straight = 4000.0f, .acceleration_straight_dash = 10000.0f,
         .velocity_straight = 3000.0f, .kp_wall = 0.05f, .kp_diagonal = 0.05f,
-        .straight_weight = 2, .diagonal_weight = 2,
+        .solver_profile = SOLVER_PROFILE_STANDARD,
         .acceleration_d_straight = 4000.0f, .acceleration_d_straight_dash = 8000.0f,
         .velocity_d_straight = 2500.0f
     },
@@ -249,7 +250,7 @@ const ShortestRunCaseParams_t shortestRunCaseParamsMode3[9] = {
     {
         .acceleration_straight = 4000.0f, .acceleration_straight_dash = 14000.0f,
         .velocity_straight = 3000.0f, .kp_wall = 0.05f, .kp_diagonal = 0.05f,
-        .straight_weight = 2, .diagonal_weight = 2,
+        .solver_profile = SOLVER_PROFILE_STANDARD,
         .acceleration_d_straight = 4000.0f, .acceleration_d_straight_dash = 8000.0f,
         .velocity_d_straight = 2500.0f
     },
@@ -321,37 +322,37 @@ const ShortestRunCaseParams_t shortestRunCaseParamsMode4[9] = {
     {
         .acceleration_straight = 7111.11f, .acceleration_straight_dash = 6000.0f,
         .velocity_straight = 1200.0f, .kp_wall = 0.05f,
-        .straight_weight = 0, .diagonal_weight = 0
+        .solver_profile = SOLVER_PROFILE_STANDARD
     },
     // case2 (index 1)
     {
         .acceleration_straight = 7111.11f, .acceleration_straight_dash = 6000.0f,
         .velocity_straight = 1200.0f, .kp_wall = 0.05f,
-        .straight_weight = 2, .diagonal_weight = 0
+        .solver_profile = SOLVER_PROFILE_STRAIGHT_STRONG
     },
     // case3 (index 2)
     {
         .acceleration_straight = 7111.11f, .acceleration_straight_dash = 6000.0f,
         .velocity_straight = 3000.0f, .kp_wall = 0.05f,
-        .straight_weight = 2, .diagonal_weight = 0
+        .solver_profile = SOLVER_PROFILE_STRAIGHT_STRONG
     },
     // case4 (index 3)
     {
         .acceleration_straight = 7111.11f, .acceleration_straight_dash = 10000.0f,
         .velocity_straight = 3000.0f, .kp_wall = 0.05f,
-        .straight_weight = 2, .diagonal_weight = 0
+        .solver_profile = SOLVER_PROFILE_STRAIGHT_STRONG
     },
     // case5 (index 4)
     {
         .acceleration_straight = 7111.11f, .acceleration_straight_dash = 14000.0f,
         .velocity_straight = 3000.0f, .kp_wall = 0.05f,
-        .straight_weight = 2, .diagonal_weight = 0
+        .solver_profile = SOLVER_PROFILE_STRAIGHT_STRONG
     },
     // case6 (index 5): 
     {
         .acceleration_straight = 7111.11f, .acceleration_straight_dash = 16000.0f,
         .velocity_straight = 3500.0f, .kp_wall = 0.05f, .kp_diagonal = 0.05f,
-        .straight_weight = 2, .diagonal_weight = 0,
+        .solver_profile = SOLVER_PROFILE_STRAIGHT_STRONG,
         .acceleration_d_straight = 4000.0f, .acceleration_d_straight_dash = 8000.0f,
         .velocity_d_straight = 2000.0f
     },
@@ -359,7 +360,7 @@ const ShortestRunCaseParams_t shortestRunCaseParamsMode4[9] = {
     {
         .acceleration_straight = 7111.11f, .acceleration_straight_dash = 18000.0f,
         .velocity_straight = 3500.0f, .kp_wall = 0.05f, .kp_diagonal = 0.05f,
-        .straight_weight = 2, .diagonal_weight = 0,
+        .solver_profile = SOLVER_PROFILE_STRAIGHT_STRONG,
         .acceleration_d_straight = 4500.0f, .acceleration_d_straight_dash = 9000.0f,
         .velocity_d_straight = 2500.0f
     },
@@ -367,7 +368,7 @@ const ShortestRunCaseParams_t shortestRunCaseParamsMode4[9] = {
     {
         .acceleration_straight = 7111.11f, .acceleration_straight_dash = 12000.0f,
         .velocity_straight = 2000.0f, .kp_wall = 0.05f, .kp_diagonal = 0.05f,
-        .straight_weight = 2, .diagonal_weight = 2,
+        .solver_profile = SOLVER_PROFILE_STANDARD,
         .acceleration_d_straight = 4000.0f, .acceleration_d_straight_dash = 8000.0f,
         .velocity_d_straight = 2000.0f
     },
@@ -375,7 +376,7 @@ const ShortestRunCaseParams_t shortestRunCaseParamsMode4[9] = {
     {
         .acceleration_straight = 7111.11f, .acceleration_straight_dash = 12000.0f,
         .velocity_straight = 3000.0f, .kp_wall = 0.05f, .kp_diagonal = 0.05f,
-        .straight_weight = 2, .diagonal_weight = 2,
+        .solver_profile = SOLVER_PROFILE_STANDARD,
         .acceleration_d_straight = 5000.0f, .acceleration_d_straight_dash = 8000.0f,
         .velocity_d_straight = 2000.0f
     },
@@ -417,37 +418,37 @@ const ShortestRunCaseParams_t shortestRunCaseParamsMode5[9] = {
     {
         .acceleration_straight = 11111.11f, .acceleration_straight_dash = 13000.0f,
         .velocity_straight = 1200.0f, .kp_wall = 0.5f,
-        .straight_weight = 0, .diagonal_weight = 0
+        .solver_profile = SOLVER_PROFILE_STANDARD
     },
     // case2 (index 1)
     {
         .acceleration_straight = 11111.11f, .acceleration_straight_dash = 13000.0f,
         .velocity_straight = 1200.0f, .kp_wall = 0.5f,
-        .straight_weight = 2, .diagonal_weight = 0
+        .solver_profile = SOLVER_PROFILE_STRAIGHT_STRONG
     },
     // case3 (index 2)
     {
         .acceleration_straight = 11111.11f, .acceleration_straight_dash = 13000.0f,
         .velocity_straight = 2000.0f, .kp_wall = 1.0f,
-        .straight_weight = 2, .diagonal_weight = 0
+        .solver_profile = SOLVER_PROFILE_STRAIGHT_STRONG
     },
     // case4 (index 3)
     {
         .acceleration_straight = 11111.11f, .acceleration_straight_dash = 23000.0f,
         .velocity_straight = 4500.0f, .kp_wall = 0.05f,
-        .straight_weight = 2, .diagonal_weight = 0
+        .solver_profile = SOLVER_PROFILE_STRAIGHT_STRONG
     },
     // case5 (index 4)
     {
         .acceleration_straight = 11111.11f, .acceleration_straight_dash = 26000.0f,
         .velocity_straight = 4800.0f, .kp_wall = 0.05f,
-        .straight_weight = 2, .diagonal_weight = 0
+        .solver_profile = SOLVER_PROFILE_STRAIGHT_STRONG
     },
     // case6 (index 5)
     {
         .acceleration_straight = 11111.11f, .acceleration_straight_dash = 28000.0f,
         .velocity_straight = 5000.0f, .kp_wall = 0.05f, .kp_diagonal = 0.05f,
-        .straight_weight = 2, .diagonal_weight = 0,
+        .solver_profile = SOLVER_PROFILE_STRAIGHT_STRONG,
         .acceleration_d_straight = 6000.0f, .acceleration_d_straight_dash = 12000.0f,
         .velocity_d_straight = 3000.0f
     },
@@ -455,7 +456,7 @@ const ShortestRunCaseParams_t shortestRunCaseParamsMode5[9] = {
     {
         .acceleration_straight = 11111.11f, .acceleration_straight_dash = 30000.0f,
         .velocity_straight = 5200.0f, .kp_wall = 0.05f, .kp_diagonal = 0.05f,
-        .straight_weight = 2, .diagonal_weight = 0,
+        .solver_profile = SOLVER_PROFILE_STRAIGHT_STRONG,
         .acceleration_d_straight = 7000.0f, .acceleration_d_straight_dash = 14000.0f,
         .velocity_d_straight = 3500.0f
     },
@@ -463,7 +464,7 @@ const ShortestRunCaseParams_t shortestRunCaseParamsMode5[9] = {
     {
         .acceleration_straight = 11111.11f, .acceleration_straight_dash = 20000.0f,
         .velocity_straight = 4000.0f, .kp_wall = 0.05f, .kp_diagonal = 0.05f,
-        .straight_weight = 2, .diagonal_weight = 2,
+        .solver_profile = SOLVER_PROFILE_STANDARD,
         .acceleration_d_straight = 6000.0f, .acceleration_d_straight_dash = 12000.0f,
         .velocity_d_straight = 3000.0f
     },
@@ -471,7 +472,7 @@ const ShortestRunCaseParams_t shortestRunCaseParamsMode5[9] = {
     {
         .acceleration_straight = 11111.11f, .acceleration_straight_dash = 23000.0f,
         .velocity_straight = 4500.0f, .kp_wall = 0.05f, .kp_diagonal = 0.05f,
-        .straight_weight = 2, .diagonal_weight = 2,
+        .solver_profile = SOLVER_PROFILE_STANDARD,
         .acceleration_d_straight = 7000.0f, .acceleration_d_straight_dash = 14000.0f,
         .velocity_d_straight = 3500.0f
     },
@@ -504,8 +505,8 @@ const ShortestRunModeParams_t shortestRunModeParams6 = {
     .makepath_type_case3 = 0,
     .makepath_type_case47= 1,
     // 壁切れ検出しきい値
-    .wall_end_thr_r = 195,
-    .wall_end_thr_l = 195
+    .wall_end_thr_r = 180,
+    .wall_end_thr_l = 180
 };
 
 const ShortestRunCaseParams_t shortestRunCaseParamsMode6[9] = {
@@ -513,37 +514,37 @@ const ShortestRunCaseParams_t shortestRunCaseParamsMode6[9] = {
     {
         .acceleration_straight = 11111.11f, .acceleration_straight_dash = 16000.0f,
         .velocity_straight = 3000.0f, .kp_wall = 0.50f,
-        .straight_weight = 0, .diagonal_weight = 0
+        .solver_profile = SOLVER_PROFILE_STANDARD
     },
     // case2 (index 1)
     {
         .acceleration_straight = 11111.11f, .acceleration_straight_dash = 13000.0f,
         .velocity_straight = 1100.0f, .kp_wall = 0.50f,
-        .straight_weight = 2, .diagonal_weight = 0
+        .solver_profile = SOLVER_PROFILE_STRAIGHT_STRONG
     },
     // case3 (index 2)
     {
         .acceleration_straight = 11111.11f, .acceleration_straight_dash = 13000.0f,
         .velocity_straight = 2000.0f, .kp_wall = 1.0f,
-        .straight_weight = 2, .diagonal_weight = 0
+        .solver_profile = SOLVER_PROFILE_STRAIGHT_STRONG
     },
     // case4 (index 3)
     {
         .acceleration_straight = 11111.11f, .acceleration_straight_dash = 23000.0f,
         .velocity_straight = 4500.0f, .kp_wall = 0.05f,
-        .straight_weight = 2, .diagonal_weight = 0
+        .solver_profile = SOLVER_PROFILE_STRAIGHT_STRONG
     },
     // case5 (index 4)
     {
         .acceleration_straight = 11111.11f, .acceleration_straight_dash = 26000.0f,
         .velocity_straight = 4800.0f, .kp_wall = 0.05f,
-        .straight_weight = 2, .diagonal_weight = 0
+        .solver_profile = SOLVER_PROFILE_STRAIGHT_STRONG
     },
     // case6 (index 5)
     {
         .acceleration_straight = 11111.11f, .acceleration_straight_dash = 28000.0f,
         .velocity_straight = 5000.0f, .kp_wall = 0.05f, .kp_diagonal = 0.05f,
-        .straight_weight = 2, .diagonal_weight = 0,
+        .solver_profile = SOLVER_PROFILE_STRAIGHT_STRONG,
         .acceleration_d_straight = 6000.0f, .acceleration_d_straight_dash = 12000.0f,
         .velocity_d_straight = 3000.0f
     },
@@ -551,7 +552,7 @@ const ShortestRunCaseParams_t shortestRunCaseParamsMode6[9] = {
     {
         .acceleration_straight = 11111.11f, .acceleration_straight_dash = 30000.0f,
         .velocity_straight = 5200.0f, .kp_wall = 0.05f, .kp_diagonal = 0.05f,
-        .straight_weight = 2, .diagonal_weight = 0,
+        .solver_profile = SOLVER_PROFILE_STRAIGHT_STRONG,
         .acceleration_d_straight = 7000.0f, .acceleration_d_straight_dash = 14000.0f,
         .velocity_d_straight = 3500.0f
     },
@@ -559,7 +560,7 @@ const ShortestRunCaseParams_t shortestRunCaseParamsMode6[9] = {
     {
         .acceleration_straight = 11111.11f, .acceleration_straight_dash = 20000.0f,
         .velocity_straight = 4000.0f, .kp_wall = 0.05f, .kp_diagonal = 0.05f,
-        .straight_weight = 2, .diagonal_weight = 2,
+        .solver_profile = SOLVER_PROFILE_STANDARD,
         .acceleration_d_straight = 6000.0f, .acceleration_d_straight_dash = 12000.0f,
         .velocity_d_straight = 3000.0f
     },
@@ -567,7 +568,7 @@ const ShortestRunCaseParams_t shortestRunCaseParamsMode6[9] = {
     {
         .acceleration_straight = 11111.11f, .acceleration_straight_dash = 23000.0f,
         .velocity_straight = 4500.0f, .kp_wall = 0.05f, .kp_diagonal = 0.05f,
-        .straight_weight = 2, .diagonal_weight = 2,
+        .solver_profile = SOLVER_PROFILE_STANDARD,
         .acceleration_d_straight = 7000.0f, .acceleration_d_straight_dash = 14000.0f,
         .velocity_d_straight = 3500.0f
     },
@@ -605,26 +606,26 @@ const ShortestRunCaseParams_t shortestRunCaseParamsMode7[5] = {
     {
         .acceleration_straight = 14222.2f, .acceleration_straight_dash = 25000.0f,
         .velocity_straight = 2300.0f, .kp_wall = 0.13f,
-        .straight_weight = 0, .diagonal_weight = 0
+        .solver_profile = SOLVER_PROFILE_STANDARD
     },
     {
         .acceleration_straight = 14222.2f, .acceleration_straight_dash = 25000.0f,
         .velocity_straight = 2300.0f, .kp_wall = 0.05f,
-        .straight_weight = 2, .diagonal_weight = 0
+        .solver_profile = SOLVER_PROFILE_STRAIGHT_STRONG
     },
     {
         .acceleration_straight = 14222.2f, .acceleration_straight_dash = 25000.0f,
         .velocity_straight = 4000.0f, .kp_wall = 0.05f,
-        .straight_weight = 2, .diagonal_weight = 0
+        .solver_profile = SOLVER_PROFILE_STRAIGHT_STRONG
     },
     {
         .acceleration_straight = 10888.9f, .acceleration_straight_dash = 26000.0f,
         .velocity_straight = 4800.0f, .kp_wall = 0.05f,
-        .straight_weight = 2, .diagonal_weight = 0
+        .solver_profile = SOLVER_PROFILE_STRAIGHT_STRONG
     },
     {
         .acceleration_straight = 10888.9f, .acceleration_straight_dash = 28000.0f,
         .velocity_straight = 5000.0f, .kp_wall = 0.05f,
-        .straight_weight = 2, .diagonal_weight = 0
+        .solver_profile = SOLVER_PROFILE_STRAIGHT_STRONG
     },
 };

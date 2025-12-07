@@ -139,7 +139,43 @@ static void convertDirectionTokensToRun(void) {
     }
 }
 
+// ゴール進入時の直進区画数を計算（経路の末尾から同じ方向が続く区画数）
+static int calc_goal_approach_straight(Pos2D *path_buf, int path_len) {
+    if (path_len < 2) return 0;
+    
+    int straight_count = 1;
+    // 最後の移動方向を取得
+    int last_dx = path_buf[path_len - 1].x - path_buf[path_len - 2].x;
+    int last_dy = path_buf[path_len - 1].y - path_buf[path_len - 2].y;
+    
+    // 末尾から同じ方向が続く区画数をカウント
+    for (int i = path_len - 2; i >= 1; i--) {
+        int dx = path_buf[i].x - path_buf[i - 1].x;
+        int dy = path_buf[i].y - path_buf[i - 1].y;
+        if (dx == last_dx && dy == last_dy) {
+            straight_count++;
+        } else {
+            break;
+        }
+    }
+    return straight_count;
+}
+
 void solver_build_path(uint8_t mode, uint8_t case_index) {
+    // 最短走行パラメータからソルバプロファイルを設定
+    const ShortestRunCaseParams_t* cp = NULL;
+    uint8_t idx = (case_index >= 1) ? (case_index - 1) : 0;
+    switch (mode) {
+        case 2: cp = &shortestRunCaseParamsMode2[idx > 8 ? 8 : idx]; break;
+        case 3: cp = &shortestRunCaseParamsMode3[idx > 8 ? 8 : idx]; break;
+        case 4: cp = &shortestRunCaseParamsMode4[idx > 8 ? 8 : idx]; break;
+        case 5: cp = &shortestRunCaseParamsMode5[idx > 8 ? 8 : idx]; break;
+        case 6: cp = &shortestRunCaseParamsMode6[idx > 8 ? 8 : idx]; break;
+        case 7: cp = &shortestRunCaseParamsMode7[idx > 8 ? 8 : idx]; break;
+        default: cp = &shortestRunCaseParamsMode2[0]; break;
+    }
+    solver_set_profile(cp->solver_profile);
+
     // 壁・迷路を構築
     load_map_from_eeprom();
     uint8_t fixedMap[MAZE_SIZE][MAZE_SIZE];
@@ -160,24 +196,80 @@ void solver_build_path(uint8_t mode, uint8_t case_index) {
         }
     }
 
-    // スタート/ゴール（bottom-left -> top-left）
+    // スタート座標（bottom-left -> top-left）
     Pos2D start_bl = { START_X, START_Y };
-    Pos2D goal_bl  = { GOAL_X,  GOAL_Y  };
     Pos2D start_tl = { start_bl.x, MAZE_SIZE - 1 - start_bl.y };
-    Pos2D goal_tl  = { goal_bl.x,  MAZE_SIZE - 1 - goal_bl.y  };
 
     // ケースパラメータ取得
     const SolverCaseParams_t* sp = solver_get_case_params(mode, case_index);
 
-    // 経路探索
-    int path_len = shortest_path(start_tl, goal_tl, g_path_buf, (int)(sizeof(g_path_buf) / sizeof(g_path_buf[0])), sp);
+    // 複数ゴール座標を定義
+    const uint8_t goals[9][2] = {
+        {GOAL1_X, GOAL1_Y}, {GOAL2_X, GOAL2_Y}, {GOAL3_X, GOAL3_Y},
+        {GOAL4_X, GOAL4_Y}, {GOAL5_X, GOAL5_Y}, {GOAL6_X, GOAL6_Y},
+        {GOAL7_X, GOAL7_Y}, {GOAL8_X, GOAL8_Y}, {GOAL9_X, GOAL9_Y},
+    };
+
+    // 全ゴール座標を探索し、最適な経路を選択
+    float best_cost = FLT_MAX;
+    int best_straight = 0;
+    int best_path_len = 0;
+    static Pos2D best_path_buf[MAZE_SIZE * MAZE_SIZE];
+    
+    for (int g = 0; g < 9; g++) {
+        uint8_t gx = goals[g][0];
+        uint8_t gy = goals[g][1];
+        
+        // (0,0) は未使用スロットとして無視
+        if (gx == 0 && gy == 0) continue;
+        if (gx >= MAZE_SIZE || gy >= MAZE_SIZE) continue;
+        
+        // ゴール座標を変換（bottom-left -> top-left）
+        Pos2D goal_tl = { gx, MAZE_SIZE - 1 - gy };
+        
+        // 経路探索
+        int path_len = shortest_path(start_tl, goal_tl, g_path_buf, 
+                                     (int)(sizeof(g_path_buf) / sizeof(g_path_buf[0])), sp);
+        
+        if (path_len <= 0) continue;
+        
+        // このゴールへの経路コストを取得
+        float cost = g_nodes[goal_tl.y][goal_tl.x].dist;
+        
+        // ゴール進入時の直進区画数を計算
+        int approach_straight = calc_goal_approach_straight(g_path_buf, path_len);
+        
+        // 最適経路の選択：コストが小さい、または同じコストで直進距離が長い
+        bool is_better = false;
+        if (cost < best_cost - 0.001f) {
+            is_better = true;
+        } else if (cost < best_cost + 0.001f && approach_straight > best_straight) {
+            is_better = true;
+        }
+        
+        if (is_better) {
+            best_cost = cost;
+            best_straight = approach_straight;
+            best_path_len = path_len;
+            for (int i = 0; i < path_len; i++) {
+                best_path_buf[i] = g_path_buf[i];
+            }
+        }
+    }
+
     // 初期化
     for (int i = 0; i < 256; i++) path[i] = 0;
 
-    if (path_len <= 0) {
+    if (best_path_len <= 0) {
         // 経路無し
         return;
     }
+    
+    // 最適経路をg_path_bufにコピー
+    for (int i = 0; i < best_path_len; i++) {
+        g_path_buf[i] = best_path_buf[i];
+    }
+    int path_len = best_path_len;
 
     // path_cell マーキング（bottom-leftで保持）
     for (int i = 0; i < path_len; i++) {

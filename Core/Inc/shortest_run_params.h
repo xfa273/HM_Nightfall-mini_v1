@@ -72,7 +72,7 @@ typedef struct {
 } ShortestRunModeParams_t;
 
 /**
- * @brief ケース個別（直線＋壁制御＋経路重み）パラメータ
+ * @brief ケース個別（直線＋壁制御＋経路導出）パラメータ
  */
 typedef struct {
     // 直線
@@ -86,9 +86,8 @@ typedef struct {
     // 壁制御
     float kp_wall;                    ///< 壁制御比例ゲイン
     float kp_diagonal;                ///< 斜め直進用 壁制御比例ゲイン
-    // 経路重み
-    int   straight_weight;            ///< 経路導出: 直線の優先度
-    int   diagonal_weight;            ///< 経路導出: 斜めの優先度
+    // 経路導出
+    uint8_t solver_profile;           ///< 経路導出プロファイル (0:標準, 1:強い直線優先, 2:弱い直線優先)
 } ShortestRunCaseParams_t;
 
 // モード共通パラメータ

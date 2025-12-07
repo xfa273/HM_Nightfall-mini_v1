@@ -1,113 +1,89 @@
 #include "solver_params.h"
 #include <stddef.h>
 
-// move_cost_min は安全のため固定値（リストからは設定しない）
+// move_cost_min は安全のため固定値
 #define SOLVER_MOVE_COST_MIN 0.05f
 
-// 既定値（必要に応じてユーザーが調整）
-// 各モードの5ケース（case=3..7に対応）
-static const SolverCaseParams_t solverCaseParamsMode2[7] = {
-    {1.00f, 0.30f, 1.00f, 0.20f, 0.01f, 0.00f, 1.00f},
-    {1.00f, 0.30f, 1.00f, 0.20f, 0.01f, 0.00f, 1.00f},
-    {1.00f, 0.30f, 1.00f, 0.20f, 0.01f, 0.00f, 1.00f},
-    {1.00f, 0.30f, 1.00f, 0.20f, 0.01f, 0.00f, 1.00f},
-    {1.00f, 0.30f, 1.00f, 0.20f, 0.01f, 0.00f, 1.00f},
-    // case8 (index 5): diagonal preference slightly higher
-    {1.00f, 0.30f, 1.00f, 0.20f, 0.01f, 0.00f, 1.00f},
-    // case9 (index 6): similar to case8
-    {1.00f, 0.30f, 1.00f, 0.20f, 0.01f, 0.00f, 1.00f},
+// =============================================
+// 3つのプロファイル定義
+// =============================================
+
+// 標準プロファイル
+static const SolverCaseParams_t kProfileStandard = {
+    .move_cost_normal   = 1.00f,
+    .move_cost_straight = 0.80f,
+    .move_cost_diagonal = 0.85f,
+    .move_cost_min      = SOLVER_MOVE_COST_MIN,
+    .straight_discount  = 0.01f,
+    .diagonal_discount  = 0.005f,
+    .turn_penalty       = 0.80f,
 };
 
-static const SolverCaseParams_t solverCaseParamsMode3[7] = {
-    {1.00f, 0.30f, 1.00f, 0.20f, 0.01f, 0.00f, 1.00f},
-    {1.00f, 0.30f, 1.00f, 0.20f, 0.01f, 0.00f, 1.00f},
-    {1.00f, 0.30f, 1.00f, 0.20f, 0.01f, 0.00f, 1.00f},
-    {1.00f, 0.30f, 1.00f, 0.20f, 0.01f, 0.00f, 1.00f},
-    {1.00f, 0.30f, 1.00f, 0.20f, 0.01f, 0.00f, 1.00f},
-    // case8 (index 5): diagonal preference
-    {1.00f, 0.30f, 1.00f, 0.20f, 0.01f, 0.00f, 1.00f},
-    // case9 (index 6): similar to case8
-    {1.00f, 0.30f, 0.45f, 0.20f, 0.01f, 0.01f, 0.10f},
+// 直進をより強く優先（直進コストを下げ、ターンペナルティを増やす）
+static const SolverCaseParams_t kProfileStraightStrong = {
+    .move_cost_normal   = 1.00f,
+    .move_cost_straight = 0.50f,
+    .move_cost_diagonal = 1.00f,
+    .move_cost_min      = SOLVER_MOVE_COST_MIN,
+    .straight_discount  = 0.02f,
+    .diagonal_discount  = 0.00f,
+    .turn_penalty       = 1.50f,
 };
 
-static const SolverCaseParams_t solverCaseParamsMode4[5] = {
-    {1.00f, 0.30f, 1.00f, 0.20f, 0.01f, 0.00f, 1.00f},
-    {1.00f, 0.30f, 1.00f, 0.20f, 0.01f, 0.00f, 1.00f},
-    {1.00f, 0.30f, 1.00f, 0.20f, 0.01f, 0.00f, 1.00f},
-    {1.00f, 0.30f, 1.00f, 0.20f, 0.02f, 0.00f, 5.00f},
-    {1.00f, 0.30f, 1.00f, 0.20f, 0.02f, 0.00f, 5.00f},
+// 直進優先を弱める（それでも多少は直進を優先）
+static const SolverCaseParams_t kProfileStraightWeak = {
+    .move_cost_normal   = 1.00f,
+    .move_cost_straight = 0.90f,
+    .move_cost_diagonal = 0.80f,
+    .move_cost_min      = SOLVER_MOVE_COST_MIN,
+    .straight_discount  = 0.005f,
+    .diagonal_discount  = 0.01f,
+    .turn_penalty       = 0.50f,
 };
 
-static const SolverCaseParams_t solverCaseParamsMode5[5] = {
-    {1.0f, 0.80f, 0.85f, 0.0f, 0.006f, 0.005f, 0.50f},
-    {1.0f, 0.78f, 0.84f, 0.0f, 0.008f, 0.006f, 0.55f},
-    {1.0f, 0.76f, 0.83f, 0.0f, 0.010f, 0.007f, 0.55f},
-    {1.0f, 0.74f, 0.82f, 0.0f, 0.012f, 0.008f, 0.60f},
-    {1.0f, 0.72f, 0.81f, 0.0f, 0.014f, 0.009f, 0.60f},
-};
+// =============================================
+// プロファイル管理
+// =============================================
 
-static const SolverCaseParams_t solverCaseParamsMode6[5] = {
-    {1.0f, 0.80f, 0.85f, 0.0f, 0.006f, 0.005f, 0.50f},
-    {1.0f, 0.78f, 0.84f, 0.0f, 0.008f, 0.006f, 0.55f},
-    {1.0f, 0.76f, 0.83f, 0.0f, 0.010f, 0.007f, 0.55f},
-    {1.0f, 0.74f, 0.82f, 0.0f, 0.012f, 0.008f, 0.60f},
-    {1.0f, 0.72f, 0.81f, 0.0f, 0.014f, 0.009f, 0.60f},
-};
-
-static const SolverCaseParams_t solverCaseParamsMode7[5] = {
-    {1.0f, 0.80f, 0.85f, 0.0f, 0.006f, 0.005f, 0.50f},
-    {1.0f, 0.78f, 0.84f, 0.0f, 0.008f, 0.006f, 0.55f},
-    {1.0f, 0.76f, 0.83f, 0.0f, 0.010f, 0.007f, 0.55f},
-    {1.0f, 0.74f, 0.82f, 0.0f, 0.012f, 0.008f, 0.60f},
-    {1.0f, 0.72f, 0.81f, 0.0f, 0.014f, 0.009f, 0.60f},
-};
-
+static uint8_t g_profile = SOLVER_PROFILE_STANDARD;
 static SolverCaseParams_t g_params;
 
-const SolverCaseParams_t* solver_get_case_params(uint8_t mode, uint8_t case_index){
-    // case_index: 3..9 を 0..6 に正規化（モードごとにクランプ）
-    uint8_t idx = 0;
-    if (case_index >= 3 && case_index <= 9) idx = (uint8_t)(case_index - 3);
-
-    const SolverCaseParams_t* p = NULL;
-    switch(mode){
-        case 2: {
-            if (idx > 6) idx = 6;
-            p = &solverCaseParamsMode2[idx];
+void solver_set_profile(uint8_t profile) {
+    switch (profile) {
+        case SOLVER_PROFILE_STANDARD:
+        case SOLVER_PROFILE_STRAIGHT_STRONG:
+        case SOLVER_PROFILE_STRAIGHT_WEAK:
+            g_profile = profile;
             break;
-        }
-        case 3: {
-            if (idx > 6) idx = 6;
-            p = &solverCaseParamsMode3[idx];
-            break;
-        }
-        case 4: {
-            if (idx > 4) idx = 4;
-            p = &solverCaseParamsMode4[idx];
-            break;
-        }
-        case 5: {
-            if (idx > 4) idx = 4;
-            p = &solverCaseParamsMode5[idx];
-            break;
-        }
-        case 6: {
-            if (idx > 4) idx = 4;
-            p = &solverCaseParamsMode6[idx];
-            break;
-        }
-        case 7: {
-            if (idx > 4) idx = 4;
-            p = &solverCaseParamsMode7[idx];
-            break;
-        }
         default:
-            p = &solverCaseParamsMode2[0];
+            g_profile = SOLVER_PROFILE_STANDARD;
             break;
     }
+}
 
-    // 出力用にコピーして move_cost_min を固定値へ上書き
-    g_params = *p;
+uint8_t solver_get_profile(void) {
+    return g_profile;
+}
+
+const SolverCaseParams_t* solver_get_case_params(uint8_t mode, uint8_t case_index) {
+    (void)mode;
+    (void)case_index;
+    
+    // 現在のプロファイルに応じてパラメータを返却
+    switch (g_profile) {
+        case SOLVER_PROFILE_STRAIGHT_STRONG:
+            g_params = kProfileStraightStrong;
+            break;
+        case SOLVER_PROFILE_STRAIGHT_WEAK:
+            g_params = kProfileStraightWeak;
+            break;
+        case SOLVER_PROFILE_STANDARD:
+        default:
+            g_params = kProfileStandard;
+            break;
+    }
+    
+    // 安全のため move_cost_min を固定値へ上書き
     g_params.move_cost_min = SOLVER_MOVE_COST_MIN;
     return &g_params;
 }
