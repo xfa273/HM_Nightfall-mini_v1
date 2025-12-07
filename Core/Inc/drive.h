@@ -385,6 +385,7 @@ void driveSL(float, float);
 void driveR(float);
 void driveFWall(float, float, float);
 void driveWallEnd(float, float, float);
+bool driveC_wallend(float, float);       // 等速走行（壁切れ検出で即終了）
 
 //----上位関数----
 void first_sectionA(void);     // 最初の一区画

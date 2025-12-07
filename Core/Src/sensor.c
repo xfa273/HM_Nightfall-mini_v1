@@ -604,8 +604,8 @@ void wall_end(void) {}
 //+++++++++++++++++++++++++++++++++++++++++++++++
 // detect_wall_end
 // 横壁センサの「有り → 無し」の立ち下がりで壁切れを検出
-// 既存の get_wall_info とは独立に動作し、r_wall/l_wall は変更しない
-// 検出直後にブザーを鳴らし、R_WALL_END / L_WALL_END を即座にクリア
+// KERISE v4/Astraea参考: 直進中のみ検出、検出時の走行距離を記録
+// 検出直後にブザーを鳴らし、検出フラグと位置を記録
 //+++++++++++++++++++++++++++++++++++++++++++++++
 void detect_wall_end(void) {
     // 有効なしきい値係数を決定
@@ -614,8 +614,7 @@ void detect_wall_end(void) {
         kx = 1.0f;
     }
 
-    // 現在の横壁判定（get_wall_info を呼ばず、ここで独立判定）
-    // 壁切れ専用しきい値（WALL_END_THR_R/L）を使用
+    // 現在の横壁判定（壁切れ専用しきい値を使用）
     bool r_has = (ad_r > (uint16_t)(WALL_END_THR_R * kx));
     bool l_has = (ad_l > (uint16_t)(WALL_END_THR_L * kx));
 
@@ -631,26 +630,53 @@ void detect_wall_end(void) {
         return;
     }
 
-    // ゲート条件: 最短走行中(SCND)かつWALL_ENDアーム中のみ最終フラグを立てる
-    const bool gate_on = (MF.FLAG.SCND && MF.FLAG.WALL_END);
+    // ゲート条件（KERISE v4/Astraea参考）:
+    // - 最短走行中（SCND）
+    // - 壁切れアーム中（WALL_END）
+    // - スラローム中は無効（直進中のみ検出）
+    const bool is_straight = (!MF.FLAG.SLALOM_R && !MF.FLAG.SLALOM_L);
+    const bool gate_on = (MF.FLAG.SCND && MF.FLAG.WALL_END && is_straight);
 
     // 右側の立ち下がり（有→無）
     if (s_prev_r && !r_has) {
-        if (gate_on) {
-            MF.FLAG.R_WALL_END = 1; // 最終フラグ: 消費側で明示的にクリア
-            buzzer_interrupt(900); // 確認用（SUCTION時は抑制）
+        if (gate_on && !wall_end_detected_r) {
+            // 検出フラグと検出時の走行距離を記録
+            wall_end_detected_r = true;
+            wall_end_dist_r = real_distance;
+            MF.FLAG.R_WALL_END = 1; // 互換用
+            // LED2を点灯（右壁切れ）
+            HAL_GPIO_WritePin(LED_2_GPIO_Port, LED_2_Pin, GPIO_PIN_SET);
+            wall_end_count = 200;  // 200ms点灯
         }
     }
 
     // 左側の立ち下がり（有→無）
     if (s_prev_l && !l_has) {
-        if (gate_on) {
-            MF.FLAG.L_WALL_END = 1; // 最終フラグ: 消費側で明示的にクリア
-            buzzer_interrupt(900);
+        if (gate_on && !wall_end_detected_l) {
+            // 検出フラグと検出時の走行距離を記録
+            wall_end_detected_l = true;
+            wall_end_dist_l = real_distance;
+            MF.FLAG.L_WALL_END = 1; // 互換用
+            // LED3を点灯（左壁切れ）
+            HAL_GPIO_WritePin(LED_3_GPIO_Port, LED_3_Pin, GPIO_PIN_SET);
+            wall_end_count = 200;  // 200ms点灯
         }
     }
 
     // 状態を更新
     s_prev_r = r_has;
     s_prev_l = l_has;
+}
+
+//+++++++++++++++++++++++++++++++++++++++++++++++
+// wall_end_reset
+// 壁切れ検出フラグをリセット（直進開始時に呼び出す）
+//+++++++++++++++++++++++++++++++++++++++++++++++
+void wall_end_reset(void) {
+    wall_end_detected_r = false;
+    wall_end_detected_l = false;
+    wall_end_dist_r = 0.0f;
+    wall_end_dist_l = 0.0f;
+    MF.FLAG.R_WALL_END = 0;
+    MF.FLAG.L_WALL_END = 0;
 }

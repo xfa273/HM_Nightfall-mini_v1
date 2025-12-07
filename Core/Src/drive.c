@@ -456,7 +456,7 @@ void l_turn_R90(void) {
     // スラローム前は壁制御OFF（元の挙動を維持）
     MF.FLAG.CTRL = 0;
 
-    // 前距離（必要なら）
+    // 前距離（入口オフセット）
     if (dist_l_turn_in_90 > 0.0f) {
         MF.FLAG.CTRL = 1;
         driveA(dist_l_turn_in_90, speed_now, velocity_l_turn_90, 0);
@@ -483,7 +483,7 @@ void l_turn_L90(void) {
     // スラローム前は壁制御OFF（元の挙動を維持）
     MF.FLAG.CTRL = 0;
 
-    // 前距離（必要なら）
+    // 前距離（入口オフセット）
     if (dist_l_turn_in_90 > 0.0f) {
         MF.FLAG.CTRL = 1;
         driveA(dist_l_turn_in_90, speed_now, velocity_l_turn_90, 0);
@@ -510,7 +510,7 @@ void l_turn_R180(uint8_t fwall) {
     // スラローム前は壁制御OFF（元の挙動を維持）
     MF.FLAG.CTRL = 0;
 
-    // 前距離（必要なら）
+    // 前距離（入口オフセット）
     if (dist_l_turn_in_180 > 0.0f) {
         MF.FLAG.CTRL = 1;
         driveA(dist_l_turn_in_180, speed_now, velocity_l_turn_180, 0);
@@ -537,7 +537,7 @@ void l_turn_L180(uint8_t fwall) {
     // スラローム前は壁制御OFF（元の挙動を維持）
     MF.FLAG.CTRL = 0;
 
-    // 前距離（必要なら）
+    // 前距離（入口オフセット）
     if (dist_l_turn_in_180 > 0.0f) {
         MF.FLAG.CTRL = 1;
         driveA(dist_l_turn_in_180, speed_now, velocity_l_turn_180, 0);
@@ -2227,4 +2227,59 @@ void reset_failed(void) {
     }
 
     MF.FLAG.FAILED = 0;
+}
+
+//+++++++++++++++++++++++++++++++++++++++++++++++
+// driveC_wallend
+// 等速走行し、壁切れ検出時に即座に終了する
+// 引数1：dist_max …… 最大走行距離[mm]
+// 引数2: spd …… 走行速度[mm/sec]
+// 戻り値：壁切れを検出した場合true、未検出でdist_max走行した場合false
+//+++++++++++++++++++++++++++++++++++++++++++++++
+bool driveC_wallend(float dist_max, float spd) {
+    
+    // 走行距離カウントをリセット
+    real_distance = 0;
+    encoder_distance_r = 0;
+    encoder_distance_l = 0;
+    
+    // 回転角度カウントをリセット
+    real_angle = 0;
+    IMU_angle = 0;
+    target_angle = 0;
+    
+    // 等速走行（加速度0）
+    acceleration_interrupt = 0.0f;
+    velocity_interrupt = spd;
+    
+    // 壁切れ検出をアーム
+    wall_end_reset();
+    MF.FLAG.WALL_END = 1;
+    
+    drive_start();
+    
+    bool wall_end_detected = false;
+    
+    // 壁切れ検出または最大距離到達まで走行
+    while (real_distance < dist_max && !MF.FLAG.FAILED) {
+        // 壁切れ検出チェック
+        if (wall_end_detected_r || wall_end_detected_l) {
+            wall_end_detected = true;
+            break;  // 即座に終了
+        }
+        background_replan_tick();
+    }
+    
+    // 壁切れ検出をディスアーム
+    MF.FLAG.WALL_END = 0;
+    
+    // 割込み内の変数をリセット（速度は維持）
+    // drive_variable_reset(); // 速度を維持するためリセットしない
+    
+    // 走行距離カウントをリセット
+    real_distance = 0;
+    encoder_distance_r = 0;
+    encoder_distance_l = 0;
+    
+    return wall_end_detected;
 }

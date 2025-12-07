@@ -228,6 +228,8 @@ void adachi(void) {
         //----前進----
         case 0x88:
 
+            // buzzer_interrupt(900);
+
             if (mouse.dir == 0x00 && route[r_cnt] == 0x88) {
                 // 北向き
                 if (visited[mouse.y + 1][mouse.x]) {

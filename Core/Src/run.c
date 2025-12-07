@@ -31,6 +31,10 @@ void run(void) {
 
             // 次動作に応じたターン入口速度を決定（0なら終端）
             uint16_t next_code = path[path_count + 1];
+            
+            // 壁切れ検出用バッファ距離（直進の最後の部分）
+            const float WALL_END_BUFFER = (float)DIST_HALF_SEC;  // 45mm
+            
             float v_next = 0.0f; // [mm/s]
             if (next_code >= 300 && next_code < 400) {
                 v_next = velocity_turn90;
@@ -82,17 +86,78 @@ void run(void) {
             // 各距離を区画数に変換
             float d_acc_blocks = d_acc / DIST_HALF_SEC;
             float d_constant_blocks = d_constant / DIST_HALF_SEC;
-            float d_dec_blocks = d_acc_blocks;
+            float d_dec_blocks = d_acc / DIST_HALF_SEC;  // 減速区間 = 加速区間と同じ
 
-            // 実行
-            if (d_acc_blocks > 0.0f) {
-                run_straight(d_acc_blocks, max_reached_speed, 0);
-            }
-            if (d_constant_blocks > 0.0f) {
-                run_straight(d_constant_blocks, max_reached_speed, 0);
-            }
-            if (d_dec_blocks > 0.0f) {
-                run_straight(d_dec_blocks, v_next, 0);
+            // 次がターンかどうか、小回りか大回りかを判定
+            bool next_is_small_turn = (next_code >= 300 && next_code < 500);  // 小回り90度
+            bool next_is_large_turn = (next_code >= 500 && next_code < 700);  // 大回り90/180度
+            
+            // 前のコードを取得（例外処理用）
+            uint16_t prev_code = (path_count > 0) ? path[path_count - 1] : 0;
+            bool prev_is_large_turn = (prev_code >= 500 && prev_code < 700);
+            
+            // 例外: 大回りターン→半区画直進(S1)→小回りターン のパターンでは壁切れ補正を無効化
+            // 理由: 大回りターン出口で既に壁が途切れているため、壁切れを検出できない
+            bool skip_wallend = (prev_is_large_turn && path[path_count] == 201 && next_is_small_turn);
+            
+            // 壁切れ補正を適用するかどうか
+            // 小回りターンと大回りターンの前で適用（例外パターンを除く）
+            if ((next_is_small_turn || next_is_large_turn) && !skip_wallend) {
+                // 壁切れ補正付き直進
+                // メイン部分: 大回りターン開始位置の45mm手前までターン速度まで減速
+                // バッファ部分: 最大90mmの間等速で壁切れを探しながら走行
+                
+                const float BUFFER_MAX = 90.0f;  // バッファ区間の最大距離[mm]
+                
+                // メイン部分の距離（大回りターン開始位置の45mm手前まで）
+                float main_mm = straight_mm - WALL_END_BUFFER;
+                if (main_mm < 0.0f) main_mm = 0.0f;
+                
+                // メイン部分の走行（ターン速度まで減速）
+                if (main_mm > 0.0f) {
+                    // 加速区間
+                    if (d_acc > 0.0f) {
+                        float acc_run = (d_acc < main_mm) ? d_acc : main_mm;
+                        run_straight(acc_run / DIST_HALF_SEC, max_reached_speed, 0);
+                    }
+                    // 等速区間
+                    float const_run = main_mm - d_acc;
+                    if (const_run > 0.0f && d_constant > 0.0f) {
+                        float run_dist = (const_run < d_constant) ? const_run : d_constant;
+                        run_straight(run_dist / DIST_HALF_SEC, max_reached_speed, 0);
+                    }
+                    // 減速区間（メイン部分の残り）
+                    float dec_in_main = main_mm - d_acc - d_constant;
+                    if (dec_in_main > 0.0f) {
+                        run_straight(dec_in_main / DIST_HALF_SEC, v_next, 0);
+                    }
+                }
+                
+                // バッファ部分の走行（壁切れ検出付き、等速でターン速度を維持）
+                // 最大90mm走行し、壁切れ検出で即座に終了
+                bool wall_end_found = driveC_wallend(BUFFER_MAX, v_next);
+                
+                // 壁切れ検出後の処理
+                if (wall_end_found) {
+                    // 小回りターンの場合、壁切れ検出後に45mm追加直進
+                    if (next_is_small_turn) {
+                        run_straight(WALL_END_BUFFER / DIST_HALF_SEC, v_next, 0);
+                    }
+                    // 大回りターンの場合、そのままターン開始（追加走行なし）
+                }
+                // 壁切れ未検出の場合（90mm走行完了）、そのままターン開始
+                
+            } else {
+                // 次がターンでない場合、従来通りの処理
+                if (d_acc_blocks > 0.0f) {
+                    run_straight(d_acc_blocks, max_reached_speed, 0);
+                }
+                if (d_constant_blocks > 0.0f) {
+                    run_straight(d_constant_blocks, max_reached_speed, 0);
+                }
+                if (d_dec_blocks > 0.0f) {
+                    run_straight(d_dec_blocks, v_next, 0);
+                }
             }
 
         } else if (path[path_count] < 400) {
@@ -363,7 +428,7 @@ void run_shortest(uint8_t mode, uint8_t case_index) {
     led_flash(2);
     get_base();
 
-    led_write(1,1);
+    // led_write(1,1);
 
     // ファン出力（mode共通）
     drive_fan(pm->fan_power);

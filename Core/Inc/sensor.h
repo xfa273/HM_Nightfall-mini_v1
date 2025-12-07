@@ -44,6 +44,12 @@ uint8_t gyro_calib_flag;
 // 現在使用しているIMUモデル
 uint8_t imu_model;
 
+// 壁切れ検出用変数
+volatile bool wall_end_detected_r;   // 右壁切れ検出済みフラグ
+volatile bool wall_end_detected_l;   // 左壁切れ検出済みフラグ
+volatile float wall_end_dist_r;      // 右壁切れ検出時の走行距離[mm]
+volatile float wall_end_dist_l;      // 左壁切れ検出時の走行距離[mm]
+
 #else // main.c以外からこのファイルが呼ばれている場合
 
 extern uint8_t tp;
@@ -66,6 +72,12 @@ extern uint8_t gyro_calib_flag;
 
 // 現在使用しているIMUモデル
 extern uint8_t imu_model;
+
+// 壁切れ検出用変数
+extern volatile bool wall_end_detected_r;   // 右壁切れ検出済みフラグ
+extern volatile bool wall_end_detected_l;   // 左壁切れ検出済みフラグ
+extern volatile float wall_end_dist_r;      // 右壁切れ検出時の走行距離[mm]
+extern volatile float wall_end_dist_l;      // 左壁切れ検出時の走行距離[mm]
 
 #endif
 
@@ -105,6 +117,8 @@ void indicate_sensor();
 void wall_end();
 // 壁切れ検知（横壁の立ち下がりエッジ検出）
 void detect_wall_end(void);
+// 壁切れ検出フラグをリセット（直進開始時に呼び出す）
+void wall_end_reset(void);
 
 // ADC DMA 連続スキャン用の共有バッファ（9エントリ: R,L,R,L,FR,FL,FR,FL,BAT）
 #ifdef MAIN_C_
