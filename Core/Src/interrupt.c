@@ -177,6 +177,9 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
             HAL_GPIO_WritePin(IR_R_GPIO_Port, IR_R_Pin, GPIO_PIN_RESET);
             HAL_GPIO_WritePin(IR_L_GPIO_Port, IR_L_Pin, GPIO_PIN_RESET);
 
+            // 横センサ更新完了時に壁切れ検出（約6kHz、高速検出）
+            detect_wall_end();
+
             // グループ識別（互換性: RL=0）
             ADC_task_counter = 0;
             break;
