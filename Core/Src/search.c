@@ -207,16 +207,18 @@ void adachi(void) {
     
     first_sectionA();
     half_sectionU();
-    // adv_pos();
 
+    // 最初の1区画目を既知扱いにする（スタート区画の一つ先）
+    // adv_pos()より先に座標を更新してwrite_mapとmarkVisitedを呼ぶ
+    adv_pos();
+    get_wall_info();
     write_map();
+    markVisited(mouse.x, mouse.y);
 
     //====歩数マップ・経路作成====
     r_cnt = 0;                 // 経路カウンタの初期化
     make_smap(goal_x, goal_y); // 歩数マップ作成
     make_route(); // 最短経路探索（route配列に動作が格納される）
-
-    adv_pos();
 
     //====探索走行====
     do {
@@ -541,6 +543,13 @@ void map_Init() {
         map[0][x] |= 0xf2;             // 最南に壁を配置
         map[MAZE_SIZE - 1][x] |= 0xf8; // 最北に壁を配置
     }
+
+    // スタート区画の確定壁（東壁）を配置
+    // マイクロマウス規格: スタート区画の出口は北のみ
+    map[START_Y][START_X] |= 0x44;     // スタート区画の東壁
+    if (START_X > 0) {
+        map[START_Y][START_X - 1] |= 0x44; // 西隣の区画の東壁
+    }
 }
 
 //+++++++++++++++++++++++++++++++++++++++++++++++
@@ -662,6 +671,8 @@ int make_smap(uint8_t target_x, uint8_t target_y) {
         }
     } else {
         // 全面探索: 未探索セルを起点(0)にする
+        // スタート区画は強制的に既知扱い（無駄な帰還を防止）
+        visited[START_Y][START_X] = true;
         for (y = 0; y <= (MAZE_SIZE - 1); y++) {     // 各Y座標で実行
             for (x = 0; x <= (MAZE_SIZE - 1); x++) { // 各X座標で実行
                 if (visited[y][x] == false) {
