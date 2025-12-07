@@ -60,7 +60,9 @@ const ShortestRunModeParams_t shortestRunModeParams2 = {
     .makepath_type_case47= 1,
     // 壁切れ検出しきい値
     .wall_end_thr_r = 280,
-    .wall_end_thr_l = 280
+    .wall_end_thr_l = 280,
+    // 加速度切り替え速度
+    .accel_switch_velocity = 2000.0f
 };
 
 const ShortestRunCaseParams_t shortestRunCaseParamsMode2[9] = {
@@ -188,7 +190,9 @@ const ShortestRunModeParams_t shortestRunModeParams3 = {
     .makepath_type_case47= 1,
     // 壁切れ検出しきい値
     .wall_end_thr_r = 200,
-    .wall_end_thr_l = 200
+    .wall_end_thr_l = 200,
+    // 加速度切り替え速度
+    .accel_switch_velocity = 2000.0f
 };
 
 const ShortestRunCaseParams_t shortestRunCaseParamsMode3[9] = {
@@ -314,7 +318,9 @@ const ShortestRunModeParams_t shortestRunModeParams4 = {
     .makepath_type_case47= 1,
     // 壁切れ検出しきい値
     .wall_end_thr_r = 180,
-    .wall_end_thr_l = 180
+    .wall_end_thr_l = 180,
+    // 加速度切り替え速度
+    .accel_switch_velocity = 2000.0f
 };
 
 const ShortestRunCaseParams_t shortestRunCaseParamsMode4[9] = {
@@ -410,7 +416,9 @@ const ShortestRunModeParams_t shortestRunModeParams5 = {
     .makepath_type_case47= 1,
     // 壁切れ検出しきい値
     .wall_end_thr_r = 160,
-    .wall_end_thr_l = 160
+    .wall_end_thr_l = 160,
+    // 加速度切り替え速度
+    .accel_switch_velocity = 2000.0f
 };
 
 const ShortestRunCaseParams_t shortestRunCaseParamsMode5[9] = {
@@ -506,7 +514,9 @@ const ShortestRunModeParams_t shortestRunModeParams6 = {
     .makepath_type_case47= 1,
     // 壁切れ検出しきい値
     .wall_end_thr_r = 160,
-    .wall_end_thr_l = 160
+    .wall_end_thr_l = 160,
+    // 加速度切り替え速度
+    .accel_switch_velocity = 2000.0f
 };
 
 const ShortestRunCaseParams_t shortestRunCaseParamsMode6[9] = {
@@ -599,7 +609,9 @@ const ShortestRunModeParams_t shortestRunModeParams7 = {
     .makepath_type_case47= 1,
     // 壁切れ検出しきい値
     .wall_end_thr_r = 500,
-    .wall_end_thr_l = 500
+    .wall_end_thr_l = 500,
+    // 加速度切り替え速度
+    .accel_switch_velocity = 2000.0f
 };
 
 const ShortestRunCaseParams_t shortestRunCaseParamsMode7[5] = {

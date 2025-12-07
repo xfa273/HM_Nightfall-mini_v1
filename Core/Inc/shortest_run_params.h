@@ -69,6 +69,8 @@ typedef struct {
     // 壁切れ検出しきい値（ターン速度依存）
     uint16_t wall_end_thr_r;          ///< 右壁切れ検出しきい値
     uint16_t wall_end_thr_l;          ///< 左壁切れ検出しきい値
+    // 加速度切り替え速度（低速/高速域で加速度を切り替え）
+    float accel_switch_velocity;      ///< 加速度切り替え速度 (mm/s)
 } ShortestRunModeParams_t;
 
 /**

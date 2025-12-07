@@ -26,6 +26,7 @@
 volatile float velocity_straight;     // 直線の速度[mm/s]
 volatile float acceleration_straight; // 直線の加速度[mm/s^2]
 volatile float acceleration_straight_dash; // 直線の半区画当たりの加速量[mm/s]
+volatile float accel_switch_velocity;     // 加速度切り替え速度[mm/s]（低速/高速域切り替え）
 volatile float velocity_d_straight;     // 斜め直線の速度[mm/s]
 volatile float acceleration_d_straight; // 斜め直線の加速度[mm/s^2]
 volatile float
@@ -189,6 +190,7 @@ extern volatile float velocity_straight;     // 直線の速度[mm/s]
 extern volatile float acceleration_straight; // 直線の加速度[mm/s^2]
 extern volatile float
     acceleration_straight_dash; // 直線の半区画当たりの加速量[mm/s]
+extern volatile float accel_switch_velocity;     // 加速度切り替え速度[mm/s]
 extern volatile float velocity_d_straight;     // 斜め直線の速度[mm/s]
 extern volatile float acceleration_d_straight; // 斜め直線の加速度[mm/s^2]
 extern volatile float

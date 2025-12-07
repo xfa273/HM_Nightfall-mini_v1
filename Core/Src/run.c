@@ -417,6 +417,9 @@ void run_shortest(uint8_t mode, uint8_t case_index) {
     wall_end_thr_r = pm->wall_end_thr_r;
     wall_end_thr_l = pm->wall_end_thr_l;
 
+    // 加速度切り替え速度（モードごと）
+    accel_switch_velocity = pm->accel_switch_velocity;
+
     velocity_interrupt = 0;
 
     // センサ・モータ初期化
