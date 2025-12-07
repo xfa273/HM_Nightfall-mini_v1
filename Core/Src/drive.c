@@ -247,6 +247,9 @@ void one_sectionD(void) {
         MF.FLAG.F_WALL_STOP = 1;
     }
 
+    // 壁切れ検出をリセット（ターン後の状態を初期化）
+    wall_end_reset();
+
     // driveA 内で壁切れ追従（探索のみ一時SCND=1でアーム）。追従距離は DIST_HALF_SEC + dist_wall_end。
     driveA(DIST_HALF_SEC * 2.0f, speed_now, speed_out, dist_wall_end);
     // 減速後の現在速度を反映
