@@ -187,8 +187,8 @@ const ShortestRunModeParams_t shortestRunModeParams3 = {
     .makepath_type_case3 = 0,
     .makepath_type_case47= 1,
     // 壁切れ検出しきい値
-    .wall_end_thr_r = 220,
-    .wall_end_thr_l = 220
+    .wall_end_thr_r = 200,
+    .wall_end_thr_l = 200
 };
 
 const ShortestRunCaseParams_t shortestRunCaseParamsMode3[9] = {
@@ -313,8 +313,8 @@ const ShortestRunModeParams_t shortestRunModeParams4 = {
     .makepath_type_case3 = 0,
     .makepath_type_case47= 1,
     // 壁切れ検出しきい値
-    .wall_end_thr_r = 200,
-    .wall_end_thr_l = 200
+    .wall_end_thr_r = 180,
+    .wall_end_thr_l = 180
 };
 
 const ShortestRunCaseParams_t shortestRunCaseParamsMode4[9] = {
@@ -409,8 +409,8 @@ const ShortestRunModeParams_t shortestRunModeParams5 = {
     .makepath_type_case3 = 0,
     .makepath_type_case47= 1,
     // 壁切れ検出しきい値
-    .wall_end_thr_r = 180,
-    .wall_end_thr_l = 180
+    .wall_end_thr_r = 160,
+    .wall_end_thr_l = 160
 };
 
 const ShortestRunCaseParams_t shortestRunCaseParamsMode5[9] = {
@@ -505,8 +505,8 @@ const ShortestRunModeParams_t shortestRunModeParams6 = {
     .makepath_type_case3 = 0,
     .makepath_type_case47= 1,
     // 壁切れ検出しきい値
-    .wall_end_thr_r = 180,
-    .wall_end_thr_l = 180
+    .wall_end_thr_r = 160,
+    .wall_end_thr_l = 160
 };
 
 const ShortestRunCaseParams_t shortestRunCaseParamsMode6[9] = {
