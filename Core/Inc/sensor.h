@@ -114,7 +114,6 @@ void IMU_GetOffset(void);
 uint8_t get_base();   // センサ基準値を取得
 void get_wall_info(); // 壁情報を読む
 void indicate_sensor();
-void wall_end();
 // 壁切れ検知（横壁の立ち下がりエッジ検出）
 void detect_wall_end(void);
 // 壁切れ検出フラグをリセット（直進開始時に呼び出す）

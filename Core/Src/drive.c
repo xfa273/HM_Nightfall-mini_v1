@@ -1351,11 +1351,6 @@ void driveFWall(float dist, float spd_in, float spd_out) {
     encoder_distance_l = 0;
 }
 
-void driveWallEnd(float dist, float spd_in, float spd_out) {
-    driveA(dist, spd_in, spd_out, 0);
-}
-
-void adjust_wallend(void) {}
 
 /*==========================================================
     初期化関数・設定関数・その他関数

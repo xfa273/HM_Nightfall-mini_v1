@@ -374,7 +374,6 @@ void drive_motor(void);
 
 void drive_fan(uint16_t);
 
-void adjust_wallend(void);
 
 //====走行系====
 //----基幹関数----
@@ -384,7 +383,6 @@ void driveSR(float, float);
 void driveSL(float, float);
 void driveR(float);
 void driveFWall(float, float, float);
-void driveWallEnd(float, float, float);
 bool driveC_wallend(float, float);       // 等速走行（壁切れ検出で即終了）
 
 //----上位関数----
