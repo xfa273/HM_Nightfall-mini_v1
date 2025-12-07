@@ -63,24 +63,72 @@ void run(void) {
                 v_next = GOAL_ENTRY_SPEED;
             }
 
-            // 直線の加減速区画を計算
-            float t_acc = velocity_straight / acceleration_straight_dash; // [s]
-            float d_acc = 0.5f * acceleration_straight_dash * t_acc * t_acc; // [mm]
-
-            // 最高到達速度が走行距離内で到達できるかのチェック
-            float d_total_acc_dec = 2 * d_acc; // 加速距離と減速距離の合計 [mm]
-            float d_constant = 0.0f;                     // 等速距離 [mm]
-            float max_reached_speed = velocity_straight; // 最高到達速度 [mm/s]
-
-            if (d_total_acc_dec > straight_mm) {
-                // 最高速度に達しない場合（等加速→等減速の三角形）
-                d_acc = straight_mm / 2.0f;
-                d_constant = 0.0f;
-                t_acc = sqrtf(2.0f * d_acc / acceleration_straight_dash);
-                max_reached_speed = acceleration_straight_dash * t_acc;
+            // 直線の加減速区画を計算（二段階加速対応）
+            // v_start=0 から加速を開始すると仮定
+            float v_start = 0.0f;
+            float v_switch = accel_switch_velocity;  // 切り替え速度
+            float v_max = velocity_straight;         // 目標最高速度
+            float accel_low = acceleration_straight;       // 低速域加速度
+            float accel_high = acceleration_straight_dash; // 高速域加速度
+            
+            float d_acc = 0.0f;      // 総加速距離 [mm]
+            float d_constant = 0.0f; // 等速距離 [mm]
+            float max_reached_speed = v_max;
+            
+            // 二段階加速が有効かどうか
+            bool two_stage = (v_switch > 0.0f && v_switch < v_max && accel_low > 0.0f && accel_high > 0.0f);
+            
+            if (two_stage) {
+                // 二段階加速の計算
+                // Phase1: v_start → v_switch (低速域加速度)
+                float d1 = (v_switch * v_switch - v_start * v_start) / (2.0f * accel_low);
+                // Phase2: v_switch → v_max (高速域加速度)
+                float d2 = (v_max * v_max - v_switch * v_switch) / (2.0f * accel_high);
+                
+                float d_acc_full = d1 + d2;  // 最高速度到達までの総加速距離
+                float d_total_acc_dec = 2.0f * d_acc_full;  // 加速+減速距離
+                
+                if (d_total_acc_dec <= straight_mm) {
+                    // 最高速度に到達する場合（台形）
+                    d_acc = d_acc_full;
+                    d_constant = straight_mm - d_total_acc_dec;
+                    max_reached_speed = v_max;
+                } else {
+                    // 最高速度に到達しない場合
+                    // まず、切り替え速度に到達するか確認
+                    float d_to_switch_and_back = 2.0f * d1;  // 切り替え速度まで加速+減速
+                    
+                    if (d_to_switch_and_back <= straight_mm) {
+                        // 切り替え速度には到達するが、最高速度には到達しない
+                        // 残り距離で高速域加速度を使って到達可能な速度を計算
+                        float remain_half = (straight_mm - d_to_switch_and_back) / 2.0f;
+                        // v_switch² + 2*accel_high*remain_half = v_reached²
+                        float v_reached_sq = v_switch * v_switch + 2.0f * accel_high * remain_half;
+                        max_reached_speed = sqrtf(v_reached_sq);
+                        d_acc = d1 + remain_half;
+                        d_constant = 0.0f;
+                    } else {
+                        // 切り替え速度にも到達しない（低速域のみ）
+                        d_acc = straight_mm / 2.0f;
+                        d_constant = 0.0f;
+                        max_reached_speed = sqrtf(v_start * v_start + 2.0f * accel_low * d_acc);
+                    }
+                }
             } else {
-                // 最高速度に達する場合（台形）
-                d_constant = straight_mm - d_total_acc_dec;
+                // 従来の1段階加速（accel_switch_velocity無効時）
+                float accel = (accel_high > 0.0f) ? accel_high : accel_low;
+                float t_acc_time = v_max / accel;
+                float d_acc_full = 0.5f * accel * t_acc_time * t_acc_time;
+                float d_total_acc_dec = 2.0f * d_acc_full;
+                
+                if (d_total_acc_dec > straight_mm) {
+                    d_acc = straight_mm / 2.0f;
+                    d_constant = 0.0f;
+                    max_reached_speed = sqrtf(2.0f * accel * d_acc);
+                } else {
+                    d_acc = d_acc_full;
+                    d_constant = straight_mm - d_total_acc_dec;
+                }
             }
 
             // 各距離を区画数に変換
