@@ -611,28 +611,31 @@ void detect_wall_end(void) {
         kx = 1.0f;
     }
 
-    // 現在の横壁判定（壁切れ専用しきい値を使用）
-    bool r_has = (ad_r > (uint16_t)(WALL_END_THR_R * kx));
-    bool l_has = (ad_l > (uint16_t)(WALL_END_THR_L * kx));
+    // 現在の横壁判定（パラメータ設定のしきい値を使用、未設定時はデフォルト値）
+    uint16_t thr_r = (wall_end_thr_r > 0) ? wall_end_thr_r : WALL_END_THR_R;
+    uint16_t thr_l = (wall_end_thr_l > 0) ? wall_end_thr_l : WALL_END_THR_L;
+    bool r_has = (ad_r > (uint16_t)(thr_r * kx));
+    bool l_has = (ad_l > (uint16_t)(thr_l * kx));
 
-    // 直前状態（関数ローカルに保持）
-    static uint8_t s_inited = 0;
+    // 直前状態（常に更新、10月20日の実装と同様）
     static bool s_prev_r = false;
     static bool s_prev_l = false;
 
-    if (!s_inited) {
+    // リセット要求があれば、現在の壁状態で初期化（returnせず処理を継続）
+    if (wall_end_reset_request) {
         s_prev_r = r_has;
         s_prev_l = l_has;
-        s_inited = 1;
-        return;
+        wall_end_reset_request = false;
+        // 注: returnしない。s_prev更新後、通常処理を継続
+        // これにより柱（無し→有り→無し）の検出を確実に行う
     }
 
-    // ゲート条件（KERISE v4/Astraea参考）:
-    // - 最短走行中（SCND）
+    // ゲート条件:
     // - 壁切れアーム中（WALL_END）
     // - スラローム中は無効（直進中のみ検出）
+    // 注: 探索走行・最短走行の両方で使用するため、SCNDフラグは条件から除外
     const bool is_straight = (!MF.FLAG.SLALOM_R && !MF.FLAG.SLALOM_L);
-    const bool gate_on = (MF.FLAG.SCND && MF.FLAG.WALL_END && is_straight);
+    const bool gate_on = (MF.FLAG.WALL_END && is_straight);
 
     // 右側の立ち下がり（有→無）
     if (s_prev_r && !r_has) {
@@ -668,6 +671,7 @@ void detect_wall_end(void) {
 //+++++++++++++++++++++++++++++++++++++++++++++++
 // wall_end_reset
 // 壁切れ検出フラグをリセット（直進開始時に呼び出す）
+// s_prev_r/lも現在の壁状態で再初期化するため、リセット要求フラグを設定
 //+++++++++++++++++++++++++++++++++++++++++++++++
 void wall_end_reset(void) {
     wall_end_detected_r = false;
@@ -676,4 +680,6 @@ void wall_end_reset(void) {
     wall_end_dist_l = 0.0f;
     MF.FLAG.R_WALL_END = 0;
     MF.FLAG.L_WALL_END = 0;
+    // detect_wall_end()内のs_prev_r/lを現在の壁状態で再初期化する要求
+    wall_end_reset_request = true;
 }

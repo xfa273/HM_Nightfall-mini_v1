@@ -148,10 +148,10 @@
 
 // 壁切れ判定専用しきい値（横壁有無判定）
 #ifndef WALL_END_THR_R
-#define WALL_END_THR_R  100
+#define WALL_END_THR_R  280
 #endif
 #ifndef WALL_END_THR_L
-#define WALL_END_THR_L  100
+#define WALL_END_THR_L  280
 #endif
 
 // 前壁補正：未検知時の最大延長距離[mm]

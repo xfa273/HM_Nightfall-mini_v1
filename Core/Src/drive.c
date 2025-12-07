@@ -267,20 +267,78 @@ void one_section(void) {}
 
 //+++++++++++++++++++++++++++++++++++++++++++++++
 // one_sectionU
-// 等速で1区画分進む
-// 引数：なし
+// 等速で1区画分進む（壁切れ補正付き）
+// 壁切れ検出時: 検出位置から45mm追加直進して終了
+// 壁切れ未検出時: 90mm（1区画）で終了
+// 引数：section（未使用）, spd_out（未使用）
 // 戻り値：なし
 //+++++++++++++++++++++++++++++++++++++++++++++++
 void one_sectionU(float section, float spd_out) {
     (void)section;
     (void)spd_out;
-    // 探索向け: 単一の連続走行で等速のまま1区画進み、必要なら壁切れ追従（半区画+バッファ）
+    
+    const float v_const = speed_now;
+    const float dist_max = DIST_HALF_SEC * 2.0f;  // 90mm（1区画）
+    // 壁切れ後の追加直進: 小回りターン用なので45mm + dist_wall_end
+    const float follow_dist = DIST_HALF_SEC + dist_wall_end;
+    
     MF.FLAG.CTRL = 1;
-
-    const float v_const = speed_now; // 等速維持
-    // driveA 内部で dist_wallend>0 をトリガにアーム（SCNDを一時的に有効化）。追従距離は DIST_HALF_SEC + dist_wall_end。
-    driveA(DIST_HALF_SEC * 2.0f, speed_now, v_const, dist_wall_end);
-
+    
+    // 走行距離カウントをリセット
+    real_distance = 0;
+    encoder_distance_r = 0;
+    encoder_distance_l = 0;
+    target_distance = 0;  // 距離制御の目標値もリセット
+    
+    // 回転角度カウントをリセット
+    real_angle = 0;
+    IMU_angle = 0;
+    target_angle = 0;
+    
+    // 等速走行
+    acceleration_interrupt = 0.0f;
+    velocity_interrupt = v_const;
+    
+    // 壁切れ検出をアーム
+    wall_end_reset();
+    MF.FLAG.WALL_END = 1;
+    
+    drive_start();
+    
+    bool wall_end_detected = false;
+    
+    // 壁切れ検出または最大距離到達まで走行
+    while (real_distance < dist_max && !MF.FLAG.FAILED) {
+        if (wall_end_detected_r || wall_end_detected_l) {
+            wall_end_detected = true;
+            break;
+        }
+        background_replan_tick();
+    }
+    
+    // 壁切れ検出をディスアーム
+    MF.FLAG.WALL_END = 0;
+    
+    // 壁切れ検出時は45mm追加直進（壁の端から次の区画中心への位置補正）
+    if (wall_end_detected) {
+        // 走行距離カウントをリセット
+        real_distance = 0;
+        encoder_distance_r = 0;
+        encoder_distance_l = 0;
+        target_distance = 0;
+        
+        // 45mm追加直進
+        while (real_distance < follow_dist && !MF.FLAG.FAILED) {
+            background_replan_tick();
+        }
+    }
+    
+    // 走行距離カウントをリセット
+    real_distance = 0;
+    encoder_distance_r = 0;
+    encoder_distance_l = 0;
+    target_distance = 0;
+    
     MF.FLAG.CTRL = 0;
     speed_now = v_const;
     get_wall_info();

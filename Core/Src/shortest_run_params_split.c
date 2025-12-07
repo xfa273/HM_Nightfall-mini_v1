@@ -56,7 +56,10 @@ const ShortestRunModeParams_t shortestRunModeParams2 = {
     .fan_power          = 0,
     // Makepath
     .makepath_type_case3 = 0,
-    .makepath_type_case47= 1
+    .makepath_type_case47= 1,
+    // 壁切れ検出しきい値
+    .wall_end_thr_r = 280,
+    .wall_end_thr_l = 280
 };
 
 const ShortestRunCaseParams_t shortestRunCaseParamsMode2[9] = {
@@ -181,7 +184,10 @@ const ShortestRunModeParams_t shortestRunModeParams3 = {
     .fan_power          = 600,
     // Makepath
     .makepath_type_case3 = 0,
-    .makepath_type_case47= 1
+    .makepath_type_case47= 1,
+    // 壁切れ検出しきい値
+    .wall_end_thr_r = 220,
+    .wall_end_thr_l = 220
 };
 
 const ShortestRunCaseParams_t shortestRunCaseParamsMode3[9] = {
@@ -304,7 +310,10 @@ const ShortestRunModeParams_t shortestRunModeParams4 = {
     .dist_turn135out_out = 10.0f,
     .fan_power          = 700,
     .makepath_type_case3 = 0,
-    .makepath_type_case47= 1
+    .makepath_type_case47= 1,
+    // 壁切れ検出しきい値
+    .wall_end_thr_r = 210,
+    .wall_end_thr_l = 210
 };
 
 const ShortestRunCaseParams_t shortestRunCaseParamsMode4[9] = {
@@ -397,7 +406,10 @@ const ShortestRunModeParams_t shortestRunModeParams5 = {
     .dist_l_turn_out_180= 40.0f,
     .fan_power          = 900,
     .makepath_type_case3 = 0,
-    .makepath_type_case47= 1
+    .makepath_type_case47= 1,
+    // 壁切れ検出しきい値
+    .wall_end_thr_r = 180,
+    .wall_end_thr_l = 180
 };
 
 const ShortestRunCaseParams_t shortestRunCaseParamsMode5[9] = {
@@ -490,7 +502,10 @@ const ShortestRunModeParams_t shortestRunModeParams6 = {
     .dist_l_turn_out_180= 47.0f,
     .fan_power          = 1000,
     .makepath_type_case3 = 0,
-    .makepath_type_case47= 1
+    .makepath_type_case47= 1,
+    // 壁切れ検出しきい値
+    .wall_end_thr_r = 195,
+    .wall_end_thr_l = 195
 };
 
 const ShortestRunCaseParams_t shortestRunCaseParamsMode6[9] = {
@@ -580,7 +595,10 @@ const ShortestRunModeParams_t shortestRunModeParams7 = {
     .dist_l_turn_out_180= 169.0f,
     .fan_power          = 200,
     .makepath_type_case3 = 0,
-    .makepath_type_case47= 1
+    .makepath_type_case47= 1,
+    // 壁切れ検出しきい値
+    .wall_end_thr_r = 500,
+    .wall_end_thr_l = 500
 };
 
 const ShortestRunCaseParams_t shortestRunCaseParamsMode7[5] = {

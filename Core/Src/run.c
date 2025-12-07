@@ -139,11 +139,14 @@ void run(void) {
                 
                 // 壁切れ検出後の処理
                 if (wall_end_found) {
-                    // 小回りターンの場合、壁切れ検出後に45mm追加直進
-                    if (next_is_small_turn) {
-                        run_straight(WALL_END_BUFFER / DIST_HALF_SEC, v_next, 0);
+                    // 小回りターンの場合: 45mm + dist_wall_end 追加直進
+                    // 大回りターンの場合: dist_wall_end 追加直進
+                    float follow_dist = next_is_small_turn 
+                        ? (WALL_END_BUFFER + dist_wall_end) 
+                        : dist_wall_end;
+                    if (follow_dist > 0.0f) {
+                        run_straight(follow_dist / DIST_HALF_SEC, v_next, 0);
                     }
-                    // 大回りターンの場合、そのままターン開始（追加走行なし）
                 }
                 // 壁切れ未検出の場合（90mm走行完了）、そのままターン開始
                 
@@ -413,6 +416,10 @@ void run_shortest(uint8_t mode, uint8_t case_index) {
     // 壁切れ後の距離・ケツ当て
     dist_wall_end = pm->dist_wall_end;
     duty_setposition = 40;
+
+    // 壁切れ検出しきい値（モードごと）
+    wall_end_thr_r = pm->wall_end_thr_r;
+    wall_end_thr_l = pm->wall_end_thr_l;
 
     velocity_interrupt = 0;
 

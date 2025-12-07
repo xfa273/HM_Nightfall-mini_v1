@@ -49,6 +49,9 @@ volatile bool wall_end_detected_r;   // 右壁切れ検出済みフラグ
 volatile bool wall_end_detected_l;   // 左壁切れ検出済みフラグ
 volatile float wall_end_dist_r;      // 右壁切れ検出時の走行距離[mm]
 volatile float wall_end_dist_l;      // 左壁切れ検出時の走行距離[mm]
+volatile bool wall_end_reset_request; // 壁切れ検出状態リセット要求
+uint16_t wall_end_thr_r;             // 壁切れ検出しきい値（右）
+uint16_t wall_end_thr_l;             // 壁切れ検出しきい値（左）
 
 #else // main.c以外からこのファイルが呼ばれている場合
 
@@ -78,6 +81,9 @@ extern volatile bool wall_end_detected_r;   // 右壁切れ検出済みフラグ
 extern volatile bool wall_end_detected_l;   // 左壁切れ検出済みフラグ
 extern volatile float wall_end_dist_r;      // 右壁切れ検出時の走行距離[mm]
 extern volatile float wall_end_dist_l;      // 左壁切れ検出時の走行距離[mm]
+extern volatile bool wall_end_reset_request; // 壁切れ検出状態リセット要求
+extern uint16_t wall_end_thr_r;             // 壁切れ検出しきい値（右）
+extern uint16_t wall_end_thr_l;             // 壁切れ検出しきい値（左）
 
 #endif
 

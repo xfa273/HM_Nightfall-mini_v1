@@ -66,6 +66,9 @@ typedef struct {
     // 経路生成（makePath）引数設定
     int makepath_type_case3;          ///< case3 用 makePath 引数（将来拡張に備えて int）
     int makepath_type_case47;         ///< case4〜7 用 makePath 引数（将来拡張に備えて int）
+    // 壁切れ検出しきい値（ターン速度依存）
+    uint16_t wall_end_thr_r;          ///< 右壁切れ検出しきい値
+    uint16_t wall_end_thr_l;          ///< 左壁切れ検出しきい値
 } ShortestRunModeParams_t;
 
 /**
