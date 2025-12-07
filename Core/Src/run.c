@@ -142,27 +142,35 @@ void run(void) {
             
             // 前のコードを取得（例外処理用）
             uint16_t prev_code = (path_count > 0) ? path[path_count - 1] : 0;
+            bool prev_is_small_turn = (prev_code >= 300 && prev_code < 500);
             bool prev_is_large_turn = (prev_code >= 500 && prev_code < 700);
             
-            // 例外: 大回りターン→半区画直進(S1)→小回りターン のパターンでは壁切れ補正を無効化
+            // 例外1: 大回りターン→半区画直進(S1)→小回りターン
             // 理由: 大回りターン出口で既に壁が途切れているため、壁切れを検出できない
-            bool skip_wallend = (prev_is_large_turn && path[path_count] == 201 && next_is_small_turn);
+            // 例外2: 小回りターン→半区画直進(S1)→大回りターン
+            // 理由: 45mmしかなく、ターン速度が異なるため等速バッファ区間を取れない
+            bool skip_wallend = (prev_is_large_turn && path[path_count] == 201 && next_is_small_turn) ||
+                                (prev_is_small_turn && path[path_count] == 201 && next_is_large_turn);
             
             // 壁切れ補正を適用するかどうか
             // 小回りターンと大回りターンの前で適用（例外パターンを除く）
             if ((next_is_small_turn || next_is_large_turn) && !skip_wallend) {
                 // 壁切れ補正付き直進
-                // メイン部分: 大回りターン開始位置の45mm手前までターン速度まで減速
+                // メイン部分: ターン開始位置の45mm手前までターン速度まで減速
                 // バッファ部分: 最大90mmの間等速で壁切れを探しながら走行
                 
                 const float BUFFER_MAX = 90.0f;  // バッファ区間の最大距離[mm]
                 
-                // メイン部分の距離（大回りターン開始位置の45mm手前まで）
+                // メイン部分の距離（ターン開始位置の45mm手前まで）
                 float main_mm = straight_mm - WALL_END_BUFFER;
                 if (main_mm < 0.0f) main_mm = 0.0f;
                 
-                // メイン部分の走行（ターン速度まで減速）
-                if (main_mm > 0.0f) {
+                // 短い直線の判定: メイン部分で十分な加減速ができるか
+                // 最低でも1区画(90mm)のメイン部分がないと加減速が困難
+                const float MIN_MAIN_FOR_ACCEL = (float)DIST_HALF_SEC * 2.0f;  // 90mm
+                
+                if (main_mm >= MIN_MAIN_FOR_ACCEL) {
+                    // 通常の加減速処理（メイン部分が十分長い場合）
                     // 加速区間
                     if (d_acc > 0.0f) {
                         float acc_run = (d_acc < main_mm) ? d_acc : main_mm;
@@ -179,6 +187,10 @@ void run(void) {
                     if (dec_in_main > 0.0f) {
                         run_straight(dec_in_main / DIST_HALF_SEC, v_next, 0);
                     }
+                } else if (main_mm > 0.0f) {
+                    // 短い直線: 前のターン速度から次のターン速度へ直接遷移
+                    // speed_now（現在速度）からv_next（次のターン速度）への加減速
+                    run_straight(main_mm / DIST_HALF_SEC, v_next, 0);
                 }
                 
                 // バッファ部分の走行（壁切れ検出付き、等速でターン速度を維持）
