@@ -92,9 +92,15 @@ void half_sectionA(uint16_t val) {
     if (val > 1) {
         speed_out = val;
     } else {
-        if (MF.FLAG.SCND && acceleration_straight_dash > 0 && !val) {
-            speed_out = sqrt(speed_now * speed_now +
-                             2 * acceleration_straight_dash * DIST_HALF_SEC);
+        if (MF.FLAG.SCND && !val) {
+            // 最短走行時: 速度に応じて加速度を切り替え
+            float accel;
+            if (accel_switch_velocity > 0.0f && speed_now >= accel_switch_velocity) {
+                accel = acceleration_straight_dash;  // 高速域
+            } else {
+                accel = acceleration_straight;       // 低速域
+            }
+            speed_out = sqrt(speed_now * speed_now + 2 * accel * DIST_HALF_SEC);
         } else {
             speed_out = sqrt(speed_now * speed_now +
                              2 * acceleration_straight * DIST_HALF_SEC);
@@ -211,8 +217,14 @@ void half_sectionDD(uint16_t val) {
 void one_sectionA(void) {
     float speed_out;
     if (MF.FLAG.SCND || known_straight) {
-        speed_out = sqrt(speed_now * speed_now +
-                         2 * acceleration_straight_dash * DIST_HALF_SEC * 2);
+        // 最短走行時: 速度に応じて加速度を切り替え
+        float accel;
+        if (accel_switch_velocity > 0.0f && speed_now >= accel_switch_velocity) {
+            accel = acceleration_straight_dash;  // 高速域
+        } else {
+            accel = acceleration_straight;       // 低速域
+        }
+        speed_out = sqrt(speed_now * speed_now + 2 * accel * DIST_HALF_SEC * 2);
     } else {
         speed_out = sqrt(speed_now * speed_now +
                          2 * acceleration_straight * DIST_HALF_SEC * 2);
@@ -237,7 +249,17 @@ void one_sectionA(void) {
 void one_sectionD(void) {
     // 探索向け: 単一の連続走行で減速し、必要なら壁切れ追従（半区画+バッファ）を動的に行う
     float v0 = speed_now;
-    float accel_lin = (MF.FLAG.SCND || acceled) ? acceleration_straight_dash : acceleration_straight; // [mm/s^2]
+    float accel_lin;
+    if (MF.FLAG.SCND || acceled) {
+        // 最短走行時: 速度に応じて加速度を切り替え
+        if (accel_switch_velocity > 0.0f && v0 >= accel_switch_velocity) {
+            accel_lin = acceleration_straight_dash;  // 高速域
+        } else {
+            accel_lin = acceleration_straight;       // 低速域
+        }
+    } else {
+        accel_lin = acceleration_straight;
+    }
     float speed_out = sqrtf(fmaxf(0.0f, v0 * v0 - 2.0f * accel_lin * (DIST_HALF_SEC * 2.0f)));
 
     MF.FLAG.CTRL = 1;

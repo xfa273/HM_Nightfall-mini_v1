@@ -63,26 +63,8 @@ void read_IMU(void) {
 
 /*並進の積算計算*/
 void calculate_translation(void) {
-    // 最短走行時は速度に応じて加速度を制限
-    float accel = acceleration_interrupt;
-    if (MF.FLAG.SCND && accel_switch_velocity > 0.0f) {
-        // 低速域では acceleration_straight、高速域では acceleration_straight_dash を上限とする
-        float accel_limit;
-        if (velocity_interrupt < accel_switch_velocity) {
-            accel_limit = acceleration_straight;
-        } else {
-            accel_limit = acceleration_straight_dash;
-        }
-        // 加速度の絶対値を制限
-        if (accel > accel_limit) {
-            accel = accel_limit;
-        } else if (accel < -accel_limit) {
-            accel = -accel_limit;
-        }
-    }
-
     // 設定された加速度から並進速度を計算
-    velocity_interrupt += accel * g_ctrl_dt;
+    velocity_interrupt += acceleration_interrupt * g_ctrl_dt;
 
     // 並進速度から目標位置を計算
     target_distance += velocity_interrupt * g_ctrl_dt;

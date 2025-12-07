@@ -189,8 +189,8 @@ const ShortestRunModeParams_t shortestRunModeParams3 = {
     .makepath_type_case3 = 0,
     .makepath_type_case47= 1,
     // 壁切れ検出しきい値
-    .wall_end_thr_r = 200,
-    .wall_end_thr_l = 200,
+    .wall_end_thr_r = 190,
+    .wall_end_thr_l = 190,
     // 加速度切り替え速度
     .accel_switch_velocity = 2000.0f
 };
@@ -317,8 +317,8 @@ const ShortestRunModeParams_t shortestRunModeParams4 = {
     .makepath_type_case3 = 0,
     .makepath_type_case47= 1,
     // 壁切れ検出しきい値
-    .wall_end_thr_r = 180,
-    .wall_end_thr_l = 180,
+    .wall_end_thr_r = 170,
+    .wall_end_thr_l = 170,
     // 加速度切り替え速度
     .accel_switch_velocity = 2000.0f
 };
@@ -415,8 +415,8 @@ const ShortestRunModeParams_t shortestRunModeParams5 = {
     .makepath_type_case3 = 0,
     .makepath_type_case47= 1,
     // 壁切れ検出しきい値
-    .wall_end_thr_r = 160,
-    .wall_end_thr_l = 160,
+    .wall_end_thr_r = 150,
+    .wall_end_thr_l = 150,
     // 加速度切り替え速度
     .accel_switch_velocity = 2000.0f
 };
@@ -513,8 +513,8 @@ const ShortestRunModeParams_t shortestRunModeParams6 = {
     .makepath_type_case3 = 0,
     .makepath_type_case47= 1,
     // 壁切れ検出しきい値
-    .wall_end_thr_r = 160,
-    .wall_end_thr_l = 160,
+    .wall_end_thr_r = 140,
+    .wall_end_thr_l = 140,
     // 加速度切り替え速度
     .accel_switch_velocity = 2000.0f
 };
@@ -528,14 +528,14 @@ const ShortestRunCaseParams_t shortestRunCaseParamsMode6[9] = {
     },
     // case2 (index 1)
     {
-        .acceleration_straight = 11111.11f, .acceleration_straight_dash = 13000.0f,
-        .velocity_straight = 1100.0f, .kp_wall = 0.50f,
+        .acceleration_straight = 11111.11f, .acceleration_straight_dash = 10000.0f,
+        .velocity_straight = 3000.0f, .kp_wall = 0.50f,
         .solver_profile = SOLVER_PROFILE_STRAIGHT_STRONG
     },
     // case3 (index 2)
     {
-        .acceleration_straight = 11111.11f, .acceleration_straight_dash = 13000.0f,
-        .velocity_straight = 2000.0f, .kp_wall = 1.0f,
+        .acceleration_straight = 18000.0f, .acceleration_straight_dash = 10000.0f,
+        .velocity_straight = 3000.0f, .kp_wall = 1.0f,
         .solver_profile = SOLVER_PROFILE_STRAIGHT_STRONG
     },
     // case4 (index 3)
