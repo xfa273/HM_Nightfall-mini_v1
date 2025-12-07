@@ -312,8 +312,8 @@ const ShortestRunModeParams_t shortestRunModeParams4 = {
     .makepath_type_case3 = 0,
     .makepath_type_case47= 1,
     // 壁切れ検出しきい値
-    .wall_end_thr_r = 210,
-    .wall_end_thr_l = 210
+    .wall_end_thr_r = 200,
+    .wall_end_thr_l = 200
 };
 
 const ShortestRunCaseParams_t shortestRunCaseParamsMode4[9] = {

@@ -73,6 +73,7 @@ void search_init(void) {
     g_suppress_first_stop_save = false;
     g_second_phase_search = false;
     g_goal_is_start = false; // 初期状態ではスタートをゴール扱いしない
+    g_defer_save_until_end = false; // 迷路保存延期フラグ
 }
 
 //+++++++++++++++++++++++++++++++++++++++++++++++
@@ -311,7 +312,7 @@ void adachi(void) {
         case 0x22:
             half_sectionD(1); // 半区間分減速しながら走行し停止（前壁センサ補正あり）
 
-            if (MF.FLAG.GOALED && save_count == 0) {
+            if (MF.FLAG.GOALED && save_count == 0 && !g_defer_save_until_end) {
                 if (g_search_mode == SEARCH_MODE_FULL && g_suppress_first_stop_save) {
                     // フル探索直後の最初の停止での保存はスキップ（1回だけ）
                     g_suppress_first_stop_save = false;

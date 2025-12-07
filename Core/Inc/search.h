@@ -103,6 +103,9 @@ bool g_goal_is_start;
 /* 第2フェーズ探索フラグ（ゴール区画からの再開始を示す） */
 bool g_second_phase_search;
 
+/* 探索終了まで迷路保存を延期するフラグ（ゴール→全面探索で使用） */
+bool g_defer_save_until_end;
+
 #else // main.c以外からこのファイルが呼ばれている場合
 /*グローバル変数の宣言*/
 extern uint16_t map[MAZE_SIZE][MAZE_SIZE];         // マップ格納配列
@@ -147,6 +150,9 @@ extern bool g_goal_is_start;
 
 /* 第2フェーズ探索フラグ（ゴール区画からの再開始を示す） */
 extern bool g_second_phase_search;
+
+/* 探索終了まで迷路保存を延期するフラグ（ゴール→全面探索で使用） */
+extern bool g_defer_save_until_end;
 
 #endif
 

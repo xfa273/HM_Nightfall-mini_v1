@@ -328,11 +328,11 @@ void mode1() {
             get_base();
             drive_start();
             set_search_mode(SEARCH_MODE_GOAL);
+            g_defer_save_until_end = true;  // 全面探索終了まで保存を延期
             search_end = false;
             adachi();
 
-            // 一旦マップ保存
-            store_map_in_eeprom();
+            // ゴール到達時は保存せず、全面探索終了後に保存
 
             // ===== 第2フェーズ: 全面探索 =====
             led_flash(2);
@@ -344,6 +344,10 @@ void mode1() {
             g_second_phase_search = true;  // 第2フェーズフラグ設定
             search_end = false;
             adachi();
+
+            // 全面探索終了後に保存
+            g_defer_save_until_end = false;
+            store_map_in_eeprom();
 
             led_wait();
 
@@ -485,11 +489,11 @@ void mode1() {
             get_base();
             drive_start();
             set_search_mode(SEARCH_MODE_GOAL);
+            g_defer_save_until_end = true;  // 全面探索終了まで保存を延期
             search_end = false;
             adachi();
 
-            // 一旦マップ保存
-            store_map_in_eeprom();
+            // ゴール到達時は保存せず、全面探索終了後に保存
 
             // ===== 第2フェーズ: 全面探索 =====
             led_flash(2);
@@ -501,6 +505,10 @@ void mode1() {
             g_second_phase_search = true;  // 第2フェーズフラグ設定
             search_end = false;
             adachi();
+
+            // 全面探索終了後に保存
+            g_defer_save_until_end = false;
+            store_map_in_eeprom();
 
             led_wait();
 
