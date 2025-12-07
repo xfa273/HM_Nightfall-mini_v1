@@ -8,7 +8,6 @@
 #include "global.h"
 #include <math.h>
 #include "../Inc/shortest_run_params.h"
-#include "../Inc/solver_params.h"
 #include "../Inc/path.h"
 #include "../Inc/solver.h"
 
@@ -347,13 +346,6 @@ void run_shortest(uint8_t mode, uint8_t case_index) {
     const ShortestRunCaseParams_t *p = &pcases[idx];
 
     printf("Mode %d-%d Shortest Run.\n", mode, case_index);
-
-    // プロファイルから重みへ変換（旧dijkstra.c互換）
-    switch (p->solver_profile) {
-        case SOLVER_PROFILE_STRAIGHT_STRONG: straight_weight = 4; diagonal_weight = 0; break;
-        case SOLVER_PROFILE_STRAIGHT_WEAK:   straight_weight = 1; diagonal_weight = 2; break;
-        default:                             straight_weight = 2; diagonal_weight = 2; break;
-    }
 
     // 経路作成（新ソルバを使用）
     solver_build_path(mode, case_index);

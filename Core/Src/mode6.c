@@ -7,7 +7,6 @@
 
 #include "global.h"
 #include "../Inc/shortest_run_params.h"
-#include "../Inc/solver_params.h"
 #include "../Inc/run.h"
 #include "../Inc/logging.h"
 
@@ -20,12 +19,6 @@ static void apply_case_params_mode6_idx(int idx) {
     acceleration_straight_dash = pc->acceleration_straight_dash;
     velocity_straight          = pc->velocity_straight;
     kp_wall                    = pc->kp_wall;
-    // プロファイルから重みへ変換（旧dijkstra.c互換）
-    switch (pc->solver_profile) {
-        case SOLVER_PROFILE_STRAIGHT_STRONG: straight_weight = 4; diagonal_weight = 0; break;
-        case SOLVER_PROFILE_STRAIGHT_WEAK:   straight_weight = 1; diagonal_weight = 2; break;
-        default:                             straight_weight = 2; diagonal_weight = 2; break;
-    }
     // 斜め直線（caseごと）
     acceleration_d_straight      = pc->acceleration_d_straight;
     acceleration_d_straight_dash = pc->acceleration_d_straight_dash;

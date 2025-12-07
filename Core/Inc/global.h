@@ -85,7 +85,6 @@ extern bool g_test_mode_run;
 
 #include "auxiliary.h"
 #include "control.h"
-#include "dijkstra.h"
 #include "drive.h"
 #include "eeprom.h"
 #include "interrupt.h"

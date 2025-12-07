@@ -8,13 +8,17 @@
 #ifndef INC_PATH_H_
 #define INC_PATH_H_
 
+// 走行パスコード
+#define STRAIGHT 200
+#define TURN_R 300
+#define TURN_L 400
 #define L_TURN_R 500
 #define L_TURN_L 600
 
 void simplifyPath(void);
 void convertLTurn(void);
 void convertDiagonal(void);
-void makePath(uint8_t path_type);
+// makePath()は削除済み - 経路導出はsolver_build_path()を使用
 
 #endif /* INC_PATH_H_ */
 

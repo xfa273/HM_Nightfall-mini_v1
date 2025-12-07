@@ -50,7 +50,6 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     # Add user sources here
     Core/Src/auxiliary.c
     Core/Src/control.c
-    Core/Src/dijkstra.c
     Core/Src/drive.c
     Core/Src/flash_params.c
     Core/Src/eeprom.c

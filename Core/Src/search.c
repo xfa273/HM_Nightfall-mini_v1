@@ -7,7 +7,6 @@
 
 #include "global.h"
 #include "maze_grid.h"
-#include "dijkstra.h"
 #include <math.h>
 
 // 経路なし終了を検出する内部フラグ（adachi() 実行中のみ有効）
@@ -86,53 +85,32 @@ void set_search_mode(search_mode_t mode) {
     g_search_mode = mode;
 }
 
-// 内部ヘルパ: 現在の map[][] から迷路を構築し、スタートからいずれかのゴールへの
+// 内部ヘルパ: 現在の map[][] から歩数マップを構築し、スタートからいずれかのゴールへの
 // 経路が存在するかを判定する（存在すれば true）。
+// 注: 一時的にgoal_x/goal_yを変更するため、呼び出し元で復元が必要な場合は注意。
 static bool path_exists_from_current_map(void) {
-    uint8_t fixedMap[MAZE_SIZE][MAZE_SIZE];
-
-    // 迷路の初期化
-    initializeMaze(fixedMap);
-
-    // 上位4ビット（2次走行用）を使用して壁を抽出
-    for (int y = 0; y < MAZE_SIZE; y++) {
-        for (int x = 0; x < MAZE_SIZE; x++) {
-            fixedMap[y][x] = (map[y][x] >> 4) & 0xF;
-        }
-    }
-
-    // dijkstra用配列へ転記
-    reverseArrayYAxis(fixedMap);
-    setMazeWalls(fixedMap);
-    correctWallInconsistencies();
-
-    Node start = (Node){START_X, START_Y};
-    const uint8_t goals[9][2] = {
-        {GOAL1_X, GOAL1_Y}, {GOAL2_X, GOAL2_Y}, {GOAL3_X, GOAL3_Y},
-        {GOAL4_X, GOAL4_Y}, {GOAL5_X, GOAL5_Y}, {GOAL6_X, GOAL6_Y},
-        {GOAL7_X, GOAL7_Y}, {GOAL8_X, GOAL8_Y}, {GOAL9_X, GOAL9_Y},
-    };
-
-    bool defined = false;
-    for (int i = 0; i < 9; i++) {
-        uint8_t gx = goals[i][0];
-        uint8_t gy = goals[i][1];
-        if (gx == 0 && gy == 0) continue; // 未使用
-        if (gx >= MAZE_SIZE || gy >= MAZE_SIZE) continue; // 範囲外
-        defined = true;
-        if (dijkstra_cost_only(start, (Node){gx, gy}) != INFINITY) {
-            return true; // いずれかへ到達可能
-        }
-    }
-
-    if (!defined) {
-        // 候補が未設定なら従来のGOAL_X/GOAL_Yで判定
-        if (dijkstra_cost_only(start, (Node){GOAL_X, GOAL_Y}) != INFINITY) {
-            return true;
-        }
-    }
-
-    return false;
+    // 現在の探索モードを一時保存
+    search_mode_t saved_mode = g_search_mode;
+    uint8_t saved_gx = goal_x;
+    uint8_t saved_gy = goal_y;
+    
+    // ゴールモードで歩数マップを作成（複数ゴールに対応）
+    g_search_mode = SEARCH_MODE_GOAL;
+    
+    // make_smap()がスタート座標に到達できるかを確認
+    // スタート座標をゴールとして設定し、現在のマウス位置からの経路を確認
+    goal_x = GOAL_X;
+    goal_y = GOAL_Y;
+    
+    int steps = make_smap(goal_x, goal_y);
+    
+    // モードとゴールを復元
+    g_search_mode = saved_mode;
+    goal_x = saved_gx;
+    goal_y = saved_gy;
+    
+    // 歩数が上限以下なら経路あり
+    return (steps <= (MAZE_SIZE * MAZE_SIZE - (MAZE_SIZE - 1)));
 }
 
 // 外部公開: 経路が存在する場合のみFlashへ保存する。保存したらtrue、保存しなければfalse。

@@ -83,10 +83,6 @@ bool acceled;
 /*Flash保存用*/
 uint8_t save_count;
 
-/*経路導出用*/
-int straight_weight; // 直線の優先度
-int diagonal_weight; // 斜めの優先度
-
 /*壁判定用のセンサ補正係数*/
 float sensor_kx;
 float fwall_kx;
@@ -131,10 +127,6 @@ extern bool acceled;
 
 /*Flash保存用*/
 extern uint8_t save_count;
-
-/*経路導出用*/
-extern int straight_weight; // 直線の優先度
-extern int diagonal_weight; // 斜めの優先度
 
 /*壁判定用のセンサ補正係数*/
 extern float sensor_kx;
