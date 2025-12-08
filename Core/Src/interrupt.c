@@ -204,6 +204,11 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
             // バッテリー更新（OFF側の最新値）
             ad_bat = adc_dma_buf_off[8];
 
+            // センサログ記録（4センサ全て更新後、約6kHz）
+            if (g_sensor_log_enabled) {
+                sensor_log_capture();
+            }
+
             // グループ識別（互換性: FR/FL=1）
             ADC_task_counter = 1;
             break;

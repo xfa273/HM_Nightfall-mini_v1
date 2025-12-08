@@ -69,6 +69,9 @@ volatile float g_ctrl_dt;
 
 /* テスト動作フラグ: trueの場合、センサ補正（壁切れ、前壁、横壁）を無効化 */
 bool g_test_mode_run;
+
+/* 壁切れ補正無効化フラグ: trueの場合、壁切れ検出を行わず距離ベースで走行 */
+bool g_disable_wall_end_correction;
 #else // main.c以外からこのファイルが呼ばれている場合
 /*グローバル変数の宣言*/
 extern volatile mouse_flags MF;
@@ -76,6 +79,9 @@ extern volatile float g_ctrl_dt;
 
 /* テスト動作フラグ: trueの場合、センサ補正（壁切れ、前壁、横壁）を無効化 */
 extern bool g_test_mode_run;
+
+/* 壁切れ補正無効化フラグ: trueの場合、壁切れ検出を行わず距離ベースで走行 */
+extern bool g_disable_wall_end_correction;
 #endif
 #include <limits.h>
 #include <stdbool.h>

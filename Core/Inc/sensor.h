@@ -125,6 +125,43 @@ void detect_wall_end(void);
 // 壁切れ検出フラグをリセット（直進開始時に呼び出す）
 void wall_end_reset(void);
 
+//============================================================
+// センサログ機能（壁切れデバッグ用）
+//============================================================
+#define SENSOR_LOG_MAX_ENTRIES 2000  // 約333ms分（6kHz）
+
+typedef struct {
+    uint32_t timestamp;  // タイムスタンプ（us相当のカウンタ）
+    uint16_t ad_r;       // 右横センサ
+    uint16_t ad_l;       // 左横センサ
+    uint16_t ad_fr;      // 右前センサ
+    uint16_t ad_fl;      // 左前センサ
+    float distance;      // 走行距離[mm]
+} SensorLogEntry;
+
+typedef struct {
+    SensorLogEntry entries[SENSOR_LOG_MAX_ENTRIES];
+    volatile uint16_t head;
+    volatile uint16_t count;
+    volatile uint8_t logging_active;
+    uint32_t start_tick;
+} SensorLogBuffer;
+
+#ifdef MAIN_C_
+SensorLogBuffer sensor_log_buffer;
+volatile bool g_sensor_log_enabled;  // センサログ有効フラグ
+#else
+extern SensorLogBuffer sensor_log_buffer;
+extern volatile bool g_sensor_log_enabled;
+#endif
+
+// センサログ関数
+void sensor_log_init(void);
+void sensor_log_start(void);
+void sensor_log_stop(void);
+void sensor_log_capture(void);  // ADCコールバックから呼ばれる
+void sensor_log_print(void);
+
 // ADC DMA 連続スキャン用の共有バッファ（9エントリ: R,L,R,L,FR,FL,FR,FL,BAT）
 #ifdef MAIN_C_
 volatile uint16_t adc_dma_buf_off[9];

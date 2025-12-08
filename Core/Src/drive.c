@@ -2334,6 +2334,11 @@ bool driveC_wallend(float dist_max, float spd) {
     wall_end_reset();
     MF.FLAG.WALL_END = 1;
     
+    // センサログが有効な場合、ログ開始
+    if (g_sensor_log_enabled) {
+        sensor_log_start();
+    }
+    
     drive_start();
     
     bool wall_end_detected = false;
@@ -2346,6 +2351,11 @@ bool driveC_wallend(float dist_max, float spd) {
             break;  // 即座に終了
         }
         background_replan_tick();
+    }
+    
+    // センサログ停止
+    if (g_sensor_log_enabled) {
+        sensor_log_stop();
     }
     
     // 壁切れ検出をディスアーム

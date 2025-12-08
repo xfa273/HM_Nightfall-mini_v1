@@ -683,3 +683,95 @@ void wall_end_reset(void) {
     // detect_wall_end()内のs_prev_r/lを現在の壁状態で再初期化する要求
     wall_end_reset_request = true;
 }
+
+//============================================================
+// センサログ機能（壁切れデバッグ用）
+//============================================================
+
+static volatile uint32_t s_sensor_log_tick = 0;  // ログ用カウンタ（6kHz相当）
+
+//+++++++++++++++++++++++++++++++++++++++++++++++
+// sensor_log_init
+// センサログバッファを初期化
+//+++++++++++++++++++++++++++++++++++++++++++++++
+void sensor_log_init(void) {
+    sensor_log_buffer.head = 0;
+    sensor_log_buffer.count = 0;
+    sensor_log_buffer.logging_active = 0;
+    sensor_log_buffer.start_tick = 0;
+    s_sensor_log_tick = 0;
+}
+
+//+++++++++++++++++++++++++++++++++++++++++++++++
+// sensor_log_start
+// センサログ取得を開始
+//+++++++++++++++++++++++++++++++++++++++++++++++
+void sensor_log_start(void) {
+    sensor_log_buffer.head = 0;
+    sensor_log_buffer.count = 0;
+    sensor_log_buffer.start_tick = HAL_GetTick();
+    s_sensor_log_tick = 0;
+    sensor_log_buffer.logging_active = 1;
+}
+
+//+++++++++++++++++++++++++++++++++++++++++++++++
+// sensor_log_stop
+// センサログ取得を停止
+//+++++++++++++++++++++++++++++++++++++++++++++++
+void sensor_log_stop(void) {
+    sensor_log_buffer.logging_active = 0;
+}
+
+//+++++++++++++++++++++++++++++++++++++++++++++++
+// sensor_log_capture
+// センサ値を記録（ADCコールバックから呼ばれる、約6kHz）
+//+++++++++++++++++++++++++++++++++++++++++++++++
+void sensor_log_capture(void) {
+    if (!sensor_log_buffer.logging_active) {
+        return;
+    }
+    if (sensor_log_buffer.count >= SENSOR_LOG_MAX_ENTRIES) {
+        return;  // バッファフル
+    }
+    
+    uint16_t pos = sensor_log_buffer.head;
+    sensor_log_buffer.entries[pos].timestamp = s_sensor_log_tick;
+    sensor_log_buffer.entries[pos].ad_r = ad_r;
+    sensor_log_buffer.entries[pos].ad_l = ad_l;
+    sensor_log_buffer.entries[pos].ad_fr = ad_fr;
+    sensor_log_buffer.entries[pos].ad_fl = ad_fl;
+    sensor_log_buffer.entries[pos].distance = real_distance;
+    
+    sensor_log_buffer.head = (pos + 1) % SENSOR_LOG_MAX_ENTRIES;
+    sensor_log_buffer.count++;
+    s_sensor_log_tick++;
+}
+
+//+++++++++++++++++++++++++++++++++++++++++++++++
+// sensor_log_print
+// センサログをCSV形式で出力
+//+++++++++++++++++++++++++++++++++++++++++++++++
+void sensor_log_print(void) {
+    printf("=== Sensor Log Data (CSV Format) ===\n");
+    printf("Total entries: %d\n", sensor_log_buffer.count);
+    printf("CSV Format: timestamp,ad_r,ad_l,ad_fr,ad_fl,distance,0,0\n");
+    printf("--- CSV Data Start ---\n");
+    
+    uint16_t count = sensor_log_buffer.count > SENSOR_LOG_MAX_ENTRIES 
+                     ? SENSOR_LOG_MAX_ENTRIES : sensor_log_buffer.count;
+    
+    for (uint16_t i = 0; i < count; i++) {
+        SensorLogEntry *entry = (SensorLogEntry *)&sensor_log_buffer.entries[i];
+        // 既存フォーマットに合わせて7パラメータ出力（余りは0）
+        printf("%lu,%d,%d,%d,%d,%.3f,0,0\n",
+               entry->timestamp,
+               entry->ad_r,
+               entry->ad_l,
+               entry->ad_fr,
+               entry->ad_fl,
+               entry->distance);
+    }
+    
+    printf("--- CSV Data End ---\n");
+    printf("=== End of Sensor Log ===\n");
+}

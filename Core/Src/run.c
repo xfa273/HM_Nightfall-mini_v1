@@ -149,8 +149,10 @@ void run(void) {
             // 理由: 大回りターン出口で既に壁が途切れているため、壁切れを検出できない
             // 例外2: 小回りターン→半区画直進(S1)→大回りターン
             // 理由: 45mmしかなく、ターン速度が異なるため等速バッファ区間を取れない
+            // 例外3: g_disable_wall_end_correctionが立っている場合（デバッグ用）
             bool skip_wallend = (prev_is_large_turn && path[path_count] == 201 && next_is_small_turn) ||
-                                (prev_is_small_turn && path[path_count] == 201 && next_is_large_turn);
+                                (prev_is_small_turn && path[path_count] == 201 && next_is_large_turn) ||
+                                g_disable_wall_end_correction;
             
             // 壁切れ補正を適用するかどうか
             // 小回りターンと大回りターンの前で適用（例外パターンを除く）

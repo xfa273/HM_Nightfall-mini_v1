@@ -443,12 +443,21 @@ void mode4() {
 
         case 2:
             // 最短走行（case2）
+            g_disable_wall_end_correction = true;  // 壁切れ補正無効（距離ベース走行）
             run_shortest(4, 2);
             break;
 
         case 3:
-            // 最短走行（case4 相当へリマップ）
-            run_shortest(4, 4);
+            printf("Mode 4-3 Sensor Log (case3).\n");
+            sensor_log_init();
+            g_sensor_log_enabled = true;
+            run_shortest(4, 3);
+            g_sensor_log_enabled = false;
+            printf("Sensor log recorded: %d entries\n", sensor_log_buffer.count);
+            printf("Press RIGHT FRONT for sensor log output...\n");
+            while (ad_fr < WALL_BASE_FR) { HAL_Delay(50); }
+            sensor_log_print();
+            led_flash(3);
             break;
 
         case 4:

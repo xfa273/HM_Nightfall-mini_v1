@@ -232,8 +232,8 @@
     探索系
 ------------------------------------------------------------*/
 //----ゴール座標----
-#define GOAL_X    7 // 7
-#define GOAL_Y    7 // 7
+#define GOAL_X    1 // 7
+#define GOAL_Y    0 // 7
 #define MAZE_SIZE 16
 #define START_X   0
 #define START_Y   0
@@ -247,18 +247,18 @@
 #endif
 
 #ifndef GOAL2_X
-#define GOAL2_X 7
-#define GOAL2_Y 8
+#define GOAL2_X 0
+#define GOAL2_Y 0
 #endif
 
 #ifndef GOAL3_X
-#define GOAL3_X 8
-#define GOAL3_Y 7
+#define GOAL3_X 0
+#define GOAL3_Y 0
 #endif
 
 #ifndef GOAL4_X
-#define GOAL4_X 8
-#define GOAL4_Y 8
+#define GOAL4_X 0
+#define GOAL4_Y 0
 #endif
 
 #ifndef GOAL5_X
