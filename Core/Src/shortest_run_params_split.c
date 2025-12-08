@@ -58,9 +58,9 @@ const ShortestRunModeParams_t shortestRunModeParams2 = {
     // Makepath
     .makepath_type_case3 = 0,
     .makepath_type_case47= 1,
-    // 壁切れ検出しきい値
-    .wall_end_thr_r = 280,
-    .wall_end_thr_l = 280,
+    // 壁切れ検出しきい値（ヒステリシス付き）
+    .wall_end_thr_r_high = 140, .wall_end_thr_r_low = 100,
+    .wall_end_thr_l_high = 140, .wall_end_thr_l_low = 100,
     // 加速度切り替え速度
     .accel_switch_velocity = 2000.0f
 };
@@ -188,9 +188,8 @@ const ShortestRunModeParams_t shortestRunModeParams3 = {
     // Makepath
     .makepath_type_case3 = 0,
     .makepath_type_case47= 1,
-    // 壁切れ検出しきい値
-    .wall_end_thr_r = 200,
-    .wall_end_thr_l = 200,
+    .wall_end_thr_r_high = 160, .wall_end_thr_r_low = 140,
+    .wall_end_thr_l_high = 160, .wall_end_thr_l_low = 140,
     // 加速度切り替え速度
     .accel_switch_velocity = 1500.0f
 };
@@ -199,31 +198,31 @@ const ShortestRunCaseParams_t shortestRunCaseParamsMode3[9] = {
     // case1 (index 0): independent (initially same as former case3)
     {
         .acceleration_straight = 4000.0f, .acceleration_straight_dash = 4000.0f,
-        .velocity_straight = 1000.0f, .kp_wall = 0.15f,
+        .velocity_straight = 1000.0f, .kp_wall = 0.30f,
         .solver_profile = SOLVER_PROFILE_STANDARD
     },
     // case2 (index 1): independent (initially same as former case4)
     {
         .acceleration_straight = 4000.0f, .acceleration_straight_dash = 4000.0f,
-        .velocity_straight = 1000.0f, .kp_wall = 0.15f,
+        .velocity_straight = 1000.0f, .kp_wall = 0.30f,
         .solver_profile = SOLVER_PROFILE_STRAIGHT_STRONG
     },
     // case3 (index 2)
     {
         .acceleration_straight = 8000.0f, .acceleration_straight_dash = 4000.0f,
-        .velocity_straight = 3000.0f, .kp_wall = 0.15f,
+        .velocity_straight = 2500.0f, .kp_wall = 0.30f,
         .solver_profile = SOLVER_PROFILE_STRAIGHT_STRONG
     },
     // case4 (index 3)
     {
-        .acceleration_straight = 8000.0f, .acceleration_straight_dash = 4000.0f,
-        .velocity_straight = 3000.0f, .kp_wall = 0.15f,
+        .acceleration_straight = 10000.0f, .acceleration_straight_dash = 4000.0f,
+        .velocity_straight = 2500.0f, .kp_wall = 0.30f,
         .solver_profile = SOLVER_PROFILE_STRAIGHT_STRONG
     },
     // case5 (index 4)
     {
-        .acceleration_straight = 8000.0f, .acceleration_straight_dash = 4000.0f,
-        .velocity_straight = 3000.0f, .kp_wall = 0.15f,
+        .acceleration_straight = 12000.0f, .acceleration_straight_dash = 4000.0f,
+        .velocity_straight = 2500.0f, .kp_wall = 0.30f,
         .solver_profile = SOLVER_PROFILE_STRAIGHT_STRONG
     },
     // case6 (index 5)
@@ -316,9 +315,9 @@ const ShortestRunModeParams_t shortestRunModeParams4 = {
     .fan_power          = 700,
     .makepath_type_case3 = 0,
     .makepath_type_case47= 1,
-    // 壁切れ検出しきい値
-    .wall_end_thr_r = 200,
-    .wall_end_thr_l = 200,
+    // 壁切れ検出しきい値（ヒステリシス付き）
+    .wall_end_thr_r_high = 160, .wall_end_thr_r_low = 140,
+    .wall_end_thr_l_high = 160, .wall_end_thr_l_low = 140,
     // 加速度切り替え速度
     .accel_switch_velocity = 1500.0f
 };
@@ -339,19 +338,19 @@ const ShortestRunCaseParams_t shortestRunCaseParamsMode4[9] = {
     // case3 (index 2)
     {
         .acceleration_straight = 6000.0f, .acceleration_straight_dash = 6000.0f,
-        .velocity_straight = 3000.0f, .kp_wall = 0.4f,
+        .velocity_straight = 2500.0f, .kp_wall = 0.4f,
         .solver_profile = SOLVER_PROFILE_STRAIGHT_STRONG
     },
     // case4 (index 3)
     {
         .acceleration_straight = 8000.0f, .acceleration_straight_dash = 6000.0f,
-        .velocity_straight = 3000.0f, .kp_wall = 0.15f,
+        .velocity_straight = 2500.0f, .kp_wall = 0.4f,
         .solver_profile = SOLVER_PROFILE_STRAIGHT_STRONG
     },
     // case5 (index 4)
     {
         .acceleration_straight = 10000.0f, .acceleration_straight_dash = 6000.0f,
-        .velocity_straight = 3000.0f, .kp_wall = 0.15f,
+        .velocity_straight = 2500.0f, .kp_wall = 0.4f,
         .solver_profile = SOLVER_PROFILE_STRAIGHT_STRONG
     },
     // case6 (index 5): 
@@ -414,9 +413,9 @@ const ShortestRunModeParams_t shortestRunModeParams5 = {
     .fan_power          = 900,
     .makepath_type_case3 = 0,
     .makepath_type_case47= 1,
-    // 壁切れ検出しきい値
-    .wall_end_thr_r = 200,
-    .wall_end_thr_l = 200,
+    // 壁切れ検出しきい値（ヒステリシス付き）
+    .wall_end_thr_r_high = 160, .wall_end_thr_r_low = 140,
+    .wall_end_thr_l_high = 160, .wall_end_thr_l_low = 140,
     // 加速度切り替え速度
     .accel_switch_velocity = 1500.0f
 };
@@ -424,32 +423,32 @@ const ShortestRunModeParams_t shortestRunModeParams5 = {
 const ShortestRunCaseParams_t shortestRunCaseParamsMode5[9] = {
     // case1 (index 0)
     {
-        .acceleration_straight = 11111.11f, .acceleration_straight_dash = 6000.0f,
+        .acceleration_straight = 12000.0f, .acceleration_straight_dash = 6000.0f,
         .velocity_straight = 1200.0f, .kp_wall = 0.5f,
         .solver_profile = SOLVER_PROFILE_STANDARD
     },
     // case2 (index 1)
     {
-        .acceleration_straight = 11111.11f, .acceleration_straight_dash = 6000.0f,
+        .acceleration_straight = 12000.0f, .acceleration_straight_dash = 6000.0f,
         .velocity_straight = 1200.0f, .kp_wall = 0.5f,
         .solver_profile = SOLVER_PROFILE_STRAIGHT_STRONG
     },
     // case3 (index 2)
     {
-        .acceleration_straight = 11111.11f, .acceleration_straight_dash = 6000.0f,
-        .velocity_straight = 2000.0f, .kp_wall = 1.0f,
+        .acceleration_straight = 12000.0f, .acceleration_straight_dash = 6000.0f,
+        .velocity_straight = 2500.0f, .kp_wall = 1.0f,
         .solver_profile = SOLVER_PROFILE_STRAIGHT_STRONG
     },
     // case4 (index 3)
     {
-        .acceleration_straight = 11111.11f, .acceleration_straight_dash = 6000.0f,
-        .velocity_straight = 3000.0f, .kp_wall = 0.05f,
+        .acceleration_straight = 12000.0f, .acceleration_straight_dash = 6000.0f,
+        .velocity_straight = 2500.0f, .kp_wall = 1.0f,
         .solver_profile = SOLVER_PROFILE_STRAIGHT_STRONG
     },
     // case5 (index 4)
     {
-        .acceleration_straight = 11111.11f, .acceleration_straight_dash = 6000.0f,
-        .velocity_straight = 3000.0f, .kp_wall = 0.05f,
+        .acceleration_straight = 12000.0f, .acceleration_straight_dash = 6000.0f,
+        .velocity_straight = 2500.0f, .kp_wall = 1.0f,
         .solver_profile = SOLVER_PROFILE_STRAIGHT_STRONG
     },
     // case6 (index 5)
@@ -512,9 +511,9 @@ const ShortestRunModeParams_t shortestRunModeParams6 = {
     .fan_power          = 1000,
     .makepath_type_case3 = 0,
     .makepath_type_case47= 1,
-    // 壁切れ検出しきい値
-    .wall_end_thr_r = 200,
-    .wall_end_thr_l = 200,
+    // 壁切れ検出しきい値（ヒステリシス付き）
+    .wall_end_thr_r_high = 160, .wall_end_thr_r_low = 140,
+    .wall_end_thr_l_high = 160, .wall_end_thr_l_low = 140,
     // 加速度切り替え速度
     .accel_switch_velocity = 1500.0f
 };
@@ -535,7 +534,7 @@ const ShortestRunCaseParams_t shortestRunCaseParamsMode6[9] = {
     // case3 (index 2)
     {
         .acceleration_straight = 15000.0f, .acceleration_straight_dash = 8000.0f,
-        .velocity_straight = 3000.0f, .kp_wall = 1.0f,
+        .velocity_straight = 1400.0f, .kp_wall = 1.0f,
         .solver_profile = SOLVER_PROFILE_STRAIGHT_STRONG
     },
     // case4 (index 3)
@@ -607,9 +606,9 @@ const ShortestRunModeParams_t shortestRunModeParams7 = {
     .fan_power          = 200,
     .makepath_type_case3 = 0,
     .makepath_type_case47= 1,
-    // 壁切れ検出しきい値
-    .wall_end_thr_r = 500,
-    .wall_end_thr_l = 500,
+    // 壁切れ検出しきい値（ヒステリシス付き）
+    .wall_end_thr_r_high = 500, .wall_end_thr_r_low = 350,
+    .wall_end_thr_l_high = 500, .wall_end_thr_l_low = 350,
     // 加速度切り替え速度
     .accel_switch_velocity = 2000.0f
 };

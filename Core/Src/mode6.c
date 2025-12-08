@@ -307,21 +307,19 @@ void mode6() {
             break;
 
         case 2:
-            g_disable_wall_end_correction = true;  // 壁切れ補正無効（距離ベース走行）
+            sensor_log_init();
+            g_sensor_log_enabled = true;
             run_shortest(6, 2);
+            g_sensor_log_enabled = false;
+            printf("Sensor log recorded: %d entries\n", sensor_log_buffer.count);
+            printf("Press button for sensor log output...\n");
+            while (HAL_GPIO_ReadPin(PUSH_IN_1_GPIO_Port, PUSH_IN_1_Pin) != 0) { HAL_Delay(50); }
+            sensor_log_print();
+            led_flash(3);
             break;
 
         case 3:
-            printf("Mode 6-3 Sensor Log (case3).\n");
-            sensor_log_init();
-            g_sensor_log_enabled = true;
             run_shortest(6, 3);
-            g_sensor_log_enabled = false;
-            printf("Sensor log recorded: %d entries\n", sensor_log_buffer.count);
-            printf("Press RIGHT FRONT for sensor log output...\n");
-            while (ad_fr < WALL_BASE_FR) { HAL_Delay(50); }
-            sensor_log_print();
-            led_flash(3);
             break;
 
         case 4:

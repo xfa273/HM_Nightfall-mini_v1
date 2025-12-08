@@ -27,9 +27,9 @@ const SearchRunParams_t searchRunParams[2] = {
         // センサパラメータ
         .sensor_kx = 1.0f,
         
-        // 壁切れ検出しきい値
-        .wall_end_thr_r = 280,
-        .wall_end_thr_l = 280,
+        // 壁切れ検出しきい値（ヒステリシス付き）
+        .wall_end_thr_r_high = 280, .wall_end_thr_r_low = 200,
+        .wall_end_thr_l_high = 280, .wall_end_thr_l_low = 200,
         
         // フラグ
         .wall_align_enable = 1  // 壁合わせ有効
@@ -51,7 +51,7 @@ const SearchRunParams_t searchRunParams[2] = {
         .angle_turn_90 = 89.0f,
         
         // 壁切れ後の追従距離
-        .dist_wall_end = 3.2f,
+        .dist_wall_end = 1.0f,
         
         // 壁制御パラメータ
         .kp_wall = 0.10f,
@@ -60,9 +60,9 @@ const SearchRunParams_t searchRunParams[2] = {
         // センサパラメータ
         .sensor_kx = 1.0f,
         
-        // 壁切れ検出しきい値
-        .wall_end_thr_r = 280,
-        .wall_end_thr_l = 280,
+        // 壁切れ検出しきい値（ヒステリシス付き）
+        .wall_end_thr_r_high = 160, .wall_end_thr_r_low = 140,
+        .wall_end_thr_l_high = 160, .wall_end_thr_l_low = 140,
         
         // フラグ
         .wall_align_enable = 0  // 壁合わせ無効

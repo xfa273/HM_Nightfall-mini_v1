@@ -66,9 +66,11 @@ typedef struct {
     // 経路生成（makePath）引数設定
     int makepath_type_case3;          ///< case3 用 makePath 引数（将来拡張に備えて int）
     int makepath_type_case47;         ///< case4〜7 用 makePath 引数（将来拡張に備えて int）
-    // 壁切れ検出しきい値（ターン速度依存）
-    uint16_t wall_end_thr_r;          ///< 右壁切れ検出しきい値
-    uint16_t wall_end_thr_l;          ///< 左壁切れ検出しきい値
+    // 壁切れ検出しきい値（ターン速度依存、ヒステリシス付き）
+    uint16_t wall_end_thr_r_high;     ///< 右壁切れ検出Highしきい値（壁ありと判定）
+    uint16_t wall_end_thr_r_low;      ///< 右壁切れ検出Lowしきい値（壁なしと判定）
+    uint16_t wall_end_thr_l_high;     ///< 左壁切れ検出Highしきい値（壁ありと判定）
+    uint16_t wall_end_thr_l_low;      ///< 左壁切れ検出Lowしきい値（壁なしと判定）
     // 加速度切り替え速度（低速/高速域で加速度を切り替え）
     float accel_switch_velocity;      ///< 加速度切り替え速度 (mm/s)
 } ShortestRunModeParams_t;

@@ -601,8 +601,8 @@ void indicate_sensor(void) {
 //+++++++++++++++++++++++++++++++++++++++++++++++
 // detect_wall_end
 // 横壁センサの「有り → 無し」の立ち下がりで壁切れを検出
+// ヒステリシス付き: Highしきい値を超えたら「壁あり」、Lowしきい値を下回ったら「壁なし」
 // KERISE v4/Astraea参考: 直進中のみ検出、検出時の走行距離を記録
-// 検出直後にブザーを鳴らし、検出フラグと位置を記録
 //+++++++++++++++++++++++++++++++++++++++++++++++
 void detect_wall_end(void) {
     // 有効なしきい値係数を決定
@@ -611,61 +611,85 @@ void detect_wall_end(void) {
         kx = 1.0f;
     }
 
-    // 現在の横壁判定（パラメータ設定のしきい値を使用、未設定時はデフォルト値）
-    uint16_t thr_r = (wall_end_thr_r > 0) ? wall_end_thr_r : WALL_END_THR_R;
-    uint16_t thr_l = (wall_end_thr_l > 0) ? wall_end_thr_l : WALL_END_THR_L;
-    bool r_has = (ad_r > (uint16_t)(thr_r * kx));
-    bool l_has = (ad_l > (uint16_t)(thr_l * kx));
+    // しきい値（パラメータ設定の値を使用、未設定時はデフォルト値）
+    uint16_t thr_r_high = (wall_end_thr_r_high > 0) ? wall_end_thr_r_high : WALL_END_THR_R_HIGH;
+    uint16_t thr_r_low  = (wall_end_thr_r_low > 0)  ? wall_end_thr_r_low  : WALL_END_THR_R_LOW;
+    uint16_t thr_l_high = (wall_end_thr_l_high > 0) ? wall_end_thr_l_high : WALL_END_THR_L_HIGH;
+    uint16_t thr_l_low  = (wall_end_thr_l_low > 0)  ? wall_end_thr_l_low  : WALL_END_THR_L_LOW;
 
-    // 直前状態（常に更新、10月20日の実装と同様）
-    static bool s_prev_r = false;
-    static bool s_prev_l = false;
+    // ヒステリシス付き壁状態（staticで状態を保持）
+    static bool s_wall_r = false;  // 右壁の状態（true=壁あり）
+    static bool s_wall_l = false;  // 左壁の状態（true=壁あり）
+    static bool s_prev_r = false;  // 前回の壁状態
+    static bool s_prev_l = false;  // 前回の壁状態
 
-    // リセット要求があれば、現在の壁状態で初期化（returnせず処理を継続）
+    // リセット要求があれば、現在の壁状態で初期化
     if (wall_end_reset_request) {
-        s_prev_r = r_has;
-        s_prev_l = l_has;
+        // 初期化時はHighしきい値で判定
+        s_wall_r = (ad_r > (uint16_t)(thr_r_high * kx));
+        s_wall_l = (ad_l > (uint16_t)(thr_l_high * kx));
+        s_prev_r = s_wall_r;
+        s_prev_l = s_wall_l;
         wall_end_reset_request = false;
-        // 注: returnしない。s_prev更新後、通常処理を継続
-        // これにより柱（無し→有り→無し）の検出を確実に行う
+    }
+
+    // ヒステリシス付き壁判定
+    // 右センサ
+    if (s_wall_r) {
+        // 現在「壁あり」→ Lowしきい値を下回ったら「壁なし」
+        if (ad_r < (uint16_t)(thr_r_low * kx)) {
+            s_wall_r = false;
+        }
+    } else {
+        // 現在「壁なし」→ Highしきい値を超えたら「壁あり」
+        if (ad_r > (uint16_t)(thr_r_high * kx)) {
+            s_wall_r = true;
+        }
+    }
+    // 左センサ
+    if (s_wall_l) {
+        // 現在「壁あり」→ Lowしきい値を下回ったら「壁なし」
+        if (ad_l < (uint16_t)(thr_l_low * kx)) {
+            s_wall_l = false;
+        }
+    } else {
+        // 現在「壁なし」→ Highしきい値を超えたら「壁あり」
+        if (ad_l > (uint16_t)(thr_l_high * kx)) {
+            s_wall_l = true;
+        }
     }
 
     // ゲート条件:
     // - 壁切れアーム中（WALL_END）
     // - スラローム中は無効（直進中のみ検出）
-    // 注: 探索走行・最短走行の両方で使用するため、SCNDフラグは条件から除外
     const bool is_straight = (!MF.FLAG.SLALOM_R && !MF.FLAG.SLALOM_L);
     const bool gate_on = (MF.FLAG.WALL_END && is_straight);
 
-    // 右側の立ち下がり（有→無）
-    if (s_prev_r && !r_has) {
+    // 右側の立ち下がり（壁あり→壁なし）
+    if (s_prev_r && !s_wall_r) {
         if (gate_on && !wall_end_detected_r) {
-            // 検出フラグと検出時の走行距離を記録
             wall_end_detected_r = true;
             wall_end_dist_r = real_distance;
-            MF.FLAG.R_WALL_END = 1; // 互換用
-            // LED2を点灯（右壁切れ）
+            MF.FLAG.R_WALL_END = 1;
             HAL_GPIO_WritePin(LED_2_GPIO_Port, LED_2_Pin, GPIO_PIN_SET);
-            wall_end_count = 200;  // 200ms点灯
+            wall_end_count = 200;
         }
     }
 
-    // 左側の立ち下がり（有→無）
-    if (s_prev_l && !l_has) {
+    // 左側の立ち下がり（壁あり→壁なし）
+    if (s_prev_l && !s_wall_l) {
         if (gate_on && !wall_end_detected_l) {
-            // 検出フラグと検出時の走行距離を記録
             wall_end_detected_l = true;
             wall_end_dist_l = real_distance;
-            MF.FLAG.L_WALL_END = 1; // 互換用
-            // LED3を点灯（左壁切れ）
+            MF.FLAG.L_WALL_END = 1;
             HAL_GPIO_WritePin(LED_3_GPIO_Port, LED_3_Pin, GPIO_PIN_SET);
-            wall_end_count = 200;  // 200ms点灯
+            wall_end_count = 200;
         }
     }
 
     // 状態を更新
-    s_prev_r = r_has;
-    s_prev_l = l_has;
+    s_prev_r = s_wall_r;
+    s_prev_l = s_wall_l;
 }
 
 //+++++++++++++++++++++++++++++++++++++++++++++++

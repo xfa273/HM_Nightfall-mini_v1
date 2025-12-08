@@ -47,9 +47,11 @@ static void apply_search_params(int case_index)
     // センサパラメータ
     sensor_kx = params->sensor_kx;
 
-    // 壁切れ検出しきい値
-    wall_end_thr_r = params->wall_end_thr_r;
-    wall_end_thr_l = params->wall_end_thr_l;
+    // 壁切れ検出しきい値（ヒステリシス付き）
+    wall_end_thr_r_high = params->wall_end_thr_r_high;
+    wall_end_thr_r_low = params->wall_end_thr_r_low;
+    wall_end_thr_l_high = params->wall_end_thr_l_high;
+    wall_end_thr_l_low = params->wall_end_thr_l_low;
 
     // フラグ
     MF.FLAG.WALL_ALIGN = params->wall_align_enable;

@@ -35,9 +35,11 @@ typedef struct {
     // センサパラメータ
     float sensor_kx;                  ///< 壁判断しきい値の係数
     
-    // 壁切れ検出しきい値（速度依存）
-    uint16_t wall_end_thr_r;          ///< 右壁切れ検出しきい値
-    uint16_t wall_end_thr_l;          ///< 左壁切れ検出しきい値
+    // 壁切れ検出しきい値（速度依存、ヒステリシス付き）
+    uint16_t wall_end_thr_r_high;     ///< 右壁切れ検出Highしきい値（壁あり判定）
+    uint16_t wall_end_thr_r_low;      ///< 右壁切れ検出Lowしきい値（壁なし判定）
+    uint16_t wall_end_thr_l_high;     ///< 左壁切れ検出Highしきい値（壁あり判定）
+    uint16_t wall_end_thr_l_low;      ///< 左壁切れ検出Lowしきい値（壁なし判定）
     
     // フラグ
     uint8_t wall_align_enable;        ///< 壁合わせ有効フラグ (0:無効, 1:有効)

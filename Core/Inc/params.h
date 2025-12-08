@@ -146,12 +146,20 @@
 #define SENSOR_DIST_GAIN 1.0F
 #endif
 
-// 壁切れ判定専用しきい値（横壁有無判定）
-#ifndef WALL_END_THR_R
-#define WALL_END_THR_R  280
+// 壁切れ判定専用しきい値（横壁有無判定、ヒステリシス付き）
+// High: これを超えたら「壁あり」と判定
+// Low: これを下回ったら「壁なし」と判定
+#ifndef WALL_END_THR_R_HIGH
+#define WALL_END_THR_R_HIGH  280
 #endif
-#ifndef WALL_END_THR_L
-#define WALL_END_THR_L  280
+#ifndef WALL_END_THR_R_LOW
+#define WALL_END_THR_R_LOW   200
+#endif
+#ifndef WALL_END_THR_L_HIGH
+#define WALL_END_THR_L_HIGH  280
+#endif
+#ifndef WALL_END_THR_L_LOW
+#define WALL_END_THR_L_LOW   200
 #endif
 
 // 前壁補正：未検知時の最大延長距離[mm]

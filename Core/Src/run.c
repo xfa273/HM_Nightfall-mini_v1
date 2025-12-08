@@ -23,6 +23,11 @@ void run(void) {
 
     first_sectionA();
 
+    // センサログ有効時: 走行開始時からログ取得開始
+    if (g_sensor_log_enabled) {
+        sensor_log_start();
+    }
+
     for (uint8_t path_count = 0; path[path_count] != 0; path_count++) {
         if (200 < path[path_count] && path[path_count] < 300) {
             // 直進（距離ベース）
@@ -213,7 +218,7 @@ void run(void) {
                 // 壁切れ未検出の場合（90mm走行完了）、そのままターン開始
                 
             } else {
-                // 次がターンでない場合、従来通りの処理
+                // 次がターンでない場合、または壁切れ補正無効時の処理
                 if (d_acc_blocks > 0.0f) {
                     run_straight(d_acc_blocks, max_reached_speed, 0);
                 }
@@ -222,6 +227,12 @@ void run(void) {
                 }
                 if (d_dec_blocks > 0.0f) {
                     run_straight(d_dec_blocks, v_next, 0);
+                }
+                
+                // センサログ有効時: バッファ区間でセンサ値を記録（壁切れ補正は無効のまま）
+                if (g_sensor_log_enabled && (next_is_small_turn || next_is_large_turn)) {
+                    const float BUFFER_MAX = 90.0f;
+                    driveC_wallend(BUFFER_MAX, v_next);  // 壁切れ検出しても補正は行わない
                 }
             }
 
@@ -371,6 +382,11 @@ void run(void) {
 
     half_sectionD(0);
 
+    // センサログ停止
+    if (g_sensor_log_enabled) {
+        sensor_log_stop();
+    }
+
     // ゴール演出（LED/Buzzer）は run_shortest() 側で必要に応じて実施する。
     // ここでは直後にファン停止やLED消灯を行うため、一時的な再点灯/再起動を避ける目的で呼ばない。
     drive_stop();
@@ -475,9 +491,11 @@ void run_shortest(uint8_t mode, uint8_t case_index) {
     dist_wall_end = pm->dist_wall_end;
     duty_setposition = 40;
 
-    // 壁切れ検出しきい値（モードごと）
-    wall_end_thr_r = pm->wall_end_thr_r;
-    wall_end_thr_l = pm->wall_end_thr_l;
+    // 壁切れ検出しきい値（モードごと、ヒステリシス付き）
+    wall_end_thr_r_high = pm->wall_end_thr_r_high;
+    wall_end_thr_r_low = pm->wall_end_thr_r_low;
+    wall_end_thr_l_high = pm->wall_end_thr_l_high;
+    wall_end_thr_l_low = pm->wall_end_thr_l_low;
 
     // 加速度切り替え速度（モードごと）
     accel_switch_velocity = pm->accel_switch_velocity;
@@ -509,5 +527,5 @@ void run_shortest(uint8_t mode, uint8_t case_index) {
     MF.FLAG.RUNNING = 0;
 
     led_write(0,0);
-    led_wait();
+    // led_wait();
 }
