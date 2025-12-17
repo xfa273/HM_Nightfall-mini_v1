@@ -252,24 +252,27 @@ void run(void) {
 
         } else if (path[path_count] < 600) {
             // 右大回り旋回
-
             uint8_t l_turn_sections = path[path_count] - 500;
+            // 次が大回りターンかどうか判定（500-699が大回り）
+            uint16_t next_code = path[path_count + 1];
+            bool next_is_large = (next_code >= 500 && next_code < 700);
 
             if (l_turn_sections == 2) {
-                l_turn_R180(0);
+                l_turn_R180(next_is_large);
             } else {
-                l_turn_R90();
+                l_turn_R90(next_is_large);
             }
         } else if (path[path_count] < 700) {
             // 左大回り旋回
-
             uint8_t l_turn_sections = path[path_count] - 600;
-            // printf("Large Turn L %d Sections.\n", l_turn_sections);
+            // 次が大回りターンかどうか判定（500-699が大回り）
+            uint16_t next_code = path[path_count + 1];
+            bool next_is_large = (next_code >= 500 && next_code < 700);
 
             if (l_turn_sections == 2) {
-                l_turn_L180(0);
+                l_turn_L180(next_is_large);
             } else {
-                l_turn_L90();
+                l_turn_L90(next_is_large);
             }
         } else if (path[path_count] == 701) {
             // 45degターン右入り

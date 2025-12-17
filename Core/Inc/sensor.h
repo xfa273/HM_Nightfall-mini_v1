@@ -153,10 +153,8 @@ typedef struct {
 
 #ifdef MAIN_C_
 SensorLogBuffer sensor_log_buffer;
-volatile bool g_sensor_log_enabled;  // センサログ有効フラグ
 #else
 extern SensorLogBuffer sensor_log_buffer;
-extern volatile bool g_sensor_log_enabled;
 #endif
 
 // センサログ関数

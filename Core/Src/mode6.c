@@ -307,10 +307,13 @@ void mode6() {
             break;
 
         case 2:
+            // g_disable_front_wall_correction = true;  // 前壁補正無効（距離ベース走行）
             sensor_log_init();
             g_sensor_log_enabled = true;
+            g_disable_front_wall_correction = true;
             run_shortest(6, 2);
             g_sensor_log_enabled = false;
+            g_disable_front_wall_correction = false;
             printf("Sensor log recorded: %d entries\n", sensor_log_buffer.count);
             printf("Press button for sensor log output...\n");
             while (HAL_GPIO_ReadPin(PUSH_IN_1_GPIO_Port, PUSH_IN_1_Pin) != 0) { HAL_Delay(50); }
@@ -319,31 +322,45 @@ void mode6() {
             break;
 
         case 3:
+            g_disable_front_wall_correction = true;
             run_shortest(6, 3);
+            g_disable_front_wall_correction = false;
             break;
 
         case 4:
+            g_disable_front_wall_correction = true;
             run_shortest(6, 4);
+            g_disable_front_wall_correction = false;
             break;
 
         case 5:
+            g_disable_front_wall_correction = true;
             run_shortest(6, 5);
+            g_disable_front_wall_correction = false;
             break;
 
         case 6:
+            g_disable_front_wall_correction = true;
             run_shortest(6, 6);
+            g_disable_front_wall_correction = false;
             break;
 
         case 7:
+            g_disable_front_wall_correction = true;
             run_shortest(6, 7);
+            g_disable_front_wall_correction = false;
             break;
 
         case 8:
+            g_disable_front_wall_correction = true;
             run_shortest(6, 8);
+            g_disable_front_wall_correction = false;
             break;
 
         case 9:
+            g_disable_front_wall_correction = true;
             run_shortest(6, 9);
+            g_disable_front_wall_correction = false;
             break;
         }
     }

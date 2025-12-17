@@ -405,10 +405,10 @@ void rotate_L90(void);                  // 左90回転
 void rotate_180(void);                  // 180度回転
 void turn_R90(uint8_t);                 // 90度スラロームで右旋回
 void turn_L90(uint8_t);                 // 90度スラロームで左旋回
-void l_turn_R90(void);                  // 90度大回り右旋回
-void l_turn_L90(void);                  // 90度大回り左旋回
-void l_turn_R180(uint8_t);              // 180度大回り右旋回
-void l_turn_L180(uint8_t);              // 180度大回り左旋回
+void l_turn_R90(bool next_is_large);    // 90度大回り右旋回（次が大回りなら壁切れ補正）
+void l_turn_L90(bool next_is_large);    // 90度大回り左旋回（次が大回りなら壁切れ補正）
+void l_turn_R180(bool next_is_large);   // 180度大回り右旋回（次が大回りなら壁切れ補正）
+void l_turn_L180(bool next_is_large);   // 180度大回り左旋回（次が大回りなら壁切れ補正）
 void turn_R45_In(void);                 // 右45度入り
 void turn_R45_Out(void);                // 右45度出
 void turn_L45_In(void);                 // 左45度入り

@@ -78,7 +78,10 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
         // TIM5: 基本1kHz。常時1kHzで制御ブロックを実行する。
 
         // 前壁補正の判定（1kHz維持）
-        if (ad_fr > WALL_BASE_FR * 1.1 && ad_fl > WALL_BASE_FL * 1.1) {
+        // g_disable_front_wall_correctionがtrueの場合は常に0（前壁補正無効）
+        if (g_disable_front_wall_correction) {
+            MF.FLAG.F_WALL = 0;
+        } else if (ad_fr > WALL_BASE_FR * 1.1 && ad_fl > WALL_BASE_FL * 1.1) {
             MF.FLAG.F_WALL = 1;
         } else {
             MF.FLAG.F_WALL = 0;

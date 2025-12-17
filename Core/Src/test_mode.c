@@ -275,7 +275,7 @@ void test_mode() {
             run_straight(12, velocity_l_turn_90, 0);
 
             // 1回目のターン
-            l_turn_R90();
+            l_turn_R90(false);
 
             // 2回目の直線
             run_straight(12, velocity_straight, 0);
@@ -283,7 +283,7 @@ void test_mode() {
             run_straight(12, velocity_l_turn_90, 0);
 
             // 2回目のターン
-            l_turn_R90();
+            l_turn_R90(false);
 
             // 3回目の直線
             run_straight(12, velocity_straight, 0);
@@ -291,7 +291,7 @@ void test_mode() {
             run_straight(12, velocity_l_turn_90, 0);
 
             // 3回目のターン
-            l_turn_R90();
+            l_turn_R90(false);
 
             // 4回目の直線
             run_straight(12, velocity_straight, 0);
@@ -299,7 +299,7 @@ void test_mode() {
             run_straight(12, velocity_l_turn_90, 0);
 
             // 4回目のターン
-            l_turn_R90();
+            l_turn_R90(false);
 
             // 5回目の直線
             run_straight(12, velocity_straight, 0);
@@ -307,7 +307,7 @@ void test_mode() {
             run_straight(12, velocity_l_turn_90, 0);
 
             // 5回目のターン
-            l_turn_R90();
+            l_turn_R90(false);
 
             // 6回目の直線
             run_straight(12, velocity_straight, 0);
@@ -315,7 +315,7 @@ void test_mode() {
             run_straight(12, velocity_l_turn_90, 0);
 
             // 6回目のターン
-            l_turn_R90();
+            l_turn_R90(false);
 
             // 7回目の直線
             run_straight(12, velocity_straight, 0);
@@ -323,7 +323,7 @@ void test_mode() {
             run_straight(12, velocity_l_turn_90, 0);
 
             // 7回目のターン
-            l_turn_R90();
+            l_turn_R90(false);
 
             // 8回目の直線
             run_straight(12, velocity_straight, 0);
@@ -331,7 +331,7 @@ void test_mode() {
             run_straight(12, velocity_l_turn_90, 0);
 
             // 8回目のターン
-            l_turn_R90();
+            l_turn_R90(false);
 
             half_sectionD(0);
 

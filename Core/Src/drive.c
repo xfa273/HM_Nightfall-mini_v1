@@ -534,7 +534,7 @@ void turn_L90(uint8_t fwall) {
 // 引数：なし
 // 戻り値：なし
 //+++++++++++++++++++++++++++++++++++++++++++++++
-void l_turn_R90(void) {
+void l_turn_R90(bool next_is_large) {
 
     // スラローム前は壁制御OFF（元の挙動を維持）
     MF.FLAG.CTRL = 0;
@@ -548,11 +548,24 @@ void l_turn_R90(void) {
 
     MF.FLAG.SLALOM_R = 1;
     driveSR(angle_l_turn_90, alpha_l_turn_90);
+    MF.FLAG.SLALOM_R = 0;  // ターン終了後にフラグを落とす（壁切れ検出を有効化）
     MF.FLAG.CTRL = 1;
-    // 出オフセット（距離ベース）
-    driveA(dist_l_turn_out_90, speed_now, velocity_l_turn_90, 0);
+    
+    // 出オフセット（次が大回りターンの場合のみ壁切れ補正）
+    if (next_is_large && !g_disable_wall_end_correction && dist_l_turn_out_90 > 0.0f) {
+        bool found = driveC_wallend(dist_l_turn_out_90, velocity_l_turn_90);
+        if (found) {
+            // 壁切れ検出時: dist_wall_end分追加直進
+            if (dist_wall_end > 0.0f) {
+                driveA(dist_wall_end, speed_now, velocity_l_turn_90, 0);
+            }
+        }
+    } else {
+        // 次が大回りでない or 壁切れ補正無効時: 距離ベース
+        driveA(dist_l_turn_out_90, speed_now, velocity_l_turn_90, 0);
+    }
+    
     MF.FLAG.CTRL = 0;
-    MF.FLAG.SLALOM_R = 0;
 }
 
 //+++++++++++++++++++++++++++++++++++++++++++++++
@@ -561,7 +574,7 @@ void l_turn_R90(void) {
 // 引数：なし
 // 戻り値：なし
 //+++++++++++++++++++++++++++++++++++++++++++++++
-void l_turn_L90(void) {
+void l_turn_L90(bool next_is_large) {
 
     // スラローム前は壁制御OFF（元の挙動を維持）
     MF.FLAG.CTRL = 0;
@@ -575,11 +588,24 @@ void l_turn_L90(void) {
 
     MF.FLAG.SLALOM_L = 1;
     driveSL(angle_l_turn_90, alpha_l_turn_90);
+    MF.FLAG.SLALOM_L = 0;  // ターン終了後にフラグを落とす（壁切れ検出を有効化）
     MF.FLAG.CTRL = 1;
-    // 出オフセット（距離ベース）
-    driveA(dist_l_turn_out_90, speed_now, velocity_l_turn_90, 0);
+    
+    // 出オフセット（次が大回りターンの場合のみ壁切れ補正）
+    if (next_is_large && !g_disable_wall_end_correction && dist_l_turn_out_90 > 0.0f) {
+        bool found = driveC_wallend(dist_l_turn_out_90, velocity_l_turn_90);
+        if (found) {
+            // 壁切れ検出時: dist_wall_end分追加直進
+            if (dist_wall_end > 0.0f) {
+                driveA(dist_wall_end, speed_now, velocity_l_turn_90, 0);
+            }
+        }
+    } else {
+        // 次が大回りでない or 壁切れ補正無効時: 距離ベース
+        driveA(dist_l_turn_out_90, speed_now, velocity_l_turn_90, 0);
+    }
+
     MF.FLAG.CTRL = 0;
-    MF.FLAG.SLALOM_L = 0;
 }
 
 //+++++++++++++++++++++++++++++++++++++++++++++++
@@ -588,8 +614,7 @@ void l_turn_L90(void) {
 // 引数：前壁補正のON/OFF
 // 戻り値：なし
 //+++++++++++++++++++++++++++++++++++++++++++++++
-void l_turn_R180(uint8_t fwall) {
-    (void)fwall;
+void l_turn_R180(bool next_is_large) {
     // スラローム前は壁制御OFF（元の挙動を維持）
     MF.FLAG.CTRL = 0;
 
@@ -602,11 +627,23 @@ void l_turn_R180(uint8_t fwall) {
 
     MF.FLAG.SLALOM_R = 1;
     driveSR(angle_l_turn_180, alpha_l_turn_180);
+    MF.FLAG.SLALOM_R = 0;  // ターン終了後にフラグを落とす（壁切れ検出を有効化）
     MF.FLAG.CTRL = 1;
-    // 出オフセット（距離ベース）
-    driveA(dist_l_turn_out_180, speed_now, velocity_l_turn_180, 0);
+    
+    // 出オフセット（次が大回りターンの場合のみ壁切れ補正）
+    if (next_is_large && !g_disable_wall_end_correction && dist_l_turn_out_180 > 0.0f) {
+        bool found = driveC_wallend(dist_l_turn_out_180, velocity_l_turn_180);
+        if (found) {
+            // 壁切れ検出時: dist_wall_end分追加直進
+            if (dist_wall_end > 0.0f) {
+                driveA(dist_wall_end, speed_now, velocity_l_turn_180, 0);
+            }
+        }
+    } else {
+        // 次が大回りでない or 壁切れ補正無効時: 距離ベース
+        driveA(dist_l_turn_out_180, speed_now, velocity_l_turn_180, 0);
+    }
     MF.FLAG.CTRL = 0;
-    MF.FLAG.SLALOM_R = 0;
 }
 
 //+++++++++++++++++++++++++++++++++++++++++++++++
@@ -615,8 +652,7 @@ void l_turn_R180(uint8_t fwall) {
 // 引数：前壁補正のON/OFF
 // 戻り値：なし
 //+++++++++++++++++++++++++++++++++++++++++++++++
-void l_turn_L180(uint8_t fwall) {
-    (void)fwall;
+void l_turn_L180(bool next_is_large) {
     // スラローム前は壁制御OFF（元の挙動を維持）
     MF.FLAG.CTRL = 0;
 
@@ -629,11 +665,23 @@ void l_turn_L180(uint8_t fwall) {
 
     MF.FLAG.SLALOM_L = 1;
     driveSL(angle_l_turn_180, alpha_l_turn_180);
+    MF.FLAG.SLALOM_L = 0;  // ターン終了後にフラグを落とす（壁切れ検出を有効化）
     MF.FLAG.CTRL = 1;
-    // 出オフセット（距離ベース）
-    driveA(dist_l_turn_out_180, speed_now, velocity_l_turn_180, 0);
+    
+    // 出オフセット（次が大回りターンの場合のみ壁切れ補正）
+    if (next_is_large && !g_disable_wall_end_correction && dist_l_turn_out_180 > 0.0f) {
+        bool found = driveC_wallend(dist_l_turn_out_180, velocity_l_turn_180);
+        if (found) {
+            // 壁切れ検出時: dist_wall_end分追加直進
+            if (dist_wall_end > 0.0f) {
+                driveA(dist_wall_end, speed_now, velocity_l_turn_180, 0);
+            }
+        }
+    } else {
+        // 次が大回りでない or 壁切れ補正無効時: 距離ベース
+        driveA(dist_l_turn_out_180, speed_now, velocity_l_turn_180, 0);
+    }
     MF.FLAG.CTRL = 0;
-    MF.FLAG.SLALOM_L = 0;
 }
 
 //+++++++++++++++++++++++++++++++++++++++++++++++
@@ -2156,7 +2204,7 @@ void test_run(void) {
             
             half_sectionA(0);
 
-            l_turn_R90();
+            l_turn_R90(false);
 
             half_sectionD(0);
             log_stop();
@@ -2262,7 +2310,7 @@ void test_run(void) {
             drive_enable_motor();
 
             half_sectionA(velocity_l_turn_90);
-            l_turn_R90();
+            l_turn_R90(false);
             half_sectionD(0);
 
             led_flash(5);

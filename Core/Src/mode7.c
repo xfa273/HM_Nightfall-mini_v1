@@ -101,7 +101,7 @@ void mode7() {
             led_flash(20);
 
             half_sectionA(2200);
-            l_turn_R90();
+            l_turn_R90(false);
             half_sectionD(0);
 
             led_flash(5);

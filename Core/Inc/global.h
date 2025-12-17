@@ -62,27 +62,38 @@ typedef union { // 共用体の宣言
     } FLAG;
 } mouse_flags;
 
+typedef struct {
+    bool test_mode_run;
+    bool disable_wall_end_correction;
+    bool disable_front_wall_correction;
+    bool sensor_log_enabled;
+} DebugFlags_t;
+
 #ifdef MAIN_C_ // main.cからこのファイルが呼ばれている場合
 /*グローバル変数の定義*/
 volatile mouse_flags MF;
 volatile float g_ctrl_dt;
 
 /* テスト動作フラグ: trueの場合、センサ補正（壁切れ、前壁、横壁）を無効化 */
-bool g_test_mode_run;
-
 /* 壁切れ補正無効化フラグ: trueの場合、壁切れ検出を行わず距離ベースで走行 */
-bool g_disable_wall_end_correction;
+/* 前壁補正無効化フラグ: trueの場合、小回りターンの前壁補正(F_WALL)を無効化 */
+volatile DebugFlags_t g_debug;
 #else // main.c以外からこのファイルが呼ばれている場合
 /*グローバル変数の宣言*/
 extern volatile mouse_flags MF;
 extern volatile float g_ctrl_dt;
 
 /* テスト動作フラグ: trueの場合、センサ補正（壁切れ、前壁、横壁）を無効化 */
-extern bool g_test_mode_run;
-
 /* 壁切れ補正無効化フラグ: trueの場合、壁切れ検出を行わず距離ベースで走行 */
-extern bool g_disable_wall_end_correction;
+/* 前壁補正無効化フラグ: trueの場合、小回りターンの前壁補正(F_WALL)を無効化 */
+extern volatile DebugFlags_t g_debug;
 #endif
+
+#define g_test_mode_run (g_debug.test_mode_run)
+#define g_disable_wall_end_correction (g_debug.disable_wall_end_correction)
+#define g_disable_front_wall_correction (g_debug.disable_front_wall_correction)
+#define g_sensor_log_enabled (g_debug.sensor_log_enabled)
+
 #include <limits.h>
 #include <stdbool.h>
 #include <stdint.h>

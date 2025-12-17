@@ -240,8 +240,8 @@
     探索系
 ------------------------------------------------------------*/
 //----ゴール座標----
-#define GOAL_X    1 // 7
-#define GOAL_Y    0 // 7
+#define GOAL_X   1 // 7
+#define GOAL_Y   0 // 7
 #define MAZE_SIZE 16
 #define START_X   0
 #define START_Y   0
