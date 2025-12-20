@@ -305,7 +305,8 @@ void one_sectionU(float section, float spd_out) {
     const float v_const = speed_now;
     const float dist_max = DIST_HALF_SEC * 2.0f;  // 90mm（1区画）
     // 壁切れ後の追加直進: 小回りターン用なので45mm + dist_wall_end
-    const float follow_dist = DIST_HALF_SEC + dist_wall_end;
+    // const float follow_dist = DIST_HALF_SEC + dist_wall_end;
+    const float follow_dist = dist_wall_end;
     
     MF.FLAG.CTRL = 1;
     
@@ -1546,6 +1547,68 @@ void drive_variable_reset(void) {
     previous_omega_error = 0;
     omega_error_error = 0;
     omega_integral = 0;
+}
+
+void drive_reset_before_run(void) {
+    drive_variable_reset();
+
+    MF.FLAG.OVERRIDE = 0;
+    MF.FLAG.FAILED = 0;
+    MF.FLAG.CTRL = 0;
+    MF.FLAG.SLALOM_R = 0;
+    MF.FLAG.SLALOM_L = 0;
+    MF.FLAG.F_WALL = 0;
+
+    speed_now = 0;
+    omega_now = 0;
+
+    acceleration_interrupt = 0;
+    velocity_interrupt = 0;
+    target_distance = 0;
+
+    alpha_interrupt = 0;
+    omega_interrupt = 0;
+    target_angle = 0;
+
+    target_velocity = 0;
+    target_omega = 0;
+
+    out_r = 0;
+    out_l = 0;
+    out_translation = 0;
+    out_rotate = 0;
+
+    wall_control = 0;
+    diagonal_control = 0;
+    latest_wall_error = 0;
+
+    previous_ad_r = ad_r;
+    previous_ad_l = ad_l;
+
+    real_distance = 0;
+    real_velocity = 0;
+    encoder_speed_r = 0;
+    encoder_speed_l = 0;
+    encoder_distance_r = 0;
+    encoder_distance_l = 0;
+
+    TIM8->CNT = 30000;
+    TIM4->CNT = 30000;
+    encoder_count_r = 30000;
+    encoder_count_l = 30000;
+    previous_encoder_count_r = 30000;
+    previous_encoder_count_l = 30000;
+
+    IMU_angle = 0;
+    real_angle = 0;
+    real_omega = 0;
+    IMU_acceleration = 0;
+
+    wall_end_reset();
+    MF.FLAG.WALL_END = 0;
+    MF.FLAG.R_WALL_END = 0;
+    MF.FLAG.L_WALL_END = 0;
+    wall_end_count = 0;
 }
 
 //+++++++++++++++++++++++++++++++++++++++++++++++

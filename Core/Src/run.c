@@ -13,12 +13,8 @@
 
 void run(void) {
 
+    drive_reset_before_run();
     drive_start();
-
-    speed_now = 0;
-    velocity_interrupt = 0;
-    drive_variable_reset();
-    drive_enable_motor();
     get_base();
 
     first_sectionA();

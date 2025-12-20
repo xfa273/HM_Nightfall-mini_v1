@@ -6,7 +6,7 @@ const SearchRunParams_t searchRunParams[2] = {
     {
         // 直線パラメータ
         .acceleration_straight = 1000.0f,
-        .acceleration_straight_dash = 1500.0f,
+        .acceleration_straight_dash = 800.0f,
         
         // ターンパラメータ
         .velocity_turn90 = 300.0f,
@@ -18,7 +18,7 @@ const SearchRunParams_t searchRunParams[2] = {
         .angle_turn_90 = 89.0f,
         
         // 壁切れ後の追従距離
-        .dist_wall_end = 2.8f,
+        .dist_wall_end = 44.0f,
         
         // 壁制御パラメータ
         .kp_wall = 0.12f,
@@ -39,7 +39,7 @@ const SearchRunParams_t searchRunParams[2] = {
     {
         // 直線パラメータ
         .acceleration_straight = 694.44f,
-        .acceleration_straight_dash = 800.0f,
+        .acceleration_straight_dash = 400.0f,
         
         // ターンパラメータ
         .velocity_turn90 = 250.0f,
@@ -51,7 +51,7 @@ const SearchRunParams_t searchRunParams[2] = {
         .angle_turn_90 = 89.0f,
         
         // 壁切れ後の追従距離
-        .dist_wall_end = 1.0f,
+        .dist_wall_end = 44.0f,
         
         // 壁制御パラメータ
         .kp_wall = 0.10f,
@@ -61,8 +61,8 @@ const SearchRunParams_t searchRunParams[2] = {
         .sensor_kx = 1.0f,
         
         // 壁切れ検出しきい値（ヒステリシス付き）
-        .wall_end_thr_r_high = 160, .wall_end_thr_r_low = 140,
-        .wall_end_thr_l_high = 160, .wall_end_thr_l_low = 140,
+        .wall_end_thr_r_high = 280, .wall_end_thr_r_low = 200,
+        .wall_end_thr_l_high = 280, .wall_end_thr_l_low = 200,
         
         // フラグ
         .wall_align_enable = 0  // 壁合わせ無効

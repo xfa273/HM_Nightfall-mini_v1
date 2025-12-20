@@ -165,6 +165,7 @@ void adachi(void) {
     // 探索時のみ制御周期を0.5kHzに間引く
     // MF.FLAG.SEARCH_HALF_RATE = 1;
 
+    drive_reset_before_run();
     drive_start();
 
 

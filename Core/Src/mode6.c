@@ -307,7 +307,7 @@ void mode6() {
             break;
 
         case 2:
-            // g_disable_front_wall_correction = true;  // 前壁補正無効（距離ベース走行）
+            g_disable_front_wall_correction = true;  // 前壁補正無効（距離ベース走行）
             sensor_log_init();
             g_sensor_log_enabled = true;
             g_disable_front_wall_correction = true;

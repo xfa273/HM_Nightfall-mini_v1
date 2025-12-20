@@ -365,6 +365,7 @@ extern volatile uint16_t wall_end_count;
 ============================================================*/
 void drive_init(void);
 void drive_variable_reset(void);
+void drive_reset_before_run(void);
 void drive_enable_motor(void);
 void drive_disable_motor(void);
 void drive_start(void);

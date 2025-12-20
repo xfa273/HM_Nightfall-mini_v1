@@ -443,7 +443,7 @@ void mode4() {
 
         case 2:
             // 最短走行（case2）- 前壁補正無効
-            // g_disable_front_wall_correction = true;
+            g_disable_front_wall_correction = true;
             sensor_log_init();
             g_sensor_log_enabled = true;
             g_disable_front_wall_correction = true;
