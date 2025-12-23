@@ -6,7 +6,7 @@ const SearchRunParams_t searchRunParams[2] = {
     {
         // 直線パラメータ
         .acceleration_straight = 1000.0f,
-        .acceleration_straight_dash = 800.0f,
+        .acceleration_straight_dash = 0.0f,
         
         // ターンパラメータ
         .velocity_turn90 = 300.0f,
@@ -39,7 +39,7 @@ const SearchRunParams_t searchRunParams[2] = {
     {
         // 直線パラメータ
         .acceleration_straight = 694.44f,
-        .acceleration_straight_dash = 400.0f,
+        .acceleration_straight_dash = 0.0f,
         
         // ターンパラメータ
         .velocity_turn90 = 250.0f,

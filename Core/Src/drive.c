@@ -216,6 +216,7 @@ void half_sectionDD(uint16_t val) {
 //+++++++++++++++++++++++++++++++++++++++++++++++
 void one_sectionA(void) {
     float speed_out;
+    /*
     if (MF.FLAG.SCND || known_straight) {
         // 最短走行時: 速度に応じて加速度を切り替え
         float accel;
@@ -229,6 +230,11 @@ void one_sectionA(void) {
         speed_out = sqrt(speed_now * speed_now +
                          2 * acceleration_straight * DIST_HALF_SEC * 2);
     }
+    */
+
+    speed_out = sqrt(speed_now * speed_now +
+                         2 * acceleration_straight * DIST_HALF_SEC * 2);
+    
 
     MF.FLAG.CTRL = 1;
     // kp_wall = kp_wall * 2;
@@ -250,6 +256,7 @@ void one_sectionD(void) {
     // 探索向け: 単一の連続走行で減速し、必要なら壁切れ追従（半区画+バッファ）を動的に行う
     float v0 = speed_now;
     float accel_lin;
+    /*
     if (MF.FLAG.SCND || acceled) {
         // 最短走行時: 速度に応じて加速度を切り替え
         if (accel_switch_velocity > 0.0f && v0 >= accel_switch_velocity) {
@@ -260,6 +267,10 @@ void one_sectionD(void) {
     } else {
         accel_lin = acceleration_straight;
     }
+    */
+
+    accel_lin = acceleration_straight;
+
     float speed_out = sqrtf(fmaxf(0.0f, v0 * v0 - 2.0f * accel_lin * (DIST_HALF_SEC * 2.0f)));
 
     MF.FLAG.CTRL = 1;
