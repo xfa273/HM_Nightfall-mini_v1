@@ -17,9 +17,8 @@ Mac(M4 MacBook Air)側の Windsurf 内 AI が、Nightfall-mini のビルド不�
 
 注意:
 
-- `HM_Nightfall-mini_v1.1/` の `CMakeLists.txt` 内 `CMAKE_PROJECT_NAME` が `HM_Nightfall-mini_v1` のままになっているため、生成物名が紛らわしいです。
-  - 例: `HM_Nightfall-mini_v1.elf/.map` が生成される
-  - ただしフォルダが `HM_Nightfall-mini_v1.1/` なら v1.1 側のビルドです
+- `HM_Nightfall-mini_v1.1/` の `CMakeLists.txt` で `CMAKE_PROJECT_NAME` を `HM_Nightfall-mini_v1.1` にしておくと、生成物名も v1.1 になり、v1 と混同しにくくなります。
+  - 例: `HM_Nightfall-mini_v1.1.elf/.map` が生成される
 
 ## MCU/メモリ前提
 
@@ -116,13 +115,13 @@ Linux 側で `.map` を解析した結果、`.bss` の大半を以下の配列�
 
 ### `.map`から大きい RAM 要因を抽出（Python）
 
-`.map` が `build/Debug/HM_Nightfall-mini_v1.map` にある前提:
+`.map` が `build/Debug/HM_Nightfall-mini_v1.1.map` にある前提:
 
 ```bash
 python3 - <<'PY'
 import re
 from pathlib import Path
-p=Path('build/Debug/HM_Nightfall-mini_v1.map')
+p=Path('build/Debug/HM_Nightfall-mini_v1.1.map')
 lines=p.read_text(errors='ignore').splitlines()
 pat=re.compile(r'^\s+\.(bss[^\s]*)\s+0x[0-9a-fA-F]+\s+0x([0-9a-fA-F]+)\s*(.*)$')
 items=[]

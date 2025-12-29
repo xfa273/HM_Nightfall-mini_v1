@@ -1,14 +1,14 @@
 #!/bin/bash
 
-# STM32 UART Flash Script for HM_Nightfall-mini_v1
+# STM32 UART Flash Script for HM_Nightfall-mini_v1.1
 # Usage: ./flash_uart.sh [UART_PORT] [BAUD_RATE]
 
 # デフォルト設定
 DEFAULT_PORT="/dev/ttyUSB0"
 DEFAULT_BAUD="115200"
 PROGRAMMER_CLI="/home/xfa273/STMicroelectronics/STM32Cube/STM32CubeProgrammer/bin/STM32_Programmer_CLI"
-BIN_FILE_DEBUG="build/Debug/HM_Nightfall-mini_v1.bin"
-BIN_FILE_RELEASE="build/HM_Nightfall-mini_v1.bin"
+BIN_FILE_DEBUG="build/Debug/HM_Nightfall-mini_v1.1.bin"
+BIN_FILE_RELEASE="build/Release/HM_Nightfall-mini_v1.1.bin"
 if [ -f "$BIN_FILE_DEBUG" ] && [ -f "$BIN_FILE_RELEASE" ]; then
     TS_DEBUG=$(stat -c %Y "$BIN_FILE_DEBUG" 2>/dev/null || echo 0)
     TS_RELEASE=$(stat -c %Y "$BIN_FILE_RELEASE" 2>/dev/null || echo 0)

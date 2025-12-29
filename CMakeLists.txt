@@ -19,7 +19,7 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 # Set the project name
-set(CMAKE_PROJECT_NAME HM_Nightfall-mini_v1)
+set(CMAKE_PROJECT_NAME "HM_Nightfall-mini_v1.1")
 
 # Include toolchain file
 include("cmake/gcc-arm-none-eabi.cmake")
